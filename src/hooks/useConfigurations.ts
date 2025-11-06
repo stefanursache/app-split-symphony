@@ -83,6 +83,39 @@ export function useConfigurations() {
     }
   };
 
+  const updateConfiguration = async (
+    id: string,
+    name: string,
+    description: string,
+    plies: Ply[],
+    engineeringProps: EngineeringProperties,
+    totalThickness: number,
+    totalWeight: number
+  ) => {
+    try {
+      const { error } = await supabase
+        .from('laminate_configurations')
+        .update({
+          name,
+          description,
+          plies: plies as any,
+          engineering_properties: engineeringProps as any,
+          total_thickness: totalThickness,
+          total_weight: totalWeight,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', id);
+
+      if (error) throw error;
+      
+      toast.success('Configuration updated successfully');
+      fetchConfigurations();
+    } catch (error) {
+      console.error('Error updating configuration:', error);
+      toast.error('Failed to update configuration');
+    }
+  };
+
   useEffect(() => {
     fetchConfigurations();
   }, []);
@@ -91,6 +124,7 @@ export function useConfigurations() {
     configurations,
     loading,
     saveConfiguration,
+    updateConfiguration,
     deleteConfiguration,
     refetch: fetchConfigurations,
   };

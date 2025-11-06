@@ -4,14 +4,15 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Save } from 'lucide-react';
+import { Save, Edit } from 'lucide-react';
 
 interface SaveConfigurationDialogProps {
   onSave: (name: string, description: string) => void;
   disabled?: boolean;
+  isUpdate?: boolean;
 }
 
-export function SaveConfigurationDialog({ onSave, disabled }: SaveConfigurationDialogProps) {
+export function SaveConfigurationDialog({ onSave, disabled, isUpdate = false }: SaveConfigurationDialogProps) {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
@@ -29,13 +30,13 @@ export function SaveConfigurationDialog({ onSave, disabled }: SaveConfigurationD
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button disabled={disabled} className="gap-2">
-          <Save className="h-4 w-4" />
-          Save Configuration
+          {isUpdate ? <Edit className="h-4 w-4" /> : <Save className="h-4 w-4" />}
+          {isUpdate ? 'Update' : 'Save'} Configuration
         </Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Save Laminate Configuration</DialogTitle>
+          <DialogTitle>{isUpdate ? 'Update' : 'Save'} Laminate Configuration</DialogTitle>
         </DialogHeader>
         <div className="space-y-4 py-4">
           <div className="space-y-2">
@@ -62,7 +63,7 @@ export function SaveConfigurationDialog({ onSave, disabled }: SaveConfigurationD
               Cancel
             </Button>
             <Button onClick={handleSave} disabled={!name.trim()}>
-              Save
+              {isUpdate ? 'Update' : 'Save'}
             </Button>
           </div>
         </div>

@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect } from 'react';
 import { useMaterials } from '@/hooks/useMaterials';
 import { useAppState } from '@/hooks/useAppState';
 import { useConfigurations, Configuration } from '@/hooks/useConfigurations';
+import { toast } from 'sonner';
 import { MaterialSelector } from '@/components/composite/MaterialSelector';
 import { MaterialProperties } from '@/components/composite/MaterialProperties';
 import { MaterialEditor } from '@/components/composite/MaterialEditor';
@@ -36,7 +37,7 @@ const Index = () => {
     setActiveTab,
     setSelectedMaterial
   } = useAppState();
-  const { configurations, loading: configsLoading, saveConfiguration } = useConfigurations();
+  const { configurations, loading: configsLoading, saveConfiguration, updateConfiguration, deleteConfiguration } = useConfigurations();
 
   const [isEditorOpen, setIsEditorOpen] = useState(false);
   const [editingMaterial, setEditingMaterial] = useState<Material | null>(null);
@@ -44,6 +45,7 @@ const Index = () => {
   const [failureResults, setFailureResults] = useState<FailureResult[]>([]);
   const [safetyFactor, setSafetyFactor] = useState(1.5);
   const [failureCriterion, setFailureCriterion] = useState<'max_stress' | 'tsai_wu' | 'tsai_hill'>('max_stress');
+  const [loadedConfigId, setLoadedConfigId] = useState<string | null>(null);
 
   const selectedMaterialData = materials[state.selectedMaterial] || null;
 
@@ -114,14 +116,29 @@ const Index = () => {
       return sum + (material ? material.density * material.thickness : 0);
     }, 0);
 
-    saveConfiguration(
-      name,
-      description,
-      state.plies,
-      engineeringProps,
-      totalThickness,
-      totalWeight
-    );
+    if (loadedConfigId) {
+      // Update existing configuration
+      updateConfiguration(
+        loadedConfigId,
+        name,
+        description,
+        state.plies,
+        engineeringProps,
+        totalThickness,
+        totalWeight
+      );
+    } else {
+      // Save new configuration
+      saveConfiguration(
+        name,
+        description,
+        state.plies,
+        engineeringProps,
+        totalThickness,
+        totalWeight
+      );
+    }
+    setLoadedConfigId(null);
   };
 
   const handleAddCurrentToComparison = () => {
@@ -155,6 +172,21 @@ const Index = () => {
   const handleApplyOptimization = (plies: any[]) => {
     clearPlies();
     plies.forEach(ply => addPly(ply.material, ply.angle));
+    setLoadedConfigId(null); // Reset loaded config when applying optimization
+  };
+
+  const handleLoadConfiguration = (config: Configuration) => {
+    clearPlies();
+    config.plies.forEach(ply => addPly(ply.material, ply.angle));
+    setLoadedConfigId(config.id);
+    toast.success(`Loaded configuration: ${config.name}`);
+  };
+
+  const handleDeleteConfiguration = (id: string) => {
+    if (loadedConfigId === id) {
+      setLoadedConfigId(null);
+    }
+    deleteConfiguration(id);
   };
 
   return (
@@ -212,6 +244,7 @@ const Index = () => {
             <SaveConfigurationDialog
               onSave={handleSaveConfiguration}
               disabled={state.plies.length === 0}
+              isUpdate={!!loadedConfigId}
             />
           </div>
 
@@ -266,6 +299,8 @@ const Index = () => {
                   loading={configsLoading}
                   currentConfig={state.plies.length > 0 ? handleAddCurrentToComparison() : null}
                   onAddCurrent={() => {}}
+                  onLoadConfig={handleLoadConfiguration}
+                  onDeleteConfig={handleDeleteConfiguration}
                 />
               </TabsContent>
             </Tabs>

@@ -1,16 +1,18 @@
 import { useState } from 'react';
 import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { X, Plus } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Configuration } from '@/hooks/useConfigurations';
-import { ConfigurationSelector } from './ConfigurationSelector';
+import { ConfigurationActions } from './ConfigurationActions';
+import { Layers, Weight, Ruler } from 'lucide-react';
 
 interface ConfigurationComparisonProps {
   configurations: Configuration[];
   loading: boolean;
   currentConfig: Configuration | null;
   onAddCurrent: () => void;
+  onLoadConfig: (config: Configuration) => void;
+  onDeleteConfig: (id: string) => void;
 }
 
 export function ConfigurationComparison({
@@ -18,6 +20,8 @@ export function ConfigurationComparison({
   loading,
   currentConfig,
   onAddCurrent,
+  onLoadConfig,
+  onDeleteConfig,
 }: ConfigurationComparisonProps) {
   const [selectedConfigs, setSelectedConfigs] = useState<Configuration[]>([]);
 
@@ -37,150 +41,124 @@ export function ConfigurationComparison({
 
   return (
     <div className="space-y-6">
-      <Card className="p-6">
-        <h3 className="text-lg font-semibold mb-4 text-foreground">Configuration Comparison</h3>
-        <div className="flex gap-3 mb-4">
-          <Button onClick={onAddCurrent} disabled={!currentConfig}>
-            <Plus className="h-4 w-4 mr-2" />
-            Add Current Config
-          </Button>
-          <Button variant="outline" onClick={clearAll} disabled={selectedConfigs.length === 0}>
-            Clear All
-          </Button>
+      <div className="flex items-center justify-between">
+        <h3 className="text-lg font-semibold text-foreground">Saved Configurations</h3>
+        <Badge variant="outline">{configurations.length} saved</Badge>
+      </div>
+
+      {loading ? (
+        <div className="space-y-4">
+          {[1, 2, 3].map((i) => (
+            <Card key={i} className="p-6">
+              <Skeleton className="h-32 w-full" />
+            </Card>
+          ))}
         </div>
-
-        <ConfigurationSelector
-          configurations={configurations}
-          loading={loading}
-          onSelect={addConfiguration}
-          selectedIds={selectedConfigs.map(c => c.id)}
-        />
-      </Card>
-
-      {selectedConfigs.length === 0 ? (
-        <Card className="p-12 text-center">
-          <p className="text-muted-foreground">Add configurations to compare</p>
+      ) : configurations.length === 0 ? (
+        <Card className="p-12">
+          <div className="text-center text-muted-foreground">
+            <p className="text-lg mb-2">No saved configurations yet</p>
+            <p className="text-sm">Create and save your first laminate configuration to compare designs</p>
+          </div>
         </Card>
       ) : (
-        <div className="grid gap-6">
-          {/* Properties Comparison Table */}
-          <Card className="p-6 overflow-x-auto">
-            <h4 className="text-lg font-semibold mb-4 text-foreground">Properties Comparison</h4>
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-border">
-                  <th className="text-left py-3 px-4 font-medium">Property</th>
-                  {selectedConfigs.map((config) => (
-                    <th key={config.id} className="text-left py-3 px-4">
-                      <div className="flex items-center gap-2">
-                        <span className="font-medium truncate max-w-[150px]">{config.name}</span>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-6 w-6"
-                          onClick={() => removeConfiguration(config.id)}
-                        >
-                          <X className="h-4 w-4" />
-                        </Button>
+        <div className="grid gap-4">
+          {configurations.map((config) => (
+            <Card key={config.id} className="p-6">
+              <div className="space-y-4">
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <h4 className="font-semibold text-foreground text-lg mb-1">
+                      {config.name}
+                    </h4>
+                    {config.description && (
+                      <p className="text-sm text-muted-foreground mb-3">
+                        {config.description}
+                      </p>
+                    )}
+                    <div className="flex items-center gap-4 text-sm">
+                      <div className="flex items-center gap-1 text-muted-foreground">
+                        <Layers className="h-4 w-4" />
+                        <span>{config.plies.length} plies</span>
                       </div>
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                <tr className="border-b border-border">
-                  <td className="py-3 px-4 text-sm text-muted-foreground">Total Plies</td>
-                  {selectedConfigs.map((config) => (
-                    <td key={config.id} className="py-3 px-4 font-mono text-sm">
-                      {config.plies.length}
-                    </td>
-                  ))}
-                </tr>
-                <tr className="border-b border-border">
-                  <td className="py-3 px-4 text-sm text-muted-foreground">Total Thickness (mm)</td>
-                  {selectedConfigs.map((config) => (
-                    <td key={config.id} className="py-3 px-4 font-mono text-sm">
-                      {config.total_thickness?.toFixed(2) || 'N/A'}
-                    </td>
-                  ))}
-                </tr>
-                <tr className="border-b border-border">
-                  <td className="py-3 px-4 text-sm text-muted-foreground">Total Weight (g/m²)</td>
-                  {selectedConfigs.map((config) => (
-                    <td key={config.id} className="py-3 px-4 font-mono text-sm">
-                      {config.total_weight?.toFixed(2) || 'N/A'}
-                    </td>
-                  ))}
-                </tr>
-                <tr className="border-b border-border">
-                  <td className="py-3 px-4 text-sm text-muted-foreground">Ex (MPa)</td>
-                  {selectedConfigs.map((config) => (
-                    <td key={config.id} className="py-3 px-4 font-mono text-sm">
-                      {config.engineering_properties?.Ex?.toFixed(0) || 'N/A'}
-                    </td>
-                  ))}
-                </tr>
-                <tr className="border-b border-border">
-                  <td className="py-3 px-4 text-sm text-muted-foreground">Ey (MPa)</td>
-                  {selectedConfigs.map((config) => (
-                    <td key={config.id} className="py-3 px-4 font-mono text-sm">
-                      {config.engineering_properties?.Ey?.toFixed(0) || 'N/A'}
-                    </td>
-                  ))}
-                </tr>
-                <tr className="border-b border-border">
-                  <td className="py-3 px-4 text-sm text-muted-foreground">Gxy (MPa)</td>
-                  {selectedConfigs.map((config) => (
-                    <td key={config.id} className="py-3 px-4 font-mono text-sm">
-                      {config.engineering_properties?.Gxy?.toFixed(0) || 'N/A'}
-                    </td>
-                  ))}
-                </tr>
-                <tr className="border-b border-border">
-                  <td className="py-3 px-4 text-sm text-muted-foreground">νxy</td>
-                  {selectedConfigs.map((config) => (
-                    <td key={config.id} className="py-3 px-4 font-mono text-sm">
-                      {config.engineering_properties?.nuxy?.toFixed(3) || 'N/A'}
-                    </td>
-                  ))}
-                </tr>
-              </tbody>
-            </table>
-          </Card>
+                      {config.total_thickness && (
+                        <div className="flex items-center gap-1 text-muted-foreground">
+                          <Ruler className="h-4 w-4" />
+                          <span>{config.total_thickness.toFixed(2)} mm</span>
+                        </div>
+                      )}
+                      {config.total_weight && (
+                        <div className="flex items-center gap-1 text-muted-foreground">
+                          <Weight className="h-4 w-4" />
+                          <span>{config.total_weight.toFixed(2)} g</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
 
-          {/* Ply Stacks */}
-          <Card className="p-6">
-            <h4 className="text-lg font-semibold mb-4 text-foreground">Ply Stacks</h4>
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {selectedConfigs.map((config) => (
-                <div key={config.id} className="border border-border rounded-lg p-4">
-                  <h5 className="font-semibold mb-2 text-sm">{config.name}</h5>
-                  <div className="space-y-1">
-                    {config.plies.map((ply, idx) => (
-                      <div key={idx} className="flex justify-between text-xs">
-                        <span className="text-muted-foreground">
-                          {idx + 1}. {ply.material}
-                        </span>
-                        <Badge variant="outline" className="text-xs">
-                          {ply.angle}°
-                        </Badge>
+                <div className="bg-muted/50 rounded-lg p-3">
+                  <p className="text-xs font-medium text-muted-foreground mb-2">Ply Stack:</p>
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
+                    {config.plies.map((ply, index) => (
+                      <div
+                        key={index}
+                        className="text-xs bg-background rounded px-2 py-1 border border-border"
+                      >
+                        <span className="font-mono text-muted-foreground">#{index + 1}:</span>{' '}
+                        <span className="text-foreground">{ply.material}</span>{' '}
+                        <span className="text-primary">@ {ply.angle}°</span>
                       </div>
                     ))}
                   </div>
                 </div>
-              ))}
-            </div>
-          </Card>
+
+                {config.engineering_properties && (
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+                    <div>
+                      <div className="text-muted-foreground text-xs">Ex</div>
+                      <div className="font-medium text-foreground">
+                        {config.engineering_properties.Ex.toFixed(0)} MPa
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-muted-foreground text-xs">Ey</div>
+                      <div className="font-medium text-foreground">
+                        {config.engineering_properties.Ey.toFixed(0)} MPa
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-muted-foreground text-xs">Gxy</div>
+                      <div className="font-medium text-foreground">
+                        {config.engineering_properties.Gxy.toFixed(0)} MPa
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-muted-foreground text-xs">νxy</div>
+                      <div className="font-medium text-foreground">
+                        {config.engineering_properties.nuxy.toFixed(3)}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                <ConfigurationActions
+                  config={config}
+                  onLoad={onLoadConfig}
+                  onDelete={onDeleteConfig}
+                />
+
+                <div className="text-xs text-muted-foreground pt-2 border-t border-border">
+                  Created: {new Date(config.created_at).toLocaleDateString()}
+                  {config.updated_at !== config.created_at && (
+                    <> • Updated: {new Date(config.updated_at).toLocaleDateString()}</>
+                  )}
+                </div>
+              </div>
+            </Card>
+          ))}
         </div>
       )}
-
-      <Card className="p-6">
-        <h4 className="text-lg font-semibold mb-2 text-foreground">Design Recommendations</h4>
-        <p className="text-sm text-muted-foreground">
-          Compare different laminate configurations to find the optimal design for your application.
-          Consider trade-offs between weight, stiffness, and manufacturing complexity.
-        </p>
-      </Card>
     </div>
   );
 }
