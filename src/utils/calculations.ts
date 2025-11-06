@@ -101,10 +101,10 @@ export function calculateStressStrain(
     const cos2 = cos * cos;
     const sin2 = sin * sin;
 
-    // Transform to material coordinates (1-2 system)
+    // Transform to material coordinates (1-2 system) using correct transformation
     const sigma_1 = sigma_x * cos2 + sigma_y * sin2 + 2 * tau_xy * sin * cos;
     const sigma_2 = sigma_x * sin2 + sigma_y * cos2 - 2 * tau_xy * sin * cos;
-    const tau_12 = (sigma_y - sigma_x) * sin * cos + tau_xy * (cos2 - sin2);
+    const tau_12 = -(sigma_x - sigma_y) * sin * cos + tau_xy * (cos2 - sin2);
 
     // Calculate strains using material properties
     const E1 = material.E1;
