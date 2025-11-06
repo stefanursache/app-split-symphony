@@ -16,6 +16,7 @@ import { SaveConfigurationDialog } from '@/components/composite/SaveConfiguratio
 import { FailureCriteriaSelector } from '@/components/composite/FailureCriteriaSelector';
 import { PlyFailureAnalysis } from '@/components/composite/PlyFailureAnalysis';
 import { SafetyMarginSummary } from '@/components/composite/SafetyMarginSummary';
+import { LaminateOptimizer } from '@/components/composite/LaminateOptimizer';
 import { calculateEngineeringProperties, calculateStressStrain } from '@/utils/calculations';
 import { calculateABDMatrix } from '@/utils/abdMatrix';
 import { calculateFailureAnalysis, calculateSafetySummary, FailureResult } from '@/utils/failureAnalysis';
@@ -151,6 +152,11 @@ const Index = () => {
     return calculateSafetySummary(failureResults, safetyFactor);
   }, [failureResults, safetyFactor]);
 
+  const handleApplyOptimization = (plies: any[]) => {
+    clearPlies();
+    plies.forEach(ply => addPly(ply.material, ply.angle));
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b border-border bg-card sticky top-0 z-50">
@@ -212,11 +218,12 @@ const Index = () => {
           {/* Right Panel - Analysis */}
           <div className="lg:col-span-2 space-y-6">
             <Tabs value={state.activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="grid w-full grid-cols-4">
+              <TabsList className="grid w-full grid-cols-5">
                 <TabsTrigger value="properties">Properties</TabsTrigger>
-                <TabsTrigger value="stress">Stress Analysis</TabsTrigger>
-                <TabsTrigger value="failure">Failure Analysis</TabsTrigger>
-                <TabsTrigger value="comparison">Comparison</TabsTrigger>
+                <TabsTrigger value="stress">Stress</TabsTrigger>
+                <TabsTrigger value="failure">Failure</TabsTrigger>
+                <TabsTrigger value="optimize">Optimize</TabsTrigger>
+                <TabsTrigger value="comparison">Compare</TabsTrigger>
               </TabsList>
 
               <TabsContent value="properties" className="mt-6 space-y-6">
@@ -243,6 +250,14 @@ const Index = () => {
                 />
                 <PlyFailureAnalysis results={failureResults} />
                 <SafetyMarginSummary summary={safetySummary} />
+              </TabsContent>
+
+              <TabsContent value="optimize" className="mt-6">
+                <LaminateOptimizer
+                  currentPlies={state.plies}
+                  materials={materials}
+                  onApplySuggestion={handleApplyOptimization}
+                />
               </TabsContent>
 
               <TabsContent value="comparison" className="mt-6">
