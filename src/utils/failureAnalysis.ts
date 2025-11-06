@@ -45,24 +45,80 @@ export function calculateFailureAnalysis(
       };
     }
 
-    const { sigma_1, sigma_2, tau_12 } = stresses[index];
-    let failureIndex = 0;
-    let failureMode = 'No failure';
+    const stress = stresses[index];
+    
+    // Calculate failure index at both top and bottom surfaces, use worst case
+    let failureIndexBottom = 0;
+    let failureIndexTop = 0;
+    let failureModeBottom = 'No failure';
+    let failureModeTop = 'No failure';
 
     switch (failureCriterion) {
       case 'max_stress':
-        failureIndex = calculateMaxStressFailure(sigma_1, sigma_2, tau_12, material);
-        failureMode = determineMaxStressFailureMode(sigma_1, sigma_2, tau_12, material);
+        failureIndexBottom = calculateMaxStressFailure(
+          stress.sigma_1_bottom, 
+          stress.sigma_2_bottom, 
+          stress.tau_12_bottom, 
+          material
+        );
+        failureIndexTop = calculateMaxStressFailure(
+          stress.sigma_1_top, 
+          stress.sigma_2_top, 
+          stress.tau_12_top, 
+          material
+        );
+        failureModeBottom = determineMaxStressFailureMode(
+          stress.sigma_1_bottom, 
+          stress.sigma_2_bottom, 
+          stress.tau_12_bottom, 
+          material
+        );
+        failureModeTop = determineMaxStressFailureMode(
+          stress.sigma_1_top, 
+          stress.sigma_2_top, 
+          stress.tau_12_top, 
+          material
+        );
         break;
       case 'tsai_wu':
-        failureIndex = calculateTsaiWuFailure(sigma_1, sigma_2, tau_12, material);
-        failureMode = 'Tsai-Wu criterion';
+        failureIndexBottom = calculateTsaiWuFailure(
+          stress.sigma_1_bottom, 
+          stress.sigma_2_bottom, 
+          stress.tau_12_bottom, 
+          material
+        );
+        failureIndexTop = calculateTsaiWuFailure(
+          stress.sigma_1_top, 
+          stress.sigma_2_top, 
+          stress.tau_12_top, 
+          material
+        );
+        failureModeBottom = 'Tsai-Wu criterion';
+        failureModeTop = 'Tsai-Wu criterion';
         break;
       case 'tsai_hill':
-        failureIndex = calculateTsaiHillFailure(sigma_1, sigma_2, tau_12, material);
-        failureMode = 'Tsai-Hill criterion';
+        failureIndexBottom = calculateTsaiHillFailure(
+          stress.sigma_1_bottom, 
+          stress.sigma_2_bottom, 
+          stress.tau_12_bottom, 
+          material
+        );
+        failureIndexTop = calculateTsaiHillFailure(
+          stress.sigma_1_top, 
+          stress.sigma_2_top, 
+          stress.tau_12_top, 
+          material
+        );
+        failureModeBottom = 'Tsai-Hill criterion';
+        failureModeTop = 'Tsai-Hill criterion';
         break;
     }
+
+    // Use the worst case (higher failure index = closer to failure)
+    const failureIndex = Math.max(failureIndexBottom, failureIndexTop);
+    const failureMode = failureIndexBottom > failureIndexTop 
+      ? `${failureModeBottom} (bottom surface)` 
+      : `${failureModeTop} (top surface)`;
 
     const safetyMargin = ((1 / failureIndex) - 1) * 100;
     const isPassed = failureIndex * safetyFactor < 1;

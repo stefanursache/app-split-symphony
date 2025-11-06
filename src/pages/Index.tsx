@@ -23,6 +23,7 @@ import { LaminateOptimizer } from '@/components/composite/LaminateOptimizer';
 import { LoadCaseManager } from '@/components/composite/LoadCaseManager';
 import { StressVisualization } from '@/components/composite/StressVisualization';
 import { PDFReportExport } from '@/components/composite/PDFReportExport';
+import { GeometrySelector } from '@/components/composite/GeometrySelector';
 import { calculateEngineeringProperties, calculateStressStrain } from '@/utils/calculations';
 import { calculateABDMatrix } from '@/utils/abdMatrix';
 import { calculateFailureAnalysis, calculateSafetySummary, FailureResult } from '@/utils/failureAnalysis';
