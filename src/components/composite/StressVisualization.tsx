@@ -27,7 +27,14 @@ export function StressVisualization({ plies, materials, stressResults }: StressV
 
     let z = -totalThickness / 2;
     const maxStress = Math.max(...stressResults.map(r => 
-      Math.max(Math.abs(r.sigma_1), Math.abs(r.sigma_2), Math.abs(r.tau_12))
+      Math.max(
+        Math.abs(r.sigma_1_bottom || 0),
+        Math.abs(r.sigma_1_top || 0),
+        Math.abs(r.sigma_2_bottom || 0),
+        Math.abs(r.sigma_2_top || 0),
+        Math.abs(r.tau_12_bottom || 0),
+        Math.abs(r.tau_12_top || 0)
+      )
     ));
 
     return plies.map((ply, idx) => {
@@ -39,6 +46,11 @@ export function StressVisualization({ plies, materials, stressResults }: StressV
       const zEnd = z + thickness;
       z = zEnd;
 
+      // Use maximum stresses from top and bottom
+      const sigma_1 = Math.max(Math.abs(result?.sigma_1_bottom || 0), Math.abs(result?.sigma_1_top || 0));
+      const sigma_2 = Math.max(Math.abs(result?.sigma_2_bottom || 0), Math.abs(result?.sigma_2_top || 0));
+      const tau_12 = Math.max(Math.abs(result?.tau_12_bottom || 0), Math.abs(result?.tau_12_top || 0));
+
       return {
         plyNumber: idx + 1,
         material: ply.material,
@@ -46,11 +58,11 @@ export function StressVisualization({ plies, materials, stressResults }: StressV
         zStart,
         zEnd,
         thickness,
-        sigma_1: result?.sigma_1 || 0,
-        sigma_2: result?.sigma_2 || 0,
-        tau_12: result?.tau_12 || 0,
+        sigma_1,
+        sigma_2,
+        tau_12,
         maxStress,
-        vonMises: result?.vonMises || 0
+        vonMises: result?.von_mises || 0
       };
     });
   }, [plies, materials, stressResults]);
@@ -161,7 +173,7 @@ export function StressVisualization({ plies, materials, stressResults }: StressV
         
         {/* Stress values table */}
         <div>
-          <h4 className="text-sm font-semibold mb-3 text-foreground">Stress Components (MPa)</h4>
+          <h4 className="text-sm font-semibold mb-3 text-foreground">Max Stress Components (MPa)</h4>
           <div className="space-y-3">
             {visualizationData.map((ply) => (
               <div key={ply.plyNumber} className="p-3 rounded border border-border bg-muted/20">
@@ -173,15 +185,15 @@ export function StressVisualization({ plies, materials, stressResults }: StressV
                 </div>
                 <div className="grid grid-cols-2 gap-2 text-xs">
                   <div>
-                    <span className="text-muted-foreground">σ₁:</span>
+                    <span className="text-muted-foreground">Max |σ₁|:</span>
                     <span className="ml-1 font-mono text-foreground">{ply.sigma_1.toFixed(2)}</span>
                   </div>
                   <div>
-                    <span className="text-muted-foreground">σ₂:</span>
+                    <span className="text-muted-foreground">Max |σ₂|:</span>
                     <span className="ml-1 font-mono text-foreground">{ply.sigma_2.toFixed(2)}</span>
                   </div>
                   <div>
-                    <span className="text-muted-foreground">τ₁₂:</span>
+                    <span className="text-muted-foreground">Max |τ₁₂|:</span>
                     <span className="ml-1 font-mono text-foreground">{ply.tau_12.toFixed(2)}</span>
                   </div>
                   <div>

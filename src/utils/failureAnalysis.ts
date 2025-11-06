@@ -20,7 +20,14 @@ export interface SafetySummary {
 export function calculateFailureAnalysis(
   plies: Ply[],
   materials: Record<string, Material>,
-  stresses: Array<{ sigma_1: number; sigma_2: number; tau_12: number }>,
+  stresses: Array<{ 
+    sigma_1_bottom: number; 
+    sigma_2_bottom: number; 
+    tau_12_bottom: number;
+    sigma_1_top: number; 
+    sigma_2_top: number; 
+    tau_12_top: number;
+  }>,
   safetyFactor: number,
   failureCriterion: 'max_stress' | 'tsai_wu' | 'tsai_hill'
 ): FailureResult[] {

@@ -30,6 +30,7 @@ import { Material } from '@/types/materials';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Moon, Sun } from 'lucide-react';
+import { GeometryConfig } from '@/types/geometry';
 
 const Index = () => {
   const { materials, addMaterial, updateMaterial } = useMaterials();
@@ -61,6 +62,11 @@ const Index = () => {
   const [safetyFactor, setSafetyFactor] = useState(1.5);
   const [failureCriterion, setFailureCriterion] = useState<'max_stress' | 'tsai_wu' | 'tsai_hill'>('max_stress');
   const [loadedConfigId, setLoadedConfigId] = useState<string | null>(null);
+  const [geometry, setGeometry] = useState<GeometryConfig>({
+    type: 'tube',
+    outerDiameter: state.outerDiameter,
+    innerDiameter: state.innerDiameter
+  });
 
   const selectedMaterialData = materials[state.selectedMaterial] || null;
 
@@ -110,7 +116,7 @@ const Index = () => {
       state.plies,
       materials,
       state.loads,
-      state.outerDiameter
+      geometry
     );
     setStressResults(results);
 
@@ -371,6 +377,10 @@ const Index = () => {
               </TabsContent>
 
               <TabsContent value="stress" className="mt-6 space-y-6">
+                <GeometrySelector
+                  geometry={geometry}
+                  onGeometryChange={setGeometry}
+                />
                 <LoadInputs
                   loads={state.loads}
                   onUpdateLoads={updateLoads}

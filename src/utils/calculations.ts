@@ -1,4 +1,15 @@
 import { Material, Ply, EngineeringProperties, StressResult } from '@/types/materials';
+import { GeometryConfig } from '@/types/geometry';
+import { calculateABDMatrix } from './abdMatrix';
+import {
+  calculateStrainsAndCurvatures,
+  calculatePlyPositions,
+  transformLoadsForPlate,
+  transformLoadsForTube,
+  calculateStrainsAtZ,
+  transformStrainsToMaterial,
+  calculateStressesFromStrains
+} from './cltCalculations';
 
 export function calculateEngineeringProperties(
   plies: Ply[],
@@ -48,8 +59,6 @@ export function calculateEngineeringProperties(
     h += t;
   });
 
-  const det = A11 * A22 - A12 * A12;
-  
   const Ex = (A11 * A22 - A12 * A12) / (A22 * h);
   const Ey = (A11 * A22 - A12 * A12) / (A11 * h);
   const Gxy = A66 / h;
@@ -62,93 +71,125 @@ export function calculateStressStrain(
   plies: Ply[],
   materials: Record<string, Material>,
   loads: { axial: number; bending: number; torsion: number },
-  outerDiameter: number
+  geometry: GeometryConfig
 ): StressResult[] {
   if (plies.length === 0) return [];
 
-  const h = plies.reduce((sum, ply) => sum + materials[ply.material]?.thickness || 0, 0);
-  const innerDiameter = outerDiameter - 2 * h;
-  const area = Math.PI * (outerDiameter * outerDiameter - innerDiameter * innerDiameter) / 4;
+  const totalThickness = plies.reduce(
+    (sum, ply) => sum + (materials[ply.material]?.thickness || 0),
+    0
+  );
 
-  const Nx = loads.axial;
-  const Mx = loads.bending;
-  const Mt = loads.torsion;
+  // Calculate ABD matrix
+  const abdMatrix = calculateABDMatrix(plies, materials);
 
-  const I = Math.PI * (Math.pow(outerDiameter, 4) - Math.pow(innerDiameter, 4)) / 64;
-  const c = outerDiameter / 2;
-  const r_mean = (outerDiameter + innerDiameter) / 4;
-  const J = Math.PI * (Math.pow(outerDiameter, 4) - Math.pow(innerDiameter, 4)) / 32;
+  // Transform loads based on geometry type
+  const transformedLoads = geometry.type === 'plate'
+    ? transformLoadsForPlate(loads)
+    : transformLoadsForTube(loads, geometry, totalThickness);
 
-  const sigma_axial = Nx / area;
-  const sigma_bending = Mx * c / I;
-  const tau_torsion = Mt * r_mean / J;
+  // Calculate mid-plane strains and curvatures
+  const { strains, curvatures } = calculateStrainsAndCurvatures(
+    abdMatrix,
+    transformedLoads
+  );
 
+  // Get ply positions through thickness
+  const plyPositions = calculatePlyPositions(plies, materials);
+
+  // Calculate stresses for each ply
   const results: StressResult[] = [];
 
   plies.forEach((ply, index) => {
     const material = materials[ply.material];
     if (!material) return;
 
-    const angleRad = ply.angle * Math.PI / 180;
+    const { z_bottom, z_top } = plyPositions[index];
+    const z_mid = (z_bottom + z_top) / 2;
 
-    // Global stresses
-    const sigma_x = sigma_axial + sigma_bending;
-    const sigma_y = 0;
-    const tau_xy = tau_torsion;
+    // Calculate strains at bottom and top of ply
+    const strainsBottom = calculateStrainsAtZ(z_bottom, strains, curvatures);
+    const strainsTop = calculateStrainsAtZ(z_top, strains, curvatures);
+    const strainsMid = calculateStrainsAtZ(z_mid, strains, curvatures);
 
-    const cos = Math.cos(angleRad);
-    const sin = Math.sin(angleRad);
-    const cos2 = cos * cos;
-    const sin2 = sin * sin;
-
-    // Transform to material coordinates (1-2 system) using correct transformation
-    const sigma_1 = sigma_x * cos2 + sigma_y * sin2 + 2 * tau_xy * sin * cos;
-    const sigma_2 = sigma_x * sin2 + sigma_y * cos2 - 2 * tau_xy * sin * cos;
-    const tau_12 = -(sigma_x - sigma_y) * sin * cos + tau_xy * (cos2 - sin2);
-
-    // Calculate strains using material properties
-    const E1 = material.E1;
-    const E2 = material.E2;
-    const G12 = material.G12;
-    const nu12 = material.nu12;
-    const nu21 = nu12 * E2 / E1;
-
-    // Compliance matrix components (S matrix)
-    const S11 = 1 / E1;
-    const S12 = -nu12 / E1;
-    const S22 = 1 / E2;
-    const S66 = 1 / G12;
-
-    // Strains in material coordinates
-    const epsilon_1 = S11 * sigma_1 + S12 * sigma_2;
-    const epsilon_2 = S12 * sigma_1 + S22 * sigma_2;
-    const gamma_12 = S66 * tau_12;
-
-    // Principal stresses (for global stress state)
-    const sigma_avg = (sigma_x + sigma_y) / 2;
-    const R = Math.sqrt(Math.pow((sigma_x - sigma_y) / 2, 2) + tau_xy * tau_xy);
-    const sigma_principal_max = sigma_avg + R;
-    const sigma_principal_min = sigma_avg - R;
-    const tau_max = R;
-
-    // von Mises stress
-    const von_mises = Math.sqrt(
-      sigma_1 * sigma_1 + sigma_2 * sigma_2 - sigma_1 * sigma_2 + 3 * tau_12 * tau_12
+    // Transform to material coordinates
+    const materialStrainsBottom = transformStrainsToMaterial(
+      strainsBottom.epsilon_x,
+      strainsBottom.epsilon_y,
+      strainsBottom.gamma_xy,
+      ply.angle
     );
+    const materialStrainsTop = transformStrainsToMaterial(
+      strainsTop.epsilon_x,
+      strainsTop.epsilon_y,
+      strainsTop.gamma_xy,
+      ply.angle
+    );
+
+    // Calculate stresses
+    const stressesBottom = calculateStressesFromStrains(
+      materialStrainsBottom.epsilon_1,
+      materialStrainsBottom.epsilon_2,
+      materialStrainsBottom.gamma_12,
+      material
+    );
+    const stressesTop = calculateStressesFromStrains(
+      materialStrainsTop.epsilon_1,
+      materialStrainsTop.epsilon_2,
+      materialStrainsTop.gamma_12,
+      material
+    );
+
+    // Calculate principal stresses (use maximum magnitudes)
+    const allStresses = [
+      stressesBottom.sigma_1,
+      stressesBottom.sigma_2,
+      stressesTop.sigma_1,
+      stressesTop.sigma_2
+    ];
+    const sigma_principal_max = Math.max(...allStresses);
+    const sigma_principal_min = Math.min(...allStresses);
+    const tau_max = Math.max(
+      Math.abs(stressesBottom.tau_12),
+      Math.abs(stressesTop.tau_12)
+    );
+
+    // von Mises (use maximum from top or bottom)
+    const von_mises_bottom = Math.sqrt(
+      stressesBottom.sigma_1 * stressesBottom.sigma_1 +
+      stressesBottom.sigma_2 * stressesBottom.sigma_2 -
+      stressesBottom.sigma_1 * stressesBottom.sigma_2 +
+      3 * stressesBottom.tau_12 * stressesBottom.tau_12
+    );
+    const von_mises_top = Math.sqrt(
+      stressesTop.sigma_1 * stressesTop.sigma_1 +
+      stressesTop.sigma_2 * stressesTop.sigma_2 -
+      stressesTop.sigma_1 * stressesTop.sigma_2 +
+      3 * stressesTop.tau_12 * stressesTop.tau_12
+    );
+    const von_mises = Math.max(von_mises_bottom, von_mises_top);
 
     results.push({
       ply: index + 1,
       material: material.name,
       angle: ply.angle,
-      sigma_1,
-      sigma_2,
-      tau_12,
-      epsilon_1,
-      epsilon_2,
-      gamma_12,
-      sigma_x,
-      sigma_y,
-      tau_xy,
+      z_bottom,
+      z_top,
+      sigma_1_bottom: stressesBottom.sigma_1,
+      sigma_2_bottom: stressesBottom.sigma_2,
+      tau_12_bottom: stressesBottom.tau_12,
+      sigma_1_top: stressesTop.sigma_1,
+      sigma_2_top: stressesTop.sigma_2,
+      tau_12_top: stressesTop.tau_12,
+      epsilon_1_bottom: materialStrainsBottom.epsilon_1,
+      epsilon_2_bottom: materialStrainsBottom.epsilon_2,
+      gamma_12_bottom: materialStrainsBottom.gamma_12,
+      epsilon_1_top: materialStrainsTop.epsilon_1,
+      epsilon_2_top: materialStrainsTop.epsilon_2,
+      gamma_12_top: materialStrainsTop.gamma_12,
+      sigma_x: strainsMid.epsilon_x,
+      sigma_y: strainsMid.epsilon_y,
+      tau_xy: strainsMid.gamma_xy,
       sigma_principal_max,
       sigma_principal_min,
       tau_max,

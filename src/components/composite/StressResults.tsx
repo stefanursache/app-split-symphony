@@ -44,44 +44,81 @@ export function StressResults({ results }: StressResultsProps) {
         </TabsList>
 
         <TabsContent value="material" className="mt-4 space-y-4">
-          {results.map((result, index) => (
-            <div key={index} className="p-4 rounded-lg border border-border bg-card">
-              <div className="flex items-center justify-between mb-3">
-                <div className="font-medium text-foreground">
-                  Ply {result.ply}: {result.material} @ {result.angle}°
+          {results.map((result, index) => {
+            // Use maximum absolute values from top and bottom
+            const maxSigma1 = Math.max(Math.abs(result.sigma_1_bottom), Math.abs(result.sigma_1_top));
+            const maxSigma2 = Math.max(Math.abs(result.sigma_2_bottom), Math.abs(result.sigma_2_top));
+            const maxTau12 = Math.max(Math.abs(result.tau_12_bottom), Math.abs(result.tau_12_top));
+            
+            return (
+              <div key={index} className="p-4 rounded-lg border border-border bg-card">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="font-medium text-foreground">
+                    Ply {result.ply}: {result.material} @ {result.angle}°
+                  </div>
+                  <Badge variant="outline" className="text-xs">
+                    Material Coordinates (z: {result.z_bottom.toFixed(2)} to {result.z_top.toFixed(2)} mm)
+                  </Badge>
                 </div>
-                <Badge variant="outline" className="text-xs">
-                  Material Coordinates
-                </Badge>
+                <div className="space-y-3">
+                  <div className="text-xs font-semibold text-muted-foreground">Bottom Surface:</div>
+                  <div className="grid grid-cols-3 gap-4 text-sm">
+                    <div>
+                      <div className="text-muted-foreground mb-1">σ₁ (Longitudinal)</div>
+                      <div className="font-mono font-medium flex items-center gap-1">
+                        {getStressIcon(result.sigma_1_bottom)}
+                        <span className={getStressColor(result.sigma_1_bottom, 1000)}>
+                          {result.sigma_1_bottom.toFixed(2)} MPa
+                        </span>
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-muted-foreground mb-1">σ₂ (Transverse)</div>
+                      <div className="font-mono font-medium flex items-center gap-1">
+                        {getStressIcon(result.sigma_2_bottom)}
+                        <span className={getStressColor(result.sigma_2_bottom, 1000)}>
+                          {result.sigma_2_bottom.toFixed(2)} MPa
+                        </span>
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-muted-foreground mb-1">τ₁₂ (Shear)</div>
+                      <div className="font-mono font-medium">
+                        {result.tau_12_bottom.toFixed(2)} MPa
+                      </div>
+                    </div>
+                  </div>
+                  <div className="text-xs font-semibold text-muted-foreground pt-2">Top Surface:</div>
+                  <div className="grid grid-cols-3 gap-4 text-sm">
+                    <div>
+                      <div className="text-muted-foreground mb-1">σ₁ (Longitudinal)</div>
+                      <div className="font-mono font-medium flex items-center gap-1">
+                        {getStressIcon(result.sigma_1_top)}
+                        <span className={getStressColor(result.sigma_1_top, 1000)}>
+                          {result.sigma_1_top.toFixed(2)} MPa
+                        </span>
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-muted-foreground mb-1">σ₂ (Transverse)</div>
+                      <div className="font-mono font-medium flex items-center gap-1">
+                        {getStressIcon(result.sigma_2_top)}
+                        <span className={getStressColor(result.sigma_2_top, 1000)}>
+                          {result.sigma_2_top.toFixed(2)} MPa
+                        </span>
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-muted-foreground mb-1">τ₁₂ (Shear)</div>
+                      <div className="font-mono font-medium">
+                        {result.tau_12_top.toFixed(2)} MPa
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
-              <div className="grid grid-cols-3 gap-4 text-sm">
-                <div>
-                  <div className="text-muted-foreground mb-1">σ₁ (Longitudinal)</div>
-                  <div className="font-mono font-medium flex items-center gap-1">
-                    {getStressIcon(result.sigma_1)}
-                    <span className={getStressColor(result.sigma_1, 1000)}>
-                      {result.sigma_1.toFixed(2)} MPa
-                    </span>
-                  </div>
-                </div>
-                <div>
-                  <div className="text-muted-foreground mb-1">σ₂ (Transverse)</div>
-                  <div className="font-mono font-medium flex items-center gap-1">
-                    {getStressIcon(result.sigma_2)}
-                    <span className={getStressColor(result.sigma_2, 1000)}>
-                      {result.sigma_2.toFixed(2)} MPa
-                    </span>
-                  </div>
-                </div>
-                <div>
-                  <div className="text-muted-foreground mb-1">τ₁₂ (Shear)</div>
-                  <div className="font-mono font-medium">
-                    {result.tau_12.toFixed(2)} MPa
-                  </div>
-                </div>
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </TabsContent>
 
         <TabsContent value="global" className="mt-4 space-y-4">
@@ -92,7 +129,7 @@ export function StressResults({ results }: StressResultsProps) {
                   Ply {result.ply}: {result.material} @ {result.angle}°
                 </div>
                 <Badge variant="outline" className="text-xs">
-                  Global Coordinates
+                  Global Coordinates (Mid-plane)
                 </Badge>
               </div>
               <div className="grid grid-cols-3 gap-4 text-sm">
@@ -129,7 +166,7 @@ export function StressResults({ results }: StressResultsProps) {
                   Ply {result.ply}: {result.material} @ {result.angle}°
                 </div>
                 <Badge variant="outline" className="text-xs">
-                  Principal Stresses
+                  Principal Stresses (Maximum)
                 </Badge>
               </div>
               <div className="grid grid-cols-2 gap-4 text-sm">
@@ -179,25 +216,51 @@ export function StressResults({ results }: StressResultsProps) {
                   Material Strains
                 </Badge>
               </div>
-              <div className="grid grid-cols-3 gap-4 text-sm">
-                <div>
-                  <div className="text-muted-foreground mb-1">ε₁ (Longitudinal)</div>
-                  <div className="font-mono font-medium flex items-center gap-1">
-                    {getStressIcon(result.epsilon_1)}
-                    {(result.epsilon_1 * 1000000).toFixed(0)} με
+              <div className="space-y-3">
+                <div className="text-xs font-semibold text-muted-foreground">Bottom Surface:</div>
+                <div className="grid grid-cols-3 gap-4 text-sm">
+                  <div>
+                    <div className="text-muted-foreground mb-1">ε₁ (Longitudinal)</div>
+                    <div className="font-mono font-medium flex items-center gap-1">
+                      {getStressIcon(result.epsilon_1_bottom)}
+                      {(result.epsilon_1_bottom * 1000000).toFixed(0)} με
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-muted-foreground mb-1">ε₂ (Transverse)</div>
+                    <div className="font-mono font-medium flex items-center gap-1">
+                      {getStressIcon(result.epsilon_2_bottom)}
+                      {(result.epsilon_2_bottom * 1000000).toFixed(0)} με
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-muted-foreground mb-1">γ₁₂ (Shear)</div>
+                    <div className="font-mono font-medium">
+                      {(result.gamma_12_bottom * 1000000).toFixed(0)} με
+                    </div>
                   </div>
                 </div>
-                <div>
-                  <div className="text-muted-foreground mb-1">ε₂ (Transverse)</div>
-                  <div className="font-mono font-medium flex items-center gap-1">
-                    {getStressIcon(result.epsilon_2)}
-                    {(result.epsilon_2 * 1000000).toFixed(0)} με
+                <div className="text-xs font-semibold text-muted-foreground pt-2">Top Surface:</div>
+                <div className="grid grid-cols-3 gap-4 text-sm">
+                  <div>
+                    <div className="text-muted-foreground mb-1">ε₁ (Longitudinal)</div>
+                    <div className="font-mono font-medium flex items-center gap-1">
+                      {getStressIcon(result.epsilon_1_top)}
+                      {(result.epsilon_1_top * 1000000).toFixed(0)} με
+                    </div>
                   </div>
-                </div>
-                <div>
-                  <div className="text-muted-foreground mb-1">γ₁₂ (Shear)</div>
-                  <div className="font-mono font-medium">
-                    {(result.gamma_12 * 1000000).toFixed(0)} με
+                  <div>
+                    <div className="text-muted-foreground mb-1">ε₂ (Transverse)</div>
+                    <div className="font-mono font-medium flex items-center gap-1">
+                      {getStressIcon(result.epsilon_2_top)}
+                      {(result.epsilon_2_top * 1000000).toFixed(0)} με
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-muted-foreground mb-1">γ₁₂ (Shear)</div>
+                    <div className="font-mono font-medium">
+                      {(result.gamma_12_top * 1000000).toFixed(0)} με
+                    </div>
                   </div>
                 </div>
               </div>

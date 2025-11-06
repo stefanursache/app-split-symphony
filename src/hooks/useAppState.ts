@@ -17,7 +17,9 @@ const initialState: AppState = {
   editingMaterial: null,
   outerDiameter: 130,
   innerDiameter: 124,
-  operatingTemp: "-40°C to 60°C"
+  operatingTemp: "-40°C to 60°C",
+  geometryType: 'tube',
+  plateWidth: 100
 };
 
 export function useAppState() {

@@ -37,15 +37,29 @@ export interface StressResult {
   ply: number;
   material: string;
   angle: number;
-  sigma_1: number;
-  sigma_2: number;
-  tau_12: number;
-  epsilon_1: number;
-  epsilon_2: number;
-  gamma_12: number;
+  z_bottom: number;
+  z_top: number;
+  // Stresses at bottom of ply
+  sigma_1_bottom: number;
+  sigma_2_bottom: number;
+  tau_12_bottom: number;
+  // Stresses at top of ply
+  sigma_1_top: number;
+  sigma_2_top: number;
+  tau_12_top: number;
+  // Strains at bottom
+  epsilon_1_bottom: number;
+  epsilon_2_bottom: number;
+  gamma_12_bottom: number;
+  // Strains at top
+  epsilon_1_top: number;
+  epsilon_2_top: number;
+  gamma_12_top: number;
+  // Global stresses (at mid-plane)
   sigma_x: number;
   sigma_y: number;
   tau_xy: number;
+  // Principal stresses (maximum of top/bottom)
   sigma_principal_max: number;
   sigma_principal_min: number;
   tau_max: number;
@@ -65,4 +79,6 @@ export interface AppState {
   outerDiameter: number;
   innerDiameter: number;
   operatingTemp: string;
+  geometryType: 'plate' | 'tube';
+  plateWidth?: number;
 }
