@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { Card } from '@/components/ui/card';
-import { Canvas as FabricCanvas, Rect, Text as FabricText } from 'fabric';
+import { Canvas as FabricCanvas, Rect, Text as FabricText, Shadow } from 'fabric';
 import { Material, Ply } from '@/types/materials';
 
 interface CrossSectionVisualizationProps {
@@ -35,7 +35,7 @@ export function CrossSectionVisualization({ plies, materials }: CrossSectionVisu
     if (!canvas) return;
 
     canvas.clear();
-    canvas.backgroundColor = 'hsl(var(--card))';
+    canvas.backgroundColor = 'hsl(var(--background))';
 
     if (plies.length === 0) {
       const noDataText = new FabricText('Add plies to view cross-section', {
@@ -58,12 +58,13 @@ export function CrossSectionVisualization({ plies, materials }: CrossSectionVisu
       return sum + (material?.thickness || 0);
     }, 0);
 
-    const maxHeight = 300;
-    const width = 400;
+    const maxHeight = 320;
+    const width = 450;
     const scale = maxHeight / Math.max(totalThickness, 1);
     
-    let currentY = 50;
-    const startX = 100;
+    let currentY = 30;
+    const startX = 75;
+    let zPosition = -totalThickness / 2;
 
     plies.forEach((ply, index) => {
       const material = materials[ply.material];
@@ -71,7 +72,18 @@ export function CrossSectionVisualization({ plies, materials }: CrossSectionVisu
 
       const plyHeight = material.thickness * scale;
 
-      // Draw ply layer
+      // Draw 3D-like shadow for depth
+      const shadow = new Rect({
+        left: startX + 5,
+        top: currentY + 5,
+        width: width,
+        height: plyHeight,
+        fill: 'rgba(0, 0, 0, 0.15)',
+        selectable: false,
+      });
+      canvas.add(shadow);
+
+      // Draw main ply layer with gradient effect
       const rect = new Rect({
         left: startX,
         top: currentY,
@@ -79,60 +91,187 @@ export function CrossSectionVisualization({ plies, materials }: CrossSectionVisu
         height: plyHeight,
         fill: material.color,
         stroke: 'hsl(var(--border))',
-        strokeWidth: 1,
+        strokeWidth: 2,
         selectable: false,
+        shadow: new Shadow({
+          color: 'rgba(0, 0, 0, 0.2)',
+          blur: 8,
+          offsetX: 0,
+          offsetY: 2,
+        })
       });
 
-      // Add label
+      // Angle indicator - visual representation
+      const angleIndicator = new FabricText(
+        `↗ ${ply.angle}°`,
+        {
+          left: startX + width - 70,
+          top: currentY + plyHeight / 2,
+          fontSize: 11,
+          fill: getLuminance(material.color) > 128 ? 'rgba(0, 0, 0, 0.6)' : 'rgba(255, 255, 255, 0.6)',
+          originY: 'center',
+          selectable: false,
+          fontWeight: 'bold',
+        }
+      );
+
+      // Main label with material info
       const label = new FabricText(
-        `${index + 1}: ${material.type} @ ${ply.angle}° (${material.thickness}mm)`,
+        `Ply ${index + 1}: ${material.type}`,
         {
           left: startX + 10,
-          top: currentY + plyHeight / 2,
+          top: currentY + plyHeight / 2 - 8,
           fontSize: 12,
           fill: getLuminance(material.color) > 128 ? '#000000' : '#FFFFFF',
           originY: 'center',
+          selectable: false,
+          fontWeight: 'bold',
+        }
+      );
+
+      // Thickness label
+      const thicknessLabel = new FabricText(
+        `t = ${material.thickness} mm`,
+        {
+          left: startX + 10,
+          top: currentY + plyHeight / 2 + 8,
+          fontSize: 10,
+          fill: getLuminance(material.color) > 128 ? 'rgba(0, 0, 0, 0.7)' : 'rgba(255, 255, 255, 0.7)',
+          originY: 'center',
+          selectable: false,
+        }
+      );
+
+      // Z-position label (left side)
+      const zPosLabel = new FabricText(
+        `z = ${zPosition.toFixed(2)}`,
+        {
+          left: startX - 10,
+          top: currentY,
+          fontSize: 9,
+          fill: 'hsl(var(--muted-foreground))',
+          originX: 'right',
           selectable: false,
         }
       );
 
       canvas.add(rect);
       canvas.add(label);
+      canvas.add(thicknessLabel);
+      canvas.add(angleIndicator);
+      canvas.add(zPosLabel);
 
+      zPosition += material.thickness;
       currentY += plyHeight;
     });
 
-    // Add dimension lines
-    const dimLineY = currentY + 20;
+    // Final z-position label
+    const finalZPosLabel = new FabricText(
+      `z = ${zPosition.toFixed(2)}`,
+      {
+        left: startX - 10,
+        top: currentY,
+        fontSize: 9,
+        fill: 'hsl(var(--muted-foreground))',
+        originX: 'right',
+        selectable: false,
+      }
+    );
+    canvas.add(finalZPosLabel);
+
+    // Add enhanced dimension lines with arrows
+    const dimLineY = currentY + 25;
+    
+    // Horizontal dimension line
     const dimLine = new Rect({
       left: startX,
       top: dimLineY,
-      width: 0,
+      width: width,
       height: 2,
       fill: 'hsl(var(--primary))',
       selectable: false,
     });
+    
+    // Left arrow
+    const leftArrow = new FabricText('◄', {
+      left: startX - 10,
+      top: dimLineY - 8,
+      fontSize: 14,
+      fill: 'hsl(var(--primary))',
+      selectable: false,
+    });
+    
+    // Right arrow
+    const rightArrow = new FabricText('►', {
+      left: startX + width + 5,
+      top: dimLineY - 8,
+      fontSize: 14,
+      fill: 'hsl(var(--primary))',
+      selectable: false,
+    });
+
     canvas.add(dimLine);
+    canvas.add(leftArrow);
+    canvas.add(rightArrow);
+
+    // Total thickness label with background
+    const totalLabelBg = new Rect({
+      left: startX + width / 2 - 65,
+      top: dimLineY + 10,
+      width: 130,
+      height: 25,
+      fill: 'hsl(var(--primary))',
+      rx: 4,
+      ry: 4,
+      selectable: false,
+    });
 
     const totalLabel = new FabricText(`Total: ${totalThickness.toFixed(2)} mm`, {
       left: startX + width / 2,
-      top: dimLineY + 15,
-      fontSize: 14,
-      fill: 'hsl(var(--foreground))',
+      top: dimLineY + 22,
+      fontSize: 13,
+      fill: 'hsl(var(--primary-foreground))',
       fontWeight: 'bold',
       originX: 'center',
+      originY: 'center',
       selectable: false,
     });
+
+    canvas.add(totalLabelBg);
     canvas.add(totalLabel);
+
+    // Add coordinate system indicator
+    const coordText = new FabricText('z', {
+      left: 20,
+      top: 30,
+      fontSize: 16,
+      fill: 'hsl(var(--muted-foreground))',
+      fontStyle: 'italic',
+      selectable: false,
+    });
+    
+    const coordArrow = new FabricText('↓', {
+      left: 20,
+      top: 50,
+      fontSize: 14,
+      fill: 'hsl(var(--muted-foreground))',
+      selectable: false,
+    });
+
+    canvas.add(coordText);
+    canvas.add(coordArrow);
 
     canvas.renderAll();
   }, [plies, materials]);
 
   return (
-    <Card className="p-6">
-      <h3 className="text-lg font-semibold mb-4 text-foreground">Laminate Cross-Section</h3>
-      <div className="flex justify-center">
-        <canvas ref={canvasRef} className="border border-border rounded-lg" />
+    <Card className="p-6 bg-card">
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-lg font-semibold text-foreground">Laminate Cross-Section</h3>
+        <span className="text-xs text-muted-foreground">Through-thickness view</span>
+      </div>
+      <div className="flex justify-center bg-background rounded-lg p-4">
+        <canvas ref={canvasRef} className="rounded-lg" />
       </div>
     </Card>
   );

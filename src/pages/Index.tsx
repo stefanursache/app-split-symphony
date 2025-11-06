@@ -100,14 +100,16 @@ const Index = () => {
     }
   };
 
-  const handleCalculateStress = () => {
-    const activeCase = getActiveLoadCase();
-    if (!activeCase) return;
+  const handleCalculateStress = (createNewCase: boolean = false) => {
+    if (state.plies.length === 0) {
+      toast.error('Please add plies before calculating');
+      return;
+    }
 
     const results = calculateStressStrain(
       state.plies,
       materials,
-      activeCase.loads,
+      state.loads,
       state.outerDiameter
     );
     setStressResults(results);
@@ -122,13 +124,28 @@ const Index = () => {
     );
     setFailureResults(failureAnalysis);
 
-    // Store results in load case
-    updateLoadCase(activeLoadCaseId, {
-      results: {
-        stress: results,
-        failure: failureAnalysis
-      }
-    });
+    if (createNewCase) {
+      // Create a new load case with the results
+      const newCaseId = addLoadCase({
+        name: `Case ${loadCases.length + 1}`,
+        description: `Axial: ${state.loads.axial}N, Bending: ${state.loads.bending}N·mm, Torsion: ${state.loads.torsion}N·mm`,
+        loads: { ...state.loads },
+        results: {
+          stress: results,
+          failure: failureAnalysis
+        }
+      });
+      setActiveLoadCaseId(newCaseId);
+      toast.success('New load case created');
+    } else {
+      // Update existing load case
+      updateLoadCase(activeLoadCaseId, {
+        results: {
+          stress: results,
+          failure: failureAnalysis
+        }
+      });
+    }
   };
 
   const handleRunLoadCase = (loadCaseId: string) => {
@@ -138,9 +155,18 @@ const Index = () => {
       updateLoads(loadCase.loads);
       // Switch to stress tab and run analysis
       setActiveTab('stress');
-      setTimeout(() => handleCalculateStress(), 100);
+      setTimeout(() => handleCalculateStress(false), 100);
     }
   };
+
+  // Auto-calculate when active load case changes
+  useEffect(() => {
+    const activeCase = getActiveLoadCase();
+    if (activeCase && state.plies.length > 0) {
+      updateLoads(activeCase.loads);
+      handleCalculateStress(false);
+    }
+  }, [activeLoadCaseId]);
 
   const handleSaveConfiguration = (name: string, description: string) => {
     const totalThickness = state.plies.reduce((sum, ply) => {
@@ -320,7 +346,7 @@ const Index = () => {
                 <LoadInputs
                   loads={state.loads}
                   onUpdateLoads={updateLoads}
-                  onCalculate={handleCalculateStress}
+                  onCalculate={() => handleCalculateStress(true)}
                 />
                 <StressResults results={stressResults} />
               </TabsContent>
