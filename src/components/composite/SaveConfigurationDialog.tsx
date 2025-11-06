@@ -4,15 +4,16 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Save, Edit } from 'lucide-react';
+import { Save, Edit, FilePlus } from 'lucide-react';
 
 interface SaveConfigurationDialogProps {
   onSave: (name: string, description: string) => void;
+  onNewConfig?: () => void;
   disabled?: boolean;
   isUpdate?: boolean;
 }
 
-export function SaveConfigurationDialog({ onSave, disabled, isUpdate = false }: SaveConfigurationDialogProps) {
+export function SaveConfigurationDialog({ onSave, onNewConfig, disabled, isUpdate = false }: SaveConfigurationDialogProps) {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
@@ -27,14 +28,15 @@ export function SaveConfigurationDialog({ onSave, disabled, isUpdate = false }: 
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button disabled={disabled} className="gap-2">
-          {isUpdate ? <Edit className="h-4 w-4" /> : <Save className="h-4 w-4" />}
-          {isUpdate ? 'Update' : 'Save'} Configuration
-        </Button>
-      </DialogTrigger>
-      <DialogContent>
+    <div className="flex gap-2">
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogTrigger asChild>
+          <Button disabled={disabled} className="gap-2 flex-1">
+            {isUpdate ? <Edit className="h-4 w-4" /> : <Save className="h-4 w-4" />}
+            {isUpdate ? 'Update' : 'Save'} Configuration
+          </Button>
+        </DialogTrigger>
+        <DialogContent>
         <DialogHeader>
           <DialogTitle>{isUpdate ? 'Update' : 'Save'} Laminate Configuration</DialogTitle>
         </DialogHeader>
@@ -69,5 +71,18 @@ export function SaveConfigurationDialog({ onSave, disabled, isUpdate = false }: 
         </div>
       </DialogContent>
     </Dialog>
+    
+    {onNewConfig && (
+      <Button 
+        variant="outline" 
+        onClick={onNewConfig}
+        className="gap-2"
+        title="Start a new empty configuration"
+      >
+        <FilePlus className="h-4 w-4" />
+        New
+      </Button>
+    )}
+    </div>
   );
 }

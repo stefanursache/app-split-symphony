@@ -264,15 +264,73 @@ export function CrossSectionVisualization({ plies, materials }: CrossSectionVisu
     canvas.renderAll();
   }, [plies, materials]);
 
+  // Get unique materials for legend
+  const uniqueMaterials = Array.from(new Set(plies.map(p => p.material)))
+    .map(matName => materials[matName])
+    .filter(Boolean);
+
   return (
     <Card className="p-6 bg-card">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold text-foreground">Laminate Cross-Section</h3>
-        <span className="text-xs text-muted-foreground">Through-thickness view</span>
+        <div>
+          <h3 className="text-lg font-semibold text-foreground">Laminate Cross-Section</h3>
+          <p className="text-xs text-muted-foreground mt-1">Through-thickness view with z-coordinates</p>
+        </div>
+        <div className="text-right">
+          <div className="text-sm font-medium text-foreground">
+            {plies.length} {plies.length === 1 ? 'Ply' : 'Plies'}
+          </div>
+          <div className="text-xs text-muted-foreground">
+            {plies.reduce((sum, ply) => sum + (materials[ply.material]?.thickness || 0), 0).toFixed(2)} mm total
+          </div>
+        </div>
       </div>
-      <div className="flex justify-center bg-background rounded-lg p-4">
+
+      {/* Material Legend */}
+      {plies.length > 0 && (
+        <div className="mb-4 p-3 bg-muted/30 rounded-lg border border-border">
+          <div className="text-xs font-semibold text-foreground mb-2">Material Legend</div>
+          <div className="grid grid-cols-2 gap-2">
+            {uniqueMaterials.map((material, idx) => (
+              <div key={idx} className="flex items-center gap-2">
+                <div 
+                  className="w-4 h-4 rounded border border-border flex-shrink-0"
+                  style={{ backgroundColor: material.color }}
+                />
+                <span className="text-xs text-foreground truncate">{material.type}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      <div className="flex justify-center bg-background rounded-lg p-4 border border-border">
         <canvas ref={canvasRef} className="rounded-lg" />
       </div>
+
+      {/* Info Footer */}
+      {plies.length > 0 && (
+        <div className="mt-4 grid grid-cols-3 gap-2 text-center">
+          <div className="p-2 bg-muted/20 rounded">
+            <div className="text-xs text-muted-foreground">Min Angle</div>
+            <div className="text-sm font-medium text-foreground">
+              {Math.min(...plies.map(p => p.angle))}°
+            </div>
+          </div>
+          <div className="p-2 bg-muted/20 rounded">
+            <div className="text-xs text-muted-foreground">Max Angle</div>
+            <div className="text-sm font-medium text-foreground">
+              {Math.max(...plies.map(p => p.angle))}°
+            </div>
+          </div>
+          <div className="p-2 bg-muted/20 rounded">
+            <div className="text-xs text-muted-foreground">Materials</div>
+            <div className="text-sm font-medium text-foreground">
+              {uniqueMaterials.length}
+            </div>
+          </div>
+        </div>
+      )}
     </Card>
   );
 }

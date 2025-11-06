@@ -252,6 +252,14 @@ const Index = () => {
     deleteConfiguration(id);
   };
 
+  const handleNewConfiguration = () => {
+    clearPlies();
+    setLoadedConfigId(null);
+    setStressResults([]);
+    setFailureResults([]);
+    toast.success('Started new configuration');
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b border-border bg-card sticky top-0 z-50">
@@ -318,6 +326,7 @@ const Index = () => {
 
             <SaveConfigurationDialog
               onSave={handleSaveConfiguration}
+              onNewConfig={handleNewConfiguration}
               disabled={state.plies.length === 0}
               isUpdate={!!loadedConfigId}
             />
