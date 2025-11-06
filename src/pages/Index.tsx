@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect } from 'react';
 import { useMaterials } from '@/hooks/useMaterials';
 import { useAppState } from '@/hooks/useAppState';
 import { useConfigurations, Configuration } from '@/hooks/useConfigurations';
+import { useLoadCases } from '@/hooks/useLoadCases';
 import { toast } from 'sonner';
 import { MaterialSelector } from '@/components/composite/MaterialSelector';
 import { MaterialProperties } from '@/components/composite/MaterialProperties';
@@ -19,6 +20,9 @@ import { FailureCriteriaSelector } from '@/components/composite/FailureCriteriaS
 import { PlyFailureAnalysis } from '@/components/composite/PlyFailureAnalysis';
 import { SafetyMarginSummary } from '@/components/composite/SafetyMarginSummary';
 import { LaminateOptimizer } from '@/components/composite/LaminateOptimizer';
+import { LoadCaseManager } from '@/components/composite/LoadCaseManager';
+import { StressVisualization } from '@/components/composite/StressVisualization';
+import { PDFReportExport } from '@/components/composite/PDFReportExport';
 import { calculateEngineeringProperties, calculateStressStrain } from '@/utils/calculations';
 import { calculateABDMatrix } from '@/utils/abdMatrix';
 import { calculateFailureAnalysis, calculateSafetySummary, FailureResult } from '@/utils/failureAnalysis';
@@ -39,6 +43,15 @@ const Index = () => {
     setSelectedMaterial
   } = useAppState();
   const { configurations, loading: configsLoading, saveConfiguration, updateConfiguration, deleteConfiguration } = useConfigurations();
+  const {
+    loadCases,
+    activeLoadCaseId,
+    setActiveLoadCaseId,
+    addLoadCase,
+    updateLoadCase,
+    deleteLoadCase,
+    getActiveLoadCase
+  } = useLoadCases();
 
   const [isEditorOpen, setIsEditorOpen] = useState(false);
   const [editingMaterial, setEditingMaterial] = useState<Material | null>(null);
@@ -87,10 +100,13 @@ const Index = () => {
   };
 
   const handleCalculateStress = () => {
+    const activeCase = getActiveLoadCase();
+    if (!activeCase) return;
+
     const results = calculateStressStrain(
       state.plies,
       materials,
-      state.loads,
+      activeCase.loads,
       state.outerDiameter
     );
     setStressResults(results);
@@ -104,6 +120,25 @@ const Index = () => {
       failureCriterion
     );
     setFailureResults(failureAnalysis);
+
+    // Store results in load case
+    updateLoadCase(activeLoadCaseId, {
+      results: {
+        stress: results,
+        failure: failureAnalysis
+      }
+    });
+  };
+
+  const handleRunLoadCase = (loadCaseId: string) => {
+    setActiveLoadCaseId(loadCaseId);
+    const loadCase = loadCases.find(lc => lc.id === loadCaseId);
+    if (loadCase) {
+      updateLoads(loadCase.loads);
+      // Switch to stress tab and run analysis
+      setActiveTab('stress');
+      setTimeout(() => handleCalculateStress(), 100);
+    }
   };
 
   const handleSaveConfiguration = (name: string, description: string) => {
@@ -203,18 +238,29 @@ const Index = () => {
                 Hybrid Composite Design Tool
               </p>
             </div>
-            <Button
-              onClick={toggleTheme}
-              variant="outline"
-              size="icon"
-              className="rounded-full"
-            >
-              {theme === 'dark' ? (
-                <Sun className="h-5 w-5" />
-              ) : (
-                <Moon className="h-5 w-5" />
-              )}
-            </Button>
+            <div className="flex items-center gap-3">
+              <PDFReportExport
+                plies={state.plies}
+                materials={materials}
+                abdMatrix={abdMatrix}
+                engineeringProps={engineeringProps}
+                stressResults={stressResults}
+                failureResults={failureResults}
+                loadCase={getActiveLoadCase()}
+              />
+              <Button
+                onClick={toggleTheme}
+                variant="outline"
+                size="icon"
+                className="rounded-full"
+              >
+                {theme === 'dark' ? (
+                  <Sun className="h-5 w-5" />
+                ) : (
+                  <Moon className="h-5 w-5" />
+                )}
+              </Button>
+            </div>
           </div>
         </div>
       </header>
@@ -252,13 +298,14 @@ const Index = () => {
           {/* Right Panel - Analysis */}
           <div className="lg:col-span-2 space-y-6">
             <Tabs value={state.activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="grid w-full grid-cols-6">
+              <TabsList className="grid w-full grid-cols-7">
                 <TabsTrigger value="properties">Properties</TabsTrigger>
                 <TabsTrigger value="stress">Stress</TabsTrigger>
+                <TabsTrigger value="visualization">Visualization</TabsTrigger>
                 <TabsTrigger value="failure">Failure</TabsTrigger>
+                <TabsTrigger value="loadcases">Load Cases</TabsTrigger>
                 <TabsTrigger value="optimize">Optimize</TabsTrigger>
                 <TabsTrigger value="comparison">Compare</TabsTrigger>
-                <TabsTrigger value="mathematics">Mathematics</TabsTrigger>
               </TabsList>
 
               <TabsContent value="properties" className="mt-6 space-y-6">
@@ -276,6 +323,15 @@ const Index = () => {
                 <StressResults results={stressResults} />
               </TabsContent>
 
+              <TabsContent value="visualization" className="mt-6 space-y-6">
+                <StressVisualization
+                  plies={state.plies}
+                  materials={materials}
+                  stressResults={stressResults}
+                />
+                <MathematicsExplanation plies={state.plies} materials={materials} />
+              </TabsContent>
+
               <TabsContent value="failure" className="mt-6 space-y-6">
                 <FailureCriteriaSelector
                   failureCriterion={failureCriterion}
@@ -285,6 +341,17 @@ const Index = () => {
                 />
                 <PlyFailureAnalysis results={failureResults} />
                 <SafetyMarginSummary summary={safetySummary} />
+              </TabsContent>
+
+              <TabsContent value="loadcases" className="mt-6">
+                <LoadCaseManager
+                  loadCases={loadCases}
+                  activeLoadCaseId={activeLoadCaseId}
+                  onSelectLoadCase={setActiveLoadCaseId}
+                  onAddLoadCase={addLoadCase}
+                  onDeleteLoadCase={deleteLoadCase}
+                  onRunAnalysis={handleRunLoadCase}
+                />
               </TabsContent>
 
               <TabsContent value="optimize" className="mt-6">
@@ -304,10 +371,6 @@ const Index = () => {
                   onLoadConfig={handleLoadConfiguration}
                   onDeleteConfig={handleDeleteConfiguration}
                 />
-              </TabsContent>
-
-              <TabsContent value="mathematics" className="mt-6">
-                <MathematicsExplanation plies={state.plies} materials={materials} />
               </TabsContent>
             </Tabs>
           </div>
