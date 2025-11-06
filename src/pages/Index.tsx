@@ -125,18 +125,37 @@ const Index = () => {
     setFailureResults(failureAnalysis);
 
     if (createNewCase) {
-      // Create a new load case with the results
-      const newCaseId = addLoadCase({
-        name: `Case ${loadCases.length + 1}`,
-        description: `Axial: ${state.loads.axial}N, Bending: ${state.loads.bending}N·mm, Torsion: ${state.loads.torsion}N·mm`,
-        loads: { ...state.loads },
-        results: {
-          stress: results,
-          failure: failureAnalysis
-        }
-      });
-      setActiveLoadCaseId(newCaseId);
-      toast.success('New load case created');
+      // Check if a similar load case already exists
+      const existingCase = loadCases.find(lc => 
+        lc.loads.axial === state.loads.axial &&
+        lc.loads.bending === state.loads.bending &&
+        lc.loads.torsion === state.loads.torsion
+      );
+
+      if (existingCase) {
+        // Update existing similar load case instead of creating new one
+        updateLoadCase(existingCase.id, {
+          results: {
+            stress: results,
+            failure: failureAnalysis
+          }
+        });
+        setActiveLoadCaseId(existingCase.id);
+        toast.info(`Updated existing load case: ${existingCase.name}`);
+      } else {
+        // Create a new load case with the results
+        const newCaseId = addLoadCase({
+          name: `Case ${loadCases.length + 1}`,
+          description: `Fz: ${state.loads.axial}N, Mx: ${state.loads.bending}N·mm, Mz: ${state.loads.torsion}N·mm`,
+          loads: { ...state.loads },
+          results: {
+            stress: results,
+            failure: failureAnalysis
+          }
+        });
+        setActiveLoadCaseId(newCaseId);
+        toast.success('New load case created');
+      }
     } else {
       // Update existing load case
       updateLoadCase(activeLoadCaseId, {

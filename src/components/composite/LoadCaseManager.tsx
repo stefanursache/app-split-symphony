@@ -176,16 +176,14 @@ export function LoadCaseManager({
                   >
                     <Play className="h-3 w-3" />
                   </Button>
-                  {loadCase.id.startsWith('custom-') && (
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => onDeleteLoadCase(loadCase.id)}
-                      title="Delete"
-                    >
-                      <Trash2 className="h-3 w-3" />
-                    </Button>
-                  )}
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => onDeleteLoadCase(loadCase.id)}
+                    title="Delete Load Case"
+                  >
+                    <Trash2 className="h-3 w-3 text-destructive" />
+                  </Button>
                 </div>
               </div>
               {loadCase.results && (
