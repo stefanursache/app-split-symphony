@@ -13,8 +13,12 @@ import { CrossSectionVisualization } from '@/components/composite/CrossSectionVi
 import { ABDMatrixDisplay } from '@/components/composite/ABDMatrixDisplay';
 import { ConfigurationComparison } from '@/components/composite/ConfigurationComparison';
 import { SaveConfigurationDialog } from '@/components/composite/SaveConfigurationDialog';
+import { FailureCriteriaSelector } from '@/components/composite/FailureCriteriaSelector';
+import { PlyFailureAnalysis } from '@/components/composite/PlyFailureAnalysis';
+import { SafetyMarginSummary } from '@/components/composite/SafetyMarginSummary';
 import { calculateEngineeringProperties, calculateStressStrain } from '@/utils/calculations';
 import { calculateABDMatrix } from '@/utils/abdMatrix';
+import { calculateFailureAnalysis, calculateSafetySummary, FailureResult } from '@/utils/failureAnalysis';
 import { Material } from '@/types/materials';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -36,6 +40,9 @@ const Index = () => {
   const [isEditorOpen, setIsEditorOpen] = useState(false);
   const [editingMaterial, setEditingMaterial] = useState<Material | null>(null);
   const [stressResults, setStressResults] = useState<any[]>([]);
+  const [failureResults, setFailureResults] = useState<FailureResult[]>([]);
+  const [safetyFactor, setSafetyFactor] = useState(1.5);
+  const [failureCriterion, setFailureCriterion] = useState<'max_stress' | 'tsai_wu' | 'tsai_hill'>('max_stress');
 
   const selectedMaterialData = materials[state.selectedMaterial] || null;
 
@@ -83,6 +90,16 @@ const Index = () => {
       state.outerDiameter
     );
     setStressResults(results);
+
+    // Calculate failure analysis
+    const failureAnalysis = calculateFailureAnalysis(
+      state.plies,
+      materials,
+      results,
+      safetyFactor,
+      failureCriterion
+    );
+    setFailureResults(failureAnalysis);
   };
 
   const handleSaveConfiguration = (name: string, description: string) => {
@@ -117,18 +134,22 @@ const Index = () => {
       return sum + (material ? material.density * material.thickness : 0);
     }, 0);
 
-    return {
-      id: 'current',
-      name: 'Current Design',
-      description: null,
-      plies: state.plies,
-      engineering_properties: engineeringProps,
-      total_thickness: totalThickness,
-      total_weight: totalWeight,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    } as Configuration;
+  return {
+    id: 'current',
+    name: 'Current Design',
+    description: null,
+    plies: state.plies,
+    engineering_properties: engineeringProps,
+    total_thickness: totalThickness,
+    total_weight: totalWeight,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  } as Configuration;
   };
+
+  const safetySummary = useMemo(() => {
+    return calculateSafetySummary(failureResults, safetyFactor);
+  }, [failureResults, safetyFactor]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -191,9 +212,10 @@ const Index = () => {
           {/* Right Panel - Analysis */}
           <div className="lg:col-span-2 space-y-6">
             <Tabs value={state.activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="grid w-full grid-cols-3">
+              <TabsList className="grid w-full grid-cols-4">
                 <TabsTrigger value="properties">Properties</TabsTrigger>
                 <TabsTrigger value="stress">Stress Analysis</TabsTrigger>
+                <TabsTrigger value="failure">Failure Analysis</TabsTrigger>
                 <TabsTrigger value="comparison">Comparison</TabsTrigger>
               </TabsList>
 
@@ -210,6 +232,17 @@ const Index = () => {
                   onCalculate={handleCalculateStress}
                 />
                 <StressResults results={stressResults} />
+              </TabsContent>
+
+              <TabsContent value="failure" className="mt-6 space-y-6">
+                <FailureCriteriaSelector
+                  failureCriterion={failureCriterion}
+                  safetyFactor={safetyFactor}
+                  onCriterionChange={(criterion) => setFailureCriterion(criterion as 'max_stress' | 'tsai_wu' | 'tsai_hill')}
+                  onSafetyFactorChange={setSafetyFactor}
+                />
+                <PlyFailureAnalysis results={failureResults} />
+                <SafetyMarginSummary summary={safetySummary} />
               </TabsContent>
 
               <TabsContent value="comparison" className="mt-6">
