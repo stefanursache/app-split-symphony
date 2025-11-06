@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useMaterials } from '@/hooks/useMaterials';
 import { useAppState } from '@/hooks/useAppState';
 import { MaterialSelector } from '@/components/composite/MaterialSelector';
@@ -8,9 +8,14 @@ import { PlyStack } from '@/components/composite/PlyStack';
 import { EngineeringProperties } from '@/components/composite/EngineeringProperties';
 import { LoadInputs } from '@/components/composite/LoadInputs';
 import { StressResults } from '@/components/composite/StressResults';
+import { CrossSectionVisualization } from '@/components/composite/CrossSectionVisualization';
+import { ABDMatrixDisplay } from '@/components/composite/ABDMatrixDisplay';
 import { calculateEngineeringProperties, calculateStressStrain } from '@/utils/calculations';
+import { calculateABDMatrix } from '@/utils/abdMatrix';
 import { Material } from '@/types/materials';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Button } from '@/components/ui/button';
+import { Moon, Sun } from 'lucide-react';
 
 const Index = () => {
   const { materials, addMaterial, updateMaterial } = useMaterials();
@@ -30,13 +35,27 @@ const Index = () => {
 
   const selectedMaterialData = materials[state.selectedMaterial] || null;
 
+  const [theme, setTheme] = useState<'light' | 'dark'>('dark');
+
+  useEffect(() => {
+    document.documentElement.classList.toggle('dark', theme === 'dark');
+  }, [theme]);
+
   const engineeringProps = useMemo(() => {
     return calculateEngineeringProperties(state.plies, materials);
+  }, [state.plies, materials]);
+
+  const abdMatrix = useMemo(() => {
+    return calculateABDMatrix(state.plies, materials);
   }, [state.plies, materials]);
 
   const handleAddMaterial = () => {
     setEditingMaterial(null);
     setIsEditorOpen(true);
+  };
+
+  const toggleTheme = () => {
+    setTheme(prev => prev === 'dark' ? 'light' : 'dark');
   };
 
   const handleEditMaterial = (name: string) => {
@@ -64,14 +83,30 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="border-b border-border bg-card">
+      <header className="border-b border-border bg-card sticky top-0 z-50">
         <div className="container mx-auto px-4 py-6">
-          <h1 className="text-3xl font-bold text-foreground">
-            Composite Laminate Structural Analysis
-          </h1>
-          <p className="text-muted-foreground mt-1">
-            Hybrid Composite Design Tool
-          </p>
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold text-foreground">
+                Composite Laminate Structural Analysis
+              </h1>
+              <p className="text-muted-foreground mt-1">
+                Hybrid Composite Design Tool
+              </p>
+            </div>
+            <Button
+              onClick={toggleTheme}
+              variant="outline"
+              size="icon"
+              className="rounded-full"
+            >
+              {theme === 'dark' ? (
+                <Sun className="h-5 w-5" />
+              ) : (
+                <Moon className="h-5 w-5" />
+              )}
+            </Button>
+          </div>
         </div>
       </header>
 
@@ -100,16 +135,21 @@ const Index = () => {
           </div>
 
           {/* Right Panel - Analysis */}
-          <div className="lg:col-span-2">
+          <div className="lg:col-span-2 space-y-6">
             <Tabs value={state.activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="grid w-full grid-cols-3">
+              <TabsList className="grid w-full grid-cols-4">
                 <TabsTrigger value="properties">Properties</TabsTrigger>
+                <TabsTrigger value="visualization">Visualization</TabsTrigger>
                 <TabsTrigger value="stress">Stress Analysis</TabsTrigger>
-                <TabsTrigger value="failure">Failure Analysis</TabsTrigger>
+                <TabsTrigger value="abd">ABD Matrix</TabsTrigger>
               </TabsList>
 
               <TabsContent value="properties" className="mt-6">
                 <EngineeringProperties properties={engineeringProps} />
+              </TabsContent>
+
+              <TabsContent value="visualization" className="mt-6">
+                <CrossSectionVisualization plies={state.plies} materials={materials} />
               </TabsContent>
 
               <TabsContent value="stress" className="mt-6 space-y-6">
@@ -121,14 +161,8 @@ const Index = () => {
                 <StressResults results={stressResults} />
               </TabsContent>
 
-              <TabsContent value="failure" className="mt-6">
-                <div className="p-6 bg-card rounded-lg border border-border">
-                  <h3 className="text-lg font-semibold mb-4">Failure Analysis</h3>
-                  <p className="text-muted-foreground">
-                    Failure analysis will be available soon. This will include various failure
-                    criteria such as Maximum Stress, Tsai-Wu, and Tsai-Hill.
-                  </p>
-                </div>
+              <TabsContent value="abd" className="mt-6">
+                <ABDMatrixDisplay matrix={abdMatrix} />
               </TabsContent>
             </Tabs>
           </div>

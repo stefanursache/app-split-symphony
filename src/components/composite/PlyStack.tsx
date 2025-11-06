@@ -2,8 +2,8 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Ply, Material } from '@/types/materials';
-import { Plus, Trash2, Layers } from 'lucide-react';
-import { useState } from 'react';
+import { Plus, Trash2, Layers, Weight } from 'lucide-react';
+import { useState, useMemo } from 'react';
 
 interface PlyStackProps {
   plies: Ply[];
@@ -27,6 +27,32 @@ export function PlyStack({
   const handleAddPly = () => {
     onAddPly(selectedMaterial, angle);
   };
+
+  // Calculate totals
+  const totals = useMemo(() => {
+    if (plies.length === 0) {
+      return { thickness: 0, weight: 0, count: 0 };
+    }
+
+    let totalThickness = 0;
+    let totalWeight = 0;
+
+    plies.forEach(ply => {
+      const material = materials[ply.material];
+      if (!material) return;
+      
+      totalThickness += material.thickness;
+      // Weight calculation: density (g/cm³) * thickness (mm) * area (assuming 1 m² = 1000000 mm²)
+      // Simplified: density * thickness gives g/m² directly
+      totalWeight += material.density * material.thickness * 1000;
+    });
+
+    return {
+      thickness: totalThickness,
+      weight: totalWeight,
+      count: plies.length
+    };
+  }, [plies, materials]);
 
   return (
     <Card className="p-6">
@@ -72,7 +98,7 @@ export function PlyStack({
             return (
               <div
                 key={index}
-                className="flex items-center gap-3 p-3 rounded-lg border border-border bg-card"
+                className="flex items-center gap-3 p-3 rounded-lg border border-border bg-card hover:bg-accent/50 transition-colors"
               >
                 <div
                   className="w-8 h-8 rounded border border-border flex-shrink-0"
@@ -100,9 +126,27 @@ export function PlyStack({
         )}
       </div>
 
-      {plies.length > 0 && (
-        <div className="mt-4 pt-4 border-t border-border text-sm text-muted-foreground">
-          Total plies: {plies.length}
+      {plies.length > 0 ? (
+        <div className="mt-4 pt-4 border-t border-border space-y-2">
+          <div className="flex justify-between text-sm">
+            <span className="text-muted-foreground">Total Plies:</span>
+            <span className="font-semibold text-foreground">{totals.count}</span>
+          </div>
+          <div className="flex justify-between text-sm">
+            <span className="text-muted-foreground">Total Thickness:</span>
+            <span className="font-semibold text-foreground">{totals.thickness.toFixed(2)} mm</span>
+          </div>
+          <div className="flex justify-between text-sm">
+            <span className="text-muted-foreground flex items-center gap-1">
+              <Weight className="h-3 w-3" />
+              Total Weight:
+            </span>
+            <span className="font-semibold text-foreground">{totals.weight.toFixed(0)} g/m²</span>
+          </div>
+        </div>
+      ) : (
+        <div className="mt-4 pt-4 border-t border-border text-sm text-muted-foreground text-center">
+          Add plies to see totals
         </div>
       )}
     </Card>
