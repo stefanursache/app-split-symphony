@@ -137,18 +137,14 @@ const Index = () => {
           {/* Right Panel - Analysis */}
           <div className="lg:col-span-2 space-y-6">
             <Tabs value={state.activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="grid w-full grid-cols-4">
+              <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="properties">Properties</TabsTrigger>
-                <TabsTrigger value="visualization">Visualization</TabsTrigger>
                 <TabsTrigger value="stress">Stress Analysis</TabsTrigger>
-                <TabsTrigger value="abd">ABD Matrix</TabsTrigger>
               </TabsList>
 
-              <TabsContent value="properties" className="mt-6">
+              <TabsContent value="properties" className="mt-6 space-y-6">
+                <ABDMatrixDisplay matrix={abdMatrix} />
                 <EngineeringProperties properties={engineeringProps} />
-              </TabsContent>
-
-              <TabsContent value="visualization" className="mt-6">
                 <CrossSectionVisualization plies={state.plies} materials={materials} />
               </TabsContent>
 
@@ -159,10 +155,6 @@ const Index = () => {
                   onCalculate={handleCalculateStress}
                 />
                 <StressResults results={stressResults} />
-              </TabsContent>
-
-              <TabsContent value="abd" className="mt-6">
-                <ABDMatrixDisplay matrix={abdMatrix} />
               </TabsContent>
             </Tabs>
           </div>
