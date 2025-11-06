@@ -2,7 +2,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Ply, Material } from '@/types/materials';
-import { Plus, Trash2, Layers, Weight } from 'lucide-react';
+import { Plus, Trash2, Layers, Weight, Check, X, Pencil } from 'lucide-react';
 import { useState, useMemo } from 'react';
 
 interface PlyStackProps {
@@ -11,6 +11,7 @@ interface PlyStackProps {
   selectedMaterial: string;
   onAddPly: (material: string, angle: number) => void;
   onRemovePly: (index: number) => void;
+  onUpdatePly: (index: number, angle: number) => void;
   onClearPlies: () => void;
 }
 
@@ -20,12 +21,31 @@ export function PlyStack({
   selectedMaterial,
   onAddPly,
   onRemovePly,
+  onUpdatePly,
   onClearPlies
 }: PlyStackProps) {
   const [angle, setAngle] = useState(0);
+  const [editingIndex, setEditingIndex] = useState<number | null>(null);
+  const [editAngle, setEditAngle] = useState<number>(0);
 
   const handleAddPly = () => {
     onAddPly(selectedMaterial, angle);
+  };
+
+  const handleStartEdit = (index: number, currentAngle: number) => {
+    setEditingIndex(index);
+    setEditAngle(currentAngle);
+  };
+
+  const handleSaveEdit = () => {
+    if (editingIndex !== null) {
+      onUpdatePly(editingIndex, editAngle);
+      setEditingIndex(null);
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setEditingIndex(null);
   };
 
   // Calculate totals
@@ -95,6 +115,8 @@ export function PlyStack({
             const material = materials[ply.material];
             if (!material) return null;
             
+            const isEditing = editingIndex === index;
+            
             return (
               <div
                 key={index}
@@ -109,17 +131,64 @@ export function PlyStack({
                     Ply {index + 1}
                   </div>
                   <div className="text-xs text-muted-foreground truncate">
-                    {material.name} @ {ply.angle}°
+                    {material.name}
                   </div>
                 </div>
-                <Button
-                  onClick={() => onRemovePly(index)}
-                  variant="ghost"
-                  size="sm"
-                  className="flex-shrink-0"
-                >
-                  <Trash2 className="h-4 w-4 text-destructive" />
-                </Button>
+                
+                {isEditing ? (
+                  <div className="flex items-center gap-2">
+                    <Input
+                      type="number"
+                      value={editAngle}
+                      onChange={(e) => setEditAngle(Number(e.target.value))}
+                      className="w-20 h-8 text-sm"
+                      autoFocus
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') handleSaveEdit();
+                        if (e.key === 'Escape') handleCancelEdit();
+                      }}
+                    />
+                    <span className="text-xs text-muted-foreground">°</span>
+                    <Button
+                      onClick={handleSaveEdit}
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 w-8 p-0"
+                    >
+                      <Check className="h-4 w-4 text-green-600" />
+                    </Button>
+                    <Button
+                      onClick={handleCancelEdit}
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 w-8 p-0"
+                    >
+                      <X className="h-4 w-4 text-destructive" />
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <div className="font-mono text-sm text-foreground min-w-[60px] text-right">
+                      {ply.angle}°
+                    </div>
+                    <Button
+                      onClick={() => handleStartEdit(index, ply.angle)}
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 w-8 p-0"
+                    >
+                      <Pencil className="h-3 w-3" />
+                    </Button>
+                    <Button
+                      onClick={() => onRemovePly(index)}
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 w-8 p-0"
+                    >
+                      <Trash2 className="h-4 w-4 text-destructive" />
+                    </Button>
+                  </div>
+                )}
               </div>
             );
           })

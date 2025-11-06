@@ -37,6 +37,7 @@ const Index = () => {
     state,
     addPly,
     removePly,
+    updatePly,
     clearPlies,
     updateLoads,
     setActiveTab,
@@ -285,6 +286,7 @@ const Index = () => {
               selectedMaterial={state.selectedMaterial}
               onAddPly={addPly}
               onRemovePly={removePly}
+              onUpdatePly={updatePly}
               onClearPlies={clearPlies}
             />
 

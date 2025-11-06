@@ -37,6 +37,15 @@ export function useAppState() {
     }));
   };
 
+  const updatePly = (index: number, angle: number) => {
+    setState(prev => ({
+      ...prev,
+      plies: prev.plies.map((ply, i) => 
+        i === index ? { ...ply, angle } : ply
+      )
+    }));
+  };
+
   const clearPlies = () => {
     setState(prev => ({
       ...prev,
@@ -63,6 +72,7 @@ export function useAppState() {
     state,
     addPly,
     removePly,
+    updatePly,
     clearPlies,
     updateLoads,
     setActiveTab,
