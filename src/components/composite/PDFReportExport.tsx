@@ -435,7 +435,7 @@ export function PDFReportExport({
       }
 
       // ============ SECTION 7: STRESS RESULTS ============
-      if (stressResults.length > 0) {
+      if (stressResults && stressResults.length > 0) {
         doc.addPage();
         yPos = 20;
         doc.setFontSize(16);
@@ -457,13 +457,13 @@ export function PDFReportExport({
 
         stressResults.forEach((result) => {
           matStressData.push([
-            result.ply.toString(),
-            result.material,
-            result.angle.toString(),
-            result.sigma_1.toFixed(2),
-            result.sigma_2.toFixed(2),
-            result.tau_12.toFixed(2),
-            result.von_mises.toFixed(2)
+            (result.ply || 0).toString(),
+            result.material || 'N/A',
+            (result.angle || 0).toString(),
+            (result.sigma_1 || 0).toFixed(2),
+            (result.sigma_2 || 0).toFixed(2),
+            (result.tau_12 || 0).toFixed(2),
+            (result.von_mises || 0).toFixed(2)
           ]);
         });
 
@@ -492,13 +492,13 @@ export function PDFReportExport({
 
         stressResults.forEach((result) => {
           globalStressData.push([
-            result.ply.toString(),
-            result.sigma_x.toFixed(2),
-            result.sigma_y.toFixed(2),
-            result.tau_xy.toFixed(2),
-            result.sigma_principal_max.toFixed(2),
-            result.sigma_principal_min.toFixed(2),
-            result.tau_max.toFixed(2)
+            (result.ply || 0).toString(),
+            (result.sigma_x || 0).toFixed(2),
+            (result.sigma_y || 0).toFixed(2),
+            (result.tau_xy || 0).toFixed(2),
+            (result.sigma_principal_max || 0).toFixed(2),
+            (result.sigma_principal_min || 0).toFixed(2),
+            (result.tau_max || 0).toFixed(2)
           ]);
         });
 
@@ -529,11 +529,11 @@ export function PDFReportExport({
 
         stressResults.forEach((result) => {
           strainData.push([
-            result.ply.toString(),
-            result.material,
-            result.epsilon_1.toExponential(3),
-            result.epsilon_2.toExponential(3),
-            result.gamma_12.toExponential(3)
+            (result.ply || 0).toString(),
+            result.material || 'N/A',
+            (result.epsilon_1 || 0).toExponential(3),
+            (result.epsilon_2 || 0).toExponential(3),
+            (result.gamma_12 || 0).toExponential(3)
           ]);
         });
 
@@ -551,7 +551,7 @@ export function PDFReportExport({
       }
 
       // ============ SECTION 9: FAILURE ANALYSIS ============
-      if (failureResults.length > 0) {
+      if (failureResults && failureResults.length > 0) {
         doc.addPage();
         yPos = 20;
         doc.setFontSize(16);
@@ -568,11 +568,11 @@ export function PDFReportExport({
         failureResults.forEach((result) => {
           const status = result.failed ? '⚠ FAILED' : '✓ PASS';
           failureData.push([
-            result.ply.toString(),
-            result.material,
-            result.maxStressFI.toFixed(3),
-            result.tsaiWuFI.toFixed(3),
-            result.tsaiHillFI.toFixed(3),
+            (result.ply || 0).toString(),
+            result.material || 'N/A',
+            (result.maxStressFI || 0).toFixed(3),
+            (result.tsaiWuFI || 0).toFixed(3),
+            (result.tsaiHillFI || 0).toFixed(3),
             status
           ]);
         });
