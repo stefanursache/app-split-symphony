@@ -2,6 +2,7 @@ import { Button } from '@/components/ui/button';
 import { FileDown, Loader2 } from 'lucide-react';
 import { useState } from 'react';
 import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 import { Ply, Material } from '@/types/materials';
 import { ABDMatrix } from '@/utils/abdMatrix';
 import { toast } from 'sonner';
@@ -36,196 +37,645 @@ export function PDFReportExport({
       const doc = new jsPDF();
       let yPos = 20;
       const pageWidth = doc.internal.pageSize.getWidth();
+      const pageHeight = doc.internal.pageSize.getHeight();
       const margin = 20;
       const contentWidth = pageWidth - 2 * margin;
 
-      // Title
-      doc.setFontSize(20);
-      doc.setFont('helvetica', 'bold');
-      doc.text('Composite Laminate Analysis Report', margin, yPos);
-      yPos += 15;
-
-      // Date and time
-      doc.setFontSize(10);
-      doc.setFont('helvetica', 'normal');
-      doc.text(`Generated: ${new Date().toLocaleString()}`, margin, yPos);
-      yPos += 15;
-
-      // Configuration Summary
-      doc.setFontSize(14);
-      doc.setFont('helvetica', 'bold');
-      doc.text('Laminate Configuration', margin, yPos);
-      yPos += 10;
-
-      doc.setFontSize(10);
-      doc.setFont('helvetica', 'normal');
-      doc.text(`Number of plies: ${plies.length}`, margin, yPos);
-      yPos += 6;
-      doc.text(`Total thickness: ${engineeringProps.thickness.toFixed(3)} mm`, margin, yPos);
-      yPos += 10;
-
-      // Ply stack table
-      doc.setFontSize(12);
-      doc.setFont('helvetica', 'bold');
-      doc.text('Ply Stack', margin, yPos);
-      yPos += 8;
-
-      doc.setFontSize(9);
-      doc.setFont('helvetica', 'normal');
-      
-      // Table header
-      const colWidths = [15, 60, 25, 35];
-      const startX = margin;
-      doc.setFont('helvetica', 'bold');
-      doc.text('#', startX, yPos);
-      doc.text('Material', startX + colWidths[0], yPos);
-      doc.text('Angle (°)', startX + colWidths[0] + colWidths[1], yPos);
-      doc.text('Thickness (mm)', startX + colWidths[0] + colWidths[1] + colWidths[2], yPos);
-      yPos += 6;
-
-      doc.setFont('helvetica', 'normal');
-      plies.forEach((ply, idx) => {
-        const material = materials[ply.material];
-        if (yPos > 270) {
+      // Helper function to check if we need a new page
+      const checkNewPage = (requiredSpace: number) => {
+        if (yPos + requiredSpace > pageHeight - 20) {
           doc.addPage();
           yPos = 20;
+          return true;
         }
-        doc.text(`${idx + 1}`, startX, yPos);
-        doc.text(ply.material, startX + colWidths[0], yPos);
-        doc.text(ply.angle.toString(), startX + colWidths[0] + colWidths[1], yPos);
-        doc.text(material?.thickness.toFixed(3) || 'N/A', startX + colWidths[0] + colWidths[1] + colWidths[2], yPos);
-        yPos += 5;
-      });
-
-      yPos += 10;
-
-      // ABD Matrix
-      if (yPos > 200) {
-        doc.addPage();
-        yPos = 20;
-      }
-
-      doc.setFontSize(12);
-      doc.setFont('helvetica', 'bold');
-      doc.text('ABD Matrix', margin, yPos);
-      yPos += 10;
-
-      const formatMatrix = (mat: number[][]) => {
-        return mat.map(row => 
-          row.map(val => {
-            if (Math.abs(val) < 0.001) return '0.00';
-            if (Math.abs(val) >= 1000000) return val.toExponential(2);
-            return val.toFixed(2);
-          })
-        );
+        return false;
       };
 
-      doc.setFontSize(9);
-      doc.setFont('helvetica', 'normal');
+      // Add page numbers footer
+      const addPageNumbers = () => {
+        const pageCount = (doc as any).internal.getNumberOfPages();
+        for (let i = 1; i <= pageCount; i++) {
+          doc.setPage(i);
+          doc.setFontSize(8);
+          doc.setTextColor(128);
+          doc.text(
+            `Page ${i} of ${pageCount}`,
+            pageWidth / 2,
+            pageHeight - 10,
+            { align: 'center' }
+          );
+        }
+      };
+
+      // ============ COVER PAGE ============
+      doc.setFillColor(41, 128, 185);
+      doc.rect(0, 0, pageWidth, 80, 'F');
       
-      // A Matrix
-      doc.text('A Matrix (N/mm):', margin, yPos);
-      yPos += 6;
-      formatMatrix(abdMatrix.A).forEach(row => {
-        doc.text(row.join('  '), margin + 5, yPos);
-        yPos += 5;
-      });
-      yPos += 5;
-
-      // B Matrix
-      doc.text('B Matrix (N):', margin, yPos);
-      yPos += 6;
-      formatMatrix(abdMatrix.B).forEach(row => {
-        doc.text(row.join('  '), margin + 5, yPos);
-        yPos += 5;
-      });
-      yPos += 5;
-
-      // D Matrix
-      doc.text('D Matrix (N·mm):', margin, yPos);
-      yPos += 6;
-      formatMatrix(abdMatrix.D).forEach(row => {
-        doc.text(row.join('  '), margin + 5, yPos);
-        yPos += 5;
-      });
-
-      // Engineering Properties
-      if (yPos > 200) {
-        doc.addPage();
-        yPos = 20;
-      } else {
-        yPos += 10;
-      }
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(28);
+      doc.setFont('helvetica', 'bold');
+      doc.text('COMPOSITE LAMINATE', pageWidth / 2, 35, { align: 'center' });
+      doc.text('ANALYSIS REPORT', pageWidth / 2, 50, { align: 'center' });
 
       doc.setFontSize(12);
+      doc.setFont('helvetica', 'normal');
+      doc.text('Structural Engineering Analysis', pageWidth / 2, 65, { align: 'center' });
+
+      // Report metadata box
+      yPos = 100;
+      doc.setTextColor(0, 0, 0);
+      doc.setFillColor(240, 240, 240);
+      doc.roundedRect(margin, yPos, contentWidth, 60, 3, 3, 'F');
+      
+      yPos += 15;
+      doc.setFontSize(11);
+      doc.text(`Report Generated: ${new Date().toLocaleString()}`, margin + 10, yPos);
+      yPos += 10;
+      doc.text(`Configuration: ${plies.length} ply laminate`, margin + 10, yPos);
+      yPos += 10;
+      doc.text(`Total Thickness: ${engineeringProps.thickness.toFixed(3)} mm`, margin + 10, yPos);
+      yPos += 10;
+      doc.text(`Analysis Type: Classical Lamination Theory (CLT)`, margin + 10, yPos);
+      yPos += 10;
+      if (loadCase) {
+        doc.text(`Load Case: ${loadCase.name}`, margin + 10, yPos);
+      }
+
+      // Summary box
+      yPos += 30;
+      doc.setFontSize(14);
       doc.setFont('helvetica', 'bold');
-      doc.text('Engineering Properties', margin, yPos);
+      doc.text('Executive Summary', margin, yPos);
       yPos += 10;
 
       doc.setFontSize(10);
       doc.setFont('helvetica', 'normal');
-      doc.text(`Ex: ${engineeringProps.Ex.toFixed(2)} MPa`, margin, yPos);
-      yPos += 6;
-      doc.text(`Ey: ${engineeringProps.Ey.toFixed(2)} MPa`, margin, yPos);
-      yPos += 6;
-      doc.text(`Gxy: ${engineeringProps.Gxy.toFixed(2)} MPa`, margin, yPos);
-      yPos += 6;
-      doc.text(`νxy: ${engineeringProps.nuxy.toFixed(4)}`, margin, yPos);
-      yPos += 10;
+      const summaryText = `This report presents a comprehensive structural analysis of a ${plies.length}-ply composite laminate using Classical Lamination Theory. The analysis includes stiffness characterization through the ABD matrix, engineering property calculations, stress and strain distributions under applied loads, and failure analysis using multiple failure criteria.`;
+      const splitSummary = doc.splitTextToSize(summaryText, contentWidth - 20);
+      doc.text(splitSummary, margin + 10, yPos);
 
-      // Load Case Information
-      if (loadCase) {
+      // ============ TABLE OF CONTENTS ============
+      doc.addPage();
+      yPos = 20;
+      doc.setFontSize(18);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Table of Contents', margin, yPos);
+      yPos += 15;
+
+      doc.setFontSize(11);
+      doc.setFont('helvetica', 'normal');
+      const tocItems = [
+        '1. Laminate Configuration',
+        '2. Material Properties',
+        '3. Ply Stack Sequence',
+        '4. ABD Stiffness Matrices',
+        '5. Engineering Properties',
+        '6. Load Case Definition',
+        '7. Stress Analysis Results',
+        '8. Strain Analysis Results',
+        '9. Failure Analysis',
+        '10. Safety Margins'
+      ];
+      tocItems.forEach(item => {
+        doc.text(item, margin + 10, yPos);
+        yPos += 8;
+      });
+
+      // ============ SECTION 1: CONFIGURATION ============
+      doc.addPage();
+      yPos = 20;
+      doc.setFontSize(16);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(41, 128, 185);
+      doc.text('1. Laminate Configuration', margin, yPos);
+      doc.setTextColor(0, 0, 0);
+      yPos += 12;
+
+      const configData = [
+        ['Parameter', 'Value', 'Unit'],
+        ['Number of Plies', plies.length.toString(), '-'],
+        ['Total Thickness', engineeringProps.thickness.toFixed(3), 'mm'],
+        ['Stacking Sequence', plies.map(p => `${p.angle}°`).join('/'), '°'],
+        ['Analysis Method', 'Classical Lamination Theory', '-'],
+        ['Coordinate System', 'Global (x-y) and Material (1-2)', '-']
+      ];
+
+      autoTable(doc, {
+        startY: yPos,
+        head: [configData[0]],
+        body: configData.slice(1),
+        theme: 'grid',
+        headStyles: { fillColor: [41, 128, 185], fontSize: 10 },
+        styles: { fontSize: 9 },
+        margin: { left: margin, right: margin }
+      });
+
+      yPos = (doc as any).lastAutoTable.finalY + 15;
+
+      // ============ SECTION 2: MATERIAL PROPERTIES ============
+      checkNewPage(80);
+      doc.setFontSize(16);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(41, 128, 185);
+      doc.text('2. Material Properties', margin, yPos);
+      doc.setTextColor(0, 0, 0);
+      yPos += 12;
+
+      // Get unique materials
+      const uniqueMaterials = Array.from(new Set(plies.map(p => p.material)));
+      uniqueMaterials.forEach((matName, idx) => {
+        const mat = materials[matName];
+        if (!mat) return;
+
+        if (idx > 0) yPos += 10;
+        checkNewPage(60);
+
         doc.setFontSize(12);
         doc.setFont('helvetica', 'bold');
-        doc.text('Load Case: ' + loadCase.name, margin, yPos);
+        doc.text(`Material ${idx + 1}: ${mat.name}`, margin, yPos);
         yPos += 8;
 
-        doc.setFontSize(10);
-        doc.setFont('helvetica', 'normal');
-        doc.text(`Axial Force: ${loadCase.loads.axial} N`, margin, yPos);
-        yPos += 6;
-        doc.text(`Bending Moment: ${loadCase.loads.bending} N·mm`, margin, yPos);
-        yPos += 6;
-        doc.text(`Torsion: ${loadCase.loads.torsion} N·mm`, margin, yPos);
-        yPos += 10;
-      }
+        const matData = [
+          ['Property', 'Value', 'Unit'],
+          ['Longitudinal Modulus (E₁)', mat.E1.toFixed(0), 'MPa'],
+          ['Transverse Modulus (E₂)', mat.E2.toFixed(0), 'MPa'],
+          ['Shear Modulus (G₁₂)', mat.G12.toFixed(0), 'MPa'],
+          ['Poisson Ratio (ν₁₂)', mat.nu12.toFixed(3), '-'],
+          ['Ply Thickness', mat.thickness.toFixed(3), 'mm'],
+          ['Density', mat.density.toFixed(2), 'g/cm³'],
+          ...(mat.tensile_strength ? [['Tensile Strength', mat.tensile_strength.toFixed(0), 'MPa']] : []),
+          ...(mat.compressive_strength ? [['Compressive Strength', mat.compressive_strength.toFixed(0), 'MPa']] : []),
+          ...(mat.shear_strength ? [['Shear Strength', mat.shear_strength.toFixed(0), 'MPa']] : []),
+          ['Thermal Resistance', mat.thermal_resistance.toFixed(0), '°C']
+        ];
 
-      // Stress Results
-      if (stressResults.length > 0) {
-        if (yPos > 220) {
-          doc.addPage();
-          yPos = 20;
-        }
+        autoTable(doc, {
+          startY: yPos,
+          head: [matData[0]],
+          body: matData.slice(1),
+          theme: 'striped',
+          headStyles: { fillColor: [52, 152, 219], fontSize: 9 },
+          styles: { fontSize: 8 },
+          margin: { left: margin + 5, right: margin }
+        });
+
+        yPos = (doc as any).lastAutoTable.finalY + 5;
+      });
+
+      // ============ SECTION 3: PLY STACK ============
+      doc.addPage();
+      yPos = 20;
+      doc.setFontSize(16);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(41, 128, 185);
+      doc.text('3. Ply Stack Sequence', margin, yPos);
+      doc.setTextColor(0, 0, 0);
+      yPos += 12;
+
+      const plyData = [
+        ['Ply #', 'Material', 'Angle (°)', 'Thickness (mm)', 'Position (mm)']
+      ];
+
+      let zPos = -engineeringProps.thickness / 2;
+      plies.forEach((ply, idx) => {
+        const mat = materials[ply.material];
+        if (!mat) return;
+        const zStart = zPos;
+        const zEnd = zPos + mat.thickness;
+        plyData.push([
+          (idx + 1).toString(),
+          mat.name,
+          ply.angle.toString(),
+          mat.thickness.toFixed(3),
+          `${zStart.toFixed(3)} to ${zEnd.toFixed(3)}`
+        ]);
+        zPos = zEnd;
+      });
+
+      autoTable(doc, {
+        startY: yPos,
+        head: [plyData[0]],
+        body: plyData.slice(1),
+        theme: 'grid',
+        headStyles: { fillColor: [41, 128, 185], fontSize: 9 },
+        styles: { fontSize: 8, halign: 'center' },
+        margin: { left: margin, right: margin }
+      });
+
+      yPos = (doc as any).lastAutoTable.finalY + 15;
+
+      // Add stacking notation
+      checkNewPage(30);
+      doc.setFontSize(11);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Stacking Notation:', margin, yPos);
+      yPos += 7;
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(10);
+      const stackingNotation = `[${plies.map(p => p.angle).join('/')}]`;
+      doc.text(stackingNotation, margin + 5, yPos);
+
+      // ============ SECTION 4: ABD MATRICES ============
+      doc.addPage();
+      yPos = 20;
+      doc.setFontSize(16);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(41, 128, 185);
+      doc.text('4. ABD Stiffness Matrices', margin, yPos);
+      doc.setTextColor(0, 0, 0);
+      yPos += 12;
+
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'normal');
+      const abdDescription = 'The ABD matrix relates forces and moments to strains and curvatures in the laminate. A: extensional stiffness, B: coupling stiffness, D: bending stiffness.';
+      doc.text(doc.splitTextToSize(abdDescription, contentWidth), margin, yPos);
+      yPos += 20;
+
+      const formatMatrixValue = (val: number) => {
+        if (Math.abs(val) < 0.001) return '0.00';
+        if (Math.abs(val) >= 1e6) return val.toExponential(2);
+        if (Math.abs(val) >= 1000) return val.toFixed(0);
+        return val.toFixed(2);
+      };
+
+      // A Matrix
+      doc.setFontSize(12);
+      doc.setFont('helvetica', 'bold');
+      doc.text('A Matrix (Extensional Stiffness) [N/mm]', margin, yPos);
+      yPos += 8;
+
+      const aData = abdMatrix.A.map((row, i) => 
+        [`A${i+1}j`, ...row.map(formatMatrixValue)]
+      );
+      aData.unshift(['', 'j=1', 'j=2', 'j=3']);
+
+      autoTable(doc, {
+        startY: yPos,
+        head: [aData[0]],
+        body: aData.slice(1),
+        theme: 'grid',
+        headStyles: { fillColor: [52, 152, 219], fontSize: 9 },
+        styles: { fontSize: 8, halign: 'right', font: 'courier' },
+        margin: { left: margin, right: margin }
+      });
+
+      yPos = (doc as any).lastAutoTable.finalY + 12;
+      checkNewPage(60);
+
+      // B Matrix
+      doc.setFontSize(12);
+      doc.setFont('helvetica', 'bold');
+      doc.text('B Matrix (Coupling Stiffness) [N]', margin, yPos);
+      yPos += 8;
+
+      const bData = abdMatrix.B.map((row, i) => 
+        [`B${i+1}j`, ...row.map(formatMatrixValue)]
+      );
+      bData.unshift(['', 'j=1', 'j=2', 'j=3']);
+
+      autoTable(doc, {
+        startY: yPos,
+        head: [bData[0]],
+        body: bData.slice(1),
+        theme: 'grid',
+        headStyles: { fillColor: [52, 152, 219], fontSize: 9 },
+        styles: { fontSize: 8, halign: 'right', font: 'courier' },
+        margin: { left: margin, right: margin }
+      });
+
+      yPos = (doc as any).lastAutoTable.finalY + 12;
+      checkNewPage(60);
+
+      // D Matrix
+      doc.setFontSize(12);
+      doc.setFont('helvetica', 'bold');
+      doc.text('D Matrix (Bending Stiffness) [N·mm]', margin, yPos);
+      yPos += 8;
+
+      const dData = abdMatrix.D.map((row, i) => 
+        [`D${i+1}j`, ...row.map(formatMatrixValue)]
+      );
+      dData.unshift(['', 'j=1', 'j=2', 'j=3']);
+
+      autoTable(doc, {
+        startY: yPos,
+        head: [dData[0]],
+        body: dData.slice(1),
+        theme: 'grid',
+        headStyles: { fillColor: [52, 152, 219], fontSize: 9 },
+        styles: { fontSize: 8, halign: 'right', font: 'courier' },
+        margin: { left: margin, right: margin }
+      });
+
+      yPos = (doc as any).lastAutoTable.finalY + 15;
+
+      // ============ SECTION 5: ENGINEERING PROPERTIES ============
+      checkNewPage(80);
+      doc.setFontSize(16);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(41, 128, 185);
+      doc.text('5. Equivalent Engineering Properties', margin, yPos);
+      doc.setTextColor(0, 0, 0);
+      yPos += 12;
+
+      const engPropData = [
+        ['Property', 'Symbol', 'Value', 'Unit'],
+        ['Longitudinal Modulus', 'Eₓ', engineeringProps.Ex.toFixed(2), 'MPa'],
+        ['Transverse Modulus', 'Eᵧ', engineeringProps.Ey.toFixed(2), 'MPa'],
+        ['Shear Modulus', 'Gₓᵧ', engineeringProps.Gxy.toFixed(2), 'MPa'],
+        ['Major Poisson Ratio', 'νₓᵧ', engineeringProps.nuxy.toFixed(4), '-'],
+        ['Total Thickness', 'h', engineeringProps.thickness.toFixed(3), 'mm']
+      ];
+
+      autoTable(doc, {
+        startY: yPos,
+        head: [engPropData[0]],
+        body: engPropData.slice(1),
+        theme: 'striped',
+        headStyles: { fillColor: [41, 128, 185], fontSize: 10 },
+        styles: { fontSize: 9 },
+        margin: { left: margin, right: margin }
+      });
+
+      yPos = (doc as any).lastAutoTable.finalY + 15;
+
+      // ============ SECTION 6: LOAD CASE ============
+      if (loadCase) {
+        checkNewPage(60);
+        doc.setFontSize(16);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(41, 128, 185);
+        doc.text('6. Load Case Definition', margin, yPos);
+        doc.setTextColor(0, 0, 0);
+        yPos += 12;
 
         doc.setFontSize(12);
         doc.setFont('helvetica', 'bold');
-        doc.text('Stress Analysis Results', margin, yPos);
+        doc.text(`Load Case: ${loadCase.name}`, margin, yPos);
         yPos += 10;
 
-        doc.setFontSize(9);
-        stressResults.forEach((result, idx) => {
-          if (yPos > 270) {
-            doc.addPage();
-            yPos = 20;
-          }
-          doc.text(`Ply ${idx + 1}:`, margin, yPos);
-          yPos += 5;
-          doc.setFont('helvetica', 'normal');
-          doc.text(`  σ₁: ${result.sigma_1?.toFixed(2) || 'N/A'} MPa`, margin, yPos);
-          yPos += 5;
-          doc.text(`  σ₂: ${result.sigma_2?.toFixed(2) || 'N/A'} MPa`, margin, yPos);
-          yPos += 5;
-          doc.text(`  τ₁₂: ${result.tau_12?.toFixed(2) || 'N/A'} MPa`, margin, yPos);
-          yPos += 5;
-          doc.text(`  von Mises: ${result.vonMises?.toFixed(2) || 'N/A'} MPa`, margin, yPos);
-          yPos += 7;
-          doc.setFont('helvetica', 'bold');
+        const loadData = [
+          ['Load Component', 'Symbol', 'Value', 'Unit'],
+          ['Axial Force', 'Nₓ', loadCase.loads.axial.toFixed(2), 'N'],
+          ['Bending Moment', 'Mₓ', loadCase.loads.bending.toFixed(2), 'N·mm'],
+          ['Torsional Moment', 'Mₜ', loadCase.loads.torsion.toFixed(2), 'N·mm']
+        ];
+
+        autoTable(doc, {
+          startY: yPos,
+          head: [loadData[0]],
+          body: loadData.slice(1),
+          theme: 'grid',
+          headStyles: { fillColor: [41, 128, 185], fontSize: 10 },
+          styles: { fontSize: 9 },
+          margin: { left: margin, right: margin }
         });
+
+        yPos = (doc as any).lastAutoTable.finalY + 15;
       }
 
+      // ============ SECTION 7: STRESS RESULTS ============
+      if (stressResults.length > 0) {
+        doc.addPage();
+        yPos = 20;
+        doc.setFontSize(16);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(41, 128, 185);
+        doc.text('7. Stress Analysis Results', margin, yPos);
+        doc.setTextColor(0, 0, 0);
+        yPos += 12;
+
+        // Material Coordinate Stresses
+        doc.setFontSize(12);
+        doc.setFont('helvetica', 'bold');
+        doc.text('Material Coordinate Stresses', margin, yPos);
+        yPos += 8;
+
+        const matStressData = [
+          ['Ply', 'Material', 'Angle (°)', 'σ₁ (MPa)', 'σ₂ (MPa)', 'τ₁₂ (MPa)', 'von Mises (MPa)']
+        ];
+
+        stressResults.forEach((result) => {
+          matStressData.push([
+            result.ply.toString(),
+            result.material,
+            result.angle.toString(),
+            result.sigma_1.toFixed(2),
+            result.sigma_2.toFixed(2),
+            result.tau_12.toFixed(2),
+            result.von_mises.toFixed(2)
+          ]);
+        });
+
+        autoTable(doc, {
+          startY: yPos,
+          head: [matStressData[0]],
+          body: matStressData.slice(1),
+          theme: 'grid',
+          headStyles: { fillColor: [41, 128, 185], fontSize: 8 },
+          styles: { fontSize: 7, halign: 'center' },
+          margin: { left: margin, right: margin }
+        });
+
+        yPos = (doc as any).lastAutoTable.finalY + 15;
+
+        // Global Coordinate Stresses
+        checkNewPage(80);
+        doc.setFontSize(12);
+        doc.setFont('helvetica', 'bold');
+        doc.text('Global Coordinate Stresses', margin, yPos);
+        yPos += 8;
+
+        const globalStressData = [
+          ['Ply', 'σₓ (MPa)', 'σᵧ (MPa)', 'τₓᵧ (MPa)', 'σ_max (MPa)', 'σ_min (MPa)', 'τ_max (MPa)']
+        ];
+
+        stressResults.forEach((result) => {
+          globalStressData.push([
+            result.ply.toString(),
+            result.sigma_x.toFixed(2),
+            result.sigma_y.toFixed(2),
+            result.tau_xy.toFixed(2),
+            result.sigma_principal_max.toFixed(2),
+            result.sigma_principal_min.toFixed(2),
+            result.tau_max.toFixed(2)
+          ]);
+        });
+
+        autoTable(doc, {
+          startY: yPos,
+          head: [globalStressData[0]],
+          body: globalStressData.slice(1),
+          theme: 'grid',
+          headStyles: { fillColor: [41, 128, 185], fontSize: 8 },
+          styles: { fontSize: 7, halign: 'center' },
+          margin: { left: margin, right: margin }
+        });
+
+        yPos = (doc as any).lastAutoTable.finalY + 15;
+
+        // ============ SECTION 8: STRAIN RESULTS ============
+        checkNewPage(60);
+        doc.setFontSize(16);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(41, 128, 185);
+        doc.text('8. Strain Analysis Results', margin, yPos);
+        doc.setTextColor(0, 0, 0);
+        yPos += 12;
+
+        const strainData = [
+          ['Ply', 'Material', 'ε₁', 'ε₂', 'γ₁₂']
+        ];
+
+        stressResults.forEach((result) => {
+          strainData.push([
+            result.ply.toString(),
+            result.material,
+            result.epsilon_1.toExponential(3),
+            result.epsilon_2.toExponential(3),
+            result.gamma_12.toExponential(3)
+          ]);
+        });
+
+        autoTable(doc, {
+          startY: yPos,
+          head: [strainData[0]],
+          body: strainData.slice(1),
+          theme: 'striped',
+          headStyles: { fillColor: [41, 128, 185], fontSize: 9 },
+          styles: { fontSize: 8, halign: 'center', font: 'courier' },
+          margin: { left: margin, right: margin }
+        });
+
+        yPos = (doc as any).lastAutoTable.finalY + 15;
+      }
+
+      // ============ SECTION 9: FAILURE ANALYSIS ============
+      if (failureResults.length > 0) {
+        doc.addPage();
+        yPos = 20;
+        doc.setFontSize(16);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(41, 128, 185);
+        doc.text('9. Failure Analysis', margin, yPos);
+        doc.setTextColor(0, 0, 0);
+        yPos += 12;
+
+        const failureData = [
+          ['Ply', 'Material', 'Max Stress', 'Tsai-Wu', 'Tsai-Hill', 'Status']
+        ];
+
+        failureResults.forEach((result) => {
+          const status = result.failed ? '⚠ FAILED' : '✓ PASS';
+          failureData.push([
+            result.ply.toString(),
+            result.material,
+            result.maxStressFI.toFixed(3),
+            result.tsaiWuFI.toFixed(3),
+            result.tsaiHillFI.toFixed(3),
+            status
+          ]);
+        });
+
+        autoTable(doc, {
+          startY: yPos,
+          head: [failureData[0]],
+          body: failureData.slice(1),
+          theme: 'grid',
+          headStyles: { fillColor: [41, 128, 185], fontSize: 9 },
+          styles: { fontSize: 8, halign: 'center' },
+          didParseCell: (data) => {
+            if (data.section === 'body' && data.column.index === 5) {
+              const value = data.cell.text[0];
+              if (value.includes('FAILED')) {
+                data.cell.styles.textColor = [231, 76, 60];
+                data.cell.styles.fontStyle = 'bold';
+              } else if (value.includes('PASS')) {
+                data.cell.styles.textColor = [39, 174, 96];
+                data.cell.styles.fontStyle = 'bold';
+              }
+            }
+          },
+          margin: { left: margin, right: margin }
+        });
+
+        yPos = (doc as any).lastAutoTable.finalY + 15;
+
+        // Add failure criterion note
+        checkNewPage(30);
+        doc.setFontSize(9);
+        doc.setFont('helvetica', 'italic');
+        doc.text('Note: Failure Index (FI) > 1.0 indicates failure. Values shown are based on applied safety factors.', margin, yPos);
+      }
+
+      // ============ FINAL PAGE: REFERENCES & NOTES ============
+      doc.addPage();
+      yPos = 20;
+      doc.setFontSize(16);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(41, 128, 185);
+      doc.text('References & Analysis Notes', margin, yPos);
+      doc.setTextColor(0, 0, 0);
+      yPos += 15;
+
+      doc.setFontSize(11);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Analysis Methodology:', margin, yPos);
+      yPos += 8;
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(10);
+      
+      const methodText = [
+        '• Classical Lamination Theory (CLT) was used for all calculations',
+        '• Plane stress assumption applied to each ply',
+        '• Perfect bonding assumed between plies',
+        '• Linear elastic material behavior',
+        '• Small deformation theory'
+      ];
+      methodText.forEach(text => {
+        doc.text(text, margin + 5, yPos);
+        yPos += 7;
+      });
+
+      yPos += 10;
+      doc.setFontSize(11);
+      doc.setFont('helvetica', 'bold');
+      doc.text('References:', margin, yPos);
+      yPos += 8;
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(9);
+      
+      const references = [
+        '1. NASA RP-1351: Basic Mechanics of Laminated Composite Plates',
+        '2. Jones, R.M. "Mechanics of Composite Materials", 2nd Ed., Taylor & Francis, 1999',
+        '3. Herakovich, C.T. "Mechanics of Fibrous Composites", Wiley, 1998',
+        '4. Tsai, S.W. and Wu, E.M. "A General Theory of Strength for Anisotropic Materials"',
+        '5. ASTM D3039: Standard Test Method for Tensile Properties of Composites'
+      ];
+      references.forEach(ref => {
+        doc.text(ref, margin + 5, yPos);
+        yPos += 6;
+      });
+
+      yPos += 15;
+      doc.setFillColor(245, 245, 245);
+      doc.roundedRect(margin, yPos, contentWidth, 40, 2, 2, 'F');
+      yPos += 10;
+      doc.setFontSize(9);
+      doc.setFont('helvetica', 'italic');
+      doc.text('Disclaimer: This analysis is provided for engineering evaluation purposes. Results should be', margin + 10, yPos);
+      yPos += 5;
+      doc.text('validated against experimental data and design codes before use in critical applications.', margin + 10, yPos);
+      yPos += 5;
+      doc.text('The accuracy of results depends on the quality of input material properties and load definitions.', margin + 10, yPos);
+
+      // Add page numbers
+      addPageNumbers();
+
       // Save the PDF
-      doc.save(`composite-analysis-${Date.now()}.pdf`);
-      toast.success('PDF report generated successfully');
+      const filename = `Composite_Analysis_${new Date().getTime()}.pdf`;
+      doc.save(filename);
+      toast.success('Comprehensive PDF report generated successfully');
     } catch (error) {
       console.error('Error generating PDF:', error);
       toast.error('Failed to generate PDF report');
