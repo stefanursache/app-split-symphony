@@ -14,6 +14,7 @@ import { CrossSectionVisualization } from '@/components/composite/CrossSectionVi
 import { ABDMatrixDisplay } from '@/components/composite/ABDMatrixDisplay';
 import { ConfigurationComparison } from '@/components/composite/ConfigurationComparison';
 import { SaveConfigurationDialog } from '@/components/composite/SaveConfigurationDialog';
+import { MathematicsExplanation } from '@/components/composite/MathematicsExplanation';
 import { FailureCriteriaSelector } from '@/components/composite/FailureCriteriaSelector';
 import { PlyFailureAnalysis } from '@/components/composite/PlyFailureAnalysis';
 import { SafetyMarginSummary } from '@/components/composite/SafetyMarginSummary';
@@ -251,12 +252,13 @@ const Index = () => {
           {/* Right Panel - Analysis */}
           <div className="lg:col-span-2 space-y-6">
             <Tabs value={state.activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="grid w-full grid-cols-5">
+              <TabsList className="grid w-full grid-cols-6">
                 <TabsTrigger value="properties">Properties</TabsTrigger>
                 <TabsTrigger value="stress">Stress</TabsTrigger>
                 <TabsTrigger value="failure">Failure</TabsTrigger>
                 <TabsTrigger value="optimize">Optimize</TabsTrigger>
                 <TabsTrigger value="comparison">Compare</TabsTrigger>
+                <TabsTrigger value="mathematics">Mathematics</TabsTrigger>
               </TabsList>
 
               <TabsContent value="properties" className="mt-6 space-y-6">
@@ -302,6 +304,10 @@ const Index = () => {
                   onLoadConfig={handleLoadConfiguration}
                   onDeleteConfig={handleDeleteConfiguration}
                 />
+              </TabsContent>
+
+              <TabsContent value="mathematics" className="mt-6">
+                <MathematicsExplanation plies={state.plies} materials={materials} />
               </TabsContent>
             </Tabs>
           </div>
