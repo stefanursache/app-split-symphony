@@ -40,6 +40,16 @@ export interface StressResult {
   sigma_1: number;
   sigma_2: number;
   tau_12: number;
+  epsilon_1: number;
+  epsilon_2: number;
+  gamma_12: number;
+  sigma_x: number;
+  sigma_y: number;
+  tau_xy: number;
+  sigma_principal_max: number;
+  sigma_principal_min: number;
+  tau_max: number;
+  von_mises: number;
 }
 
 export interface AppState {

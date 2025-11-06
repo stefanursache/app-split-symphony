@@ -91,16 +91,50 @@ export function calculateStressStrain(
 
     const angleRad = ply.angle * Math.PI / 180;
 
+    // Global stresses
     const sigma_x = sigma_axial + sigma_bending;
     const sigma_y = 0;
     const tau_xy = tau_torsion;
 
     const cos = Math.cos(angleRad);
     const sin = Math.sin(angleRad);
+    const cos2 = cos * cos;
+    const sin2 = sin * sin;
 
-    const sigma_1 = sigma_x * cos * cos + sigma_y * sin * sin + 2 * tau_xy * sin * cos;
-    const sigma_2 = sigma_x * sin * sin + sigma_y * cos * cos - 2 * tau_xy * sin * cos;
-    const tau_12 = (sigma_y - sigma_x) * sin * cos + tau_xy * (cos * cos - sin * sin);
+    // Transform to material coordinates (1-2 system)
+    const sigma_1 = sigma_x * cos2 + sigma_y * sin2 + 2 * tau_xy * sin * cos;
+    const sigma_2 = sigma_x * sin2 + sigma_y * cos2 - 2 * tau_xy * sin * cos;
+    const tau_12 = (sigma_y - sigma_x) * sin * cos + tau_xy * (cos2 - sin2);
+
+    // Calculate strains using material properties
+    const E1 = material.E1;
+    const E2 = material.E2;
+    const G12 = material.G12;
+    const nu12 = material.nu12;
+    const nu21 = nu12 * E2 / E1;
+
+    // Compliance matrix components (S matrix)
+    const S11 = 1 / E1;
+    const S12 = -nu12 / E1;
+    const S22 = 1 / E2;
+    const S66 = 1 / G12;
+
+    // Strains in material coordinates
+    const epsilon_1 = S11 * sigma_1 + S12 * sigma_2;
+    const epsilon_2 = S12 * sigma_1 + S22 * sigma_2;
+    const gamma_12 = S66 * tau_12;
+
+    // Principal stresses (for global stress state)
+    const sigma_avg = (sigma_x + sigma_y) / 2;
+    const R = Math.sqrt(Math.pow((sigma_x - sigma_y) / 2, 2) + tau_xy * tau_xy);
+    const sigma_principal_max = sigma_avg + R;
+    const sigma_principal_min = sigma_avg - R;
+    const tau_max = R;
+
+    // von Mises stress
+    const von_mises = Math.sqrt(
+      sigma_1 * sigma_1 + sigma_2 * sigma_2 - sigma_1 * sigma_2 + 3 * tau_12 * tau_12
+    );
 
     results.push({
       ply: index + 1,
@@ -108,7 +142,17 @@ export function calculateStressStrain(
       angle: ply.angle,
       sigma_1,
       sigma_2,
-      tau_12
+      tau_12,
+      epsilon_1,
+      epsilon_2,
+      gamma_12,
+      sigma_x,
+      sigma_y,
+      tau_xy,
+      sigma_principal_max,
+      sigma_principal_min,
+      tau_max,
+      von_mises
     });
   });
 
