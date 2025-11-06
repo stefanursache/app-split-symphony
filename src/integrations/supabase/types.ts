@@ -14,7 +14,42 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      laminate_configurations: {
+        Row: {
+          created_at: string
+          description: string | null
+          engineering_properties: Json | null
+          id: string
+          name: string
+          plies: Json
+          total_thickness: number | null
+          total_weight: number | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          engineering_properties?: Json | null
+          id?: string
+          name: string
+          plies: Json
+          total_thickness?: number | null
+          total_weight?: number | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          engineering_properties?: Json | null
+          id?: string
+          name?: string
+          plies?: Json
+          total_thickness?: number | null
+          total_weight?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

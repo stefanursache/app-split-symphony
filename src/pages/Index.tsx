@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useMaterials } from '@/hooks/useMaterials';
 import { useAppState } from '@/hooks/useAppState';
+import { useConfigurations, Configuration } from '@/hooks/useConfigurations';
 import { MaterialSelector } from '@/components/composite/MaterialSelector';
 import { MaterialProperties } from '@/components/composite/MaterialProperties';
 import { MaterialEditor } from '@/components/composite/MaterialEditor';
@@ -10,6 +11,8 @@ import { LoadInputs } from '@/components/composite/LoadInputs';
 import { StressResults } from '@/components/composite/StressResults';
 import { CrossSectionVisualization } from '@/components/composite/CrossSectionVisualization';
 import { ABDMatrixDisplay } from '@/components/composite/ABDMatrixDisplay';
+import { ConfigurationComparison } from '@/components/composite/ConfigurationComparison';
+import { SaveConfigurationDialog } from '@/components/composite/SaveConfigurationDialog';
 import { calculateEngineeringProperties, calculateStressStrain } from '@/utils/calculations';
 import { calculateABDMatrix } from '@/utils/abdMatrix';
 import { Material } from '@/types/materials';
@@ -28,6 +31,7 @@ const Index = () => {
     setActiveTab,
     setSelectedMaterial
   } = useAppState();
+  const { configurations, loading: configsLoading, saveConfiguration } = useConfigurations();
 
   const [isEditorOpen, setIsEditorOpen] = useState(false);
   const [editingMaterial, setEditingMaterial] = useState<Material | null>(null);
@@ -81,6 +85,51 @@ const Index = () => {
     setStressResults(results);
   };
 
+  const handleSaveConfiguration = (name: string, description: string) => {
+    const totalThickness = state.plies.reduce((sum, ply) => {
+      const material = materials[ply.material];
+      return sum + (material?.thickness || 0);
+    }, 0);
+
+    const totalWeight = state.plies.reduce((sum, ply) => {
+      const material = materials[ply.material];
+      return sum + (material ? material.density * material.thickness : 0);
+    }, 0);
+
+    saveConfiguration(
+      name,
+      description,
+      state.plies,
+      engineeringProps,
+      totalThickness,
+      totalWeight
+    );
+  };
+
+  const handleAddCurrentToComparison = () => {
+    const totalThickness = state.plies.reduce((sum, ply) => {
+      const material = materials[ply.material];
+      return sum + (material?.thickness || 0);
+    }, 0);
+
+    const totalWeight = state.plies.reduce((sum, ply) => {
+      const material = materials[ply.material];
+      return sum + (material ? material.density * material.thickness : 0);
+    }, 0);
+
+    return {
+      id: 'current',
+      name: 'Current Design',
+      description: null,
+      plies: state.plies,
+      engineering_properties: engineeringProps,
+      total_thickness: totalThickness,
+      total_weight: totalWeight,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    } as Configuration;
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b border-border bg-card sticky top-0 z-50">
@@ -132,14 +181,20 @@ const Index = () => {
               onRemovePly={removePly}
               onClearPlies={clearPlies}
             />
+
+            <SaveConfigurationDialog
+              onSave={handleSaveConfiguration}
+              disabled={state.plies.length === 0}
+            />
           </div>
 
           {/* Right Panel - Analysis */}
           <div className="lg:col-span-2 space-y-6">
             <Tabs value={state.activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="grid w-full grid-cols-2">
+              <TabsList className="grid w-full grid-cols-3">
                 <TabsTrigger value="properties">Properties</TabsTrigger>
                 <TabsTrigger value="stress">Stress Analysis</TabsTrigger>
+                <TabsTrigger value="comparison">Comparison</TabsTrigger>
               </TabsList>
 
               <TabsContent value="properties" className="mt-6 space-y-6">
@@ -155,6 +210,15 @@ const Index = () => {
                   onCalculate={handleCalculateStress}
                 />
                 <StressResults results={stressResults} />
+              </TabsContent>
+
+              <TabsContent value="comparison" className="mt-6">
+                <ConfigurationComparison
+                  configurations={configurations}
+                  loading={configsLoading}
+                  currentConfig={state.plies.length > 0 ? handleAddCurrentToComparison() : null}
+                  onAddCurrent={() => {}}
+                />
               </TabsContent>
             </Tabs>
           </div>
