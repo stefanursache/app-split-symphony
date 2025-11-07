@@ -161,66 +161,100 @@ const Index = () => {
       return;
     }
 
-    const results = calculateStressStrain(
-      state.plies,
-      materials,
-      state.loads,
-      geometry
-    );
-    setStressResults(results);
-
-    // Calculate failure analysis
-    const failureAnalysis = calculateFailureAnalysis(
-      state.plies,
-      materials,
-      results,
-      safetyFactor,
-      failureCriterion
-    );
-    setFailureResults(failureAnalysis);
-
-    // Thermal stress analysis (optional)
-    if (enableThermalAnalysis && deltaT !== 0) {
-      const thermal = calculateThermalStresses(state.plies, materials, deltaT);
-      setThermalResults(thermal);
-    } else {
-      setThermalResults([]);
+    // Validate that all materials exist
+    const missingMaterials = state.plies.filter(ply => !materials[ply.material]);
+    if (missingMaterials.length > 0) {
+      toast.error('Some materials are missing. Please reload the page or recreate the plies.');
+      console.error('Missing materials for plies:', missingMaterials);
+      return;
     }
 
-    // Buckling analysis (optional)
-    if (enableBucklingAnalysis) {
-      const buckling = calculateBucklingLoads(
-        calculateABDMatrix(state.plies, materials),
+    // Validate that materials have proper thickness values
+    const invalidMaterials = state.plies.filter(ply => {
+      const material = materials[ply.material];
+      return !material || !material.thickness || material.thickness <= 0;
+    });
+    
+    if (invalidMaterials.length > 0) {
+      toast.error('Some materials have invalid thickness. Please check material properties.');
+      console.error('Invalid material thicknesses:', invalidMaterials);
+      return;
+    }
+
+    try {
+      const results = calculateStressStrain(
+        state.plies,
+        materials,
         state.loads,
-        geometry.type,
-        {
-          a: 1000,
-          b: 1000,
-          outerDiameter: geometry.outerDiameter || 100,
-          length: geometry.length || 1000
-        }
+        geometry
       );
-      setBucklingResult(buckling);
-    } else {
+      setStressResults(results);
+
+      // Calculate failure analysis
+      const failureAnalysis = calculateFailureAnalysis(
+        state.plies,
+        materials,
+        results,
+        safetyFactor,
+        failureCriterion
+      );
+      setFailureResults(failureAnalysis);
+
+      // Thermal stress analysis (optional)
+      if (enableThermalAnalysis && deltaT !== 0) {
+        const thermal = calculateThermalStresses(state.plies, materials, deltaT);
+        setThermalResults(thermal);
+      } else {
+        setThermalResults([]);
+      }
+
+      // Buckling analysis (optional)
+      if (enableBucklingAnalysis) {
+        const buckling = calculateBucklingLoads(
+          calculateABDMatrix(state.plies, materials),
+          state.loads,
+          geometry.type,
+          {
+            a: 1000,
+            b: 1000,
+            outerDiameter: geometry.outerDiameter || 100,
+            length: geometry.length || 1000
+          }
+        );
+        setBucklingResult(buckling);
+      } else {
+        setBucklingResult(null);
+      }
+
+      // Progressive failure analysis (default)
+      const progressive = performProgressiveFailureAnalysis(
+        state.plies,
+        materials,
+        state.loads,
+        safetyFactor,
+        failureCriterion,
+        geometry.type,
+        geometry.outerDiameter || 100,
+        geometry.innerDiameter || 90
+      );
+      setProgressiveFailureAnalysis(progressive);
+
+      // Interlaminar stress analysis (default)
+      const interlaminar = calculateInterlaminarStresses(state.plies, materials, state.loads);
+      setInterlaminarResults(interlaminar);
+      
+      toast.success('Analysis completed successfully');
+    } catch (error) {
+      console.error('Calculation error:', error);
+      toast.error(`Calculation failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      // Clear results on error
+      setStressResults([]);
+      setFailureResults([]);
+      setThermalResults([]);
       setBucklingResult(null);
+      setProgressiveFailureAnalysis(null);
+      setInterlaminarResults([]);
     }
-
-    // Progressive failure analysis (default)
-    const progressive = performProgressiveFailureAnalysis(
-      state.plies,
-      materials,
-      state.loads,
-      safetyFactor,
-      failureCriterion,
-      geometry.type,
-      geometry.outerDiameter || 100,
-      geometry.innerDiameter || 90
-    );
-    setProgressiveFailureAnalysis(progressive);
-
-    // Interlaminar stress analysis (default)
-    const interlaminar = calculateInterlaminarStresses(state.plies, materials, state.loads);
-    setInterlaminarResults(interlaminar);
   };
 
   const handleRunLoadCase = (loadCaseId: string) => {

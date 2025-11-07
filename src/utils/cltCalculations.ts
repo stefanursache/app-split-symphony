@@ -5,6 +5,13 @@ import { calculateABDMatrix } from './abdMatrix';
 // Matrix inversion for 6x6 ABD matrix
 function invertMatrix6x6(ABD: number[][]): number[][] {
   const n = 6;
+  
+  // Check if matrix is all zeros
+  const isAllZeros = ABD.every(row => row.every(val => Math.abs(val) < 1e-10));
+  if (isAllZeros) {
+    throw new Error('Matrix is singular - ABD matrix contains all zeros. Check that materials have valid properties and thickness > 0.');
+  }
+  
   const augmented: number[][] = ABD.map((row, i) => [
     ...row,
     ...Array(n).fill(0).map((_, j) => (i === j ? 1 : 0))
@@ -22,7 +29,7 @@ function invertMatrix6x6(ABD: number[][]): number[][] {
 
     const pivot = augmented[i][i];
     if (Math.abs(pivot) < 1e-10) {
-      throw new Error('Matrix is singular');
+      throw new Error(`Matrix is singular at row ${i + 1}. The laminate stiffness matrix cannot be inverted - check ply configuration and material properties.`);
     }
 
     for (let j = 0; j < 2 * n; j++) {
