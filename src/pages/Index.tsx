@@ -279,12 +279,11 @@ const Index = () => {
     }
   };
 
-  // Auto-calculate when active load case changes
+  // Load the loads when active load case changes, but don't auto-calculate
   useEffect(() => {
     const activeCase = getActiveLoadCase();
-    if (activeCase && state.plies.length > 0) {
+    if (activeCase) {
       updateLoads(activeCase.loads);
-      handleCalculateStress(false);
     }
   }, [activeLoadCaseId]);
 
