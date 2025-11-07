@@ -14,7 +14,9 @@ export const DEFAULT_MATERIALS: Record<string, Material> = {
     thermal_resistance: 260,
     density: 1.9,
     thickness: 0.25,
-    color: '#E8F4F8'
+    color: '#E8F4F8',
+    alpha1: 7e-6,
+    alpha2: 7e-6
   },
   'Carbon Fiber Twill': {
     name: 'Carbon Fiber Twill',
@@ -29,7 +31,9 @@ export const DEFAULT_MATERIALS: Record<string, Material> = {
     thermal_resistance: 650,
     density: 1.9,
     thickness: 0.25,
-    color: '#2C2C2C'
+    color: '#2C2C2C',
+    alpha1: -0.5e-6,
+    alpha2: 12e-6
   },
   'Aramid Kevlar Twill': {
     name: 'Aramid Kevlar Twill',
@@ -44,7 +48,9 @@ export const DEFAULT_MATERIALS: Record<string, Material> = {
     thermal_resistance: 260,
     density: 1.45,
     thickness: 0.20,
-    color: '#FFE5B4'
+    color: '#FFE5B4',
+    alpha1: -2e-6,
+    alpha2: 60e-6
   }
 };
 

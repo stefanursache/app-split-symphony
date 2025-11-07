@@ -27,9 +27,18 @@ import { LoadCaseManager } from '@/components/composite/LoadCaseManager';
 import { StressVisualization } from '@/components/composite/StressVisualization';
 import { PDFReportExport } from '@/components/composite/PDFReportExport';
 import { GeometrySelector } from '@/components/composite/GeometrySelector';
+import { AdvancedAnalysisOptions } from '@/components/composite/AdvancedAnalysisOptions';
+import { ThermalStressResults } from '@/components/composite/ThermalStressResults';
+import { BucklingResults } from '@/components/composite/BucklingResults';
+import { ProgressiveFailureResults } from '@/components/composite/ProgressiveFailureResults';
+import { InterlaminarStressResults } from '@/components/composite/InterlaminarStressResults';
 import { calculateEngineeringProperties, calculateStressStrain } from '@/utils/calculations';
 import { calculateABDMatrix } from '@/utils/abdMatrix';
 import { calculateFailureAnalysis, calculateSafetySummary, FailureResult } from '@/utils/failureAnalysis';
+import { calculateThermalStresses, ThermalStressResult } from '@/utils/thermalAnalysis';
+import { calculateBucklingLoads, BucklingResult } from '@/utils/bucklingAnalysis';
+import { performProgressiveFailureAnalysis, ProgressiveFailureAnalysis } from '@/utils/progressiveFailure';
+import { calculateInterlaminarStresses, InterlaminarStressResult } from '@/utils/interlaminarStress';
 import { Material } from '@/types/materials';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -72,6 +81,15 @@ const Index = () => {
     type: 'tube',
     innerDiameter: state.innerDiameter
   });
+  
+  // Advanced analysis state
+  const [enableThermalAnalysis, setEnableThermalAnalysis] = useState(false);
+  const [enableBucklingAnalysis, setEnableBucklingAnalysis] = useState(false);
+  const [deltaT, setDeltaT] = useState(0);
+  const [thermalResults, setThermalResults] = useState<ThermalStressResult[]>([]);
+  const [bucklingResult, setBucklingResult] = useState<BucklingResult | null>(null);
+  const [progressiveFailureAnalysis, setProgressiveFailureAnalysis] = useState<ProgressiveFailureAnalysis | null>(null);
+  const [interlaminarResults, setInterlaminarResults] = useState<InterlaminarStressResult[]>([]);
 
   const selectedMaterialData = materials[state.selectedMaterial] || null;
 
@@ -160,6 +178,49 @@ const Index = () => {
       failureCriterion
     );
     setFailureResults(failureAnalysis);
+
+    // Thermal stress analysis (optional)
+    if (enableThermalAnalysis && deltaT !== 0) {
+      const thermal = calculateThermalStresses(state.plies, materials, deltaT);
+      setThermalResults(thermal);
+    } else {
+      setThermalResults([]);
+    }
+
+    // Buckling analysis (optional)
+    if (enableBucklingAnalysis) {
+      const buckling = calculateBucklingLoads(
+        calculateABDMatrix(state.plies, materials),
+        state.loads,
+        geometry.type,
+        {
+          a: 1000,
+          b: 1000,
+          outerDiameter: geometry.outerDiameter || 100,
+          length: geometry.length || 1000
+        }
+      );
+      setBucklingResult(buckling);
+    } else {
+      setBucklingResult(null);
+    }
+
+    // Progressive failure analysis (default)
+    const progressive = performProgressiveFailureAnalysis(
+      state.plies,
+      materials,
+      state.loads,
+      safetyFactor,
+      failureCriterion,
+      geometry.type,
+      geometry.outerDiameter || 100,
+      geometry.innerDiameter || 90
+    );
+    setProgressiveFailureAnalysis(progressive);
+
+    // Interlaminar stress analysis (default)
+    const interlaminar = calculateInterlaminarStresses(state.plies, materials, state.loads);
+    setInterlaminarResults(interlaminar);
 
     if (createNewCase) {
       // Check if a similar load case already exists
@@ -465,6 +526,14 @@ const Index = () => {
               </TabsContent>
 
               <TabsContent value="failure" className="mt-6 space-y-6">
+                <AdvancedAnalysisOptions
+                  enableThermalAnalysis={enableThermalAnalysis}
+                  enableBucklingAnalysis={enableBucklingAnalysis}
+                  deltaT={deltaT}
+                  onThermalToggle={setEnableThermalAnalysis}
+                  onBucklingToggle={setEnableBucklingAnalysis}
+                  onDeltaTChange={setDeltaT}
+                />
                 <FailureCriteriaSelector
                   failureCriterion={failureCriterion}
                   safetyFactor={safetyFactor}
@@ -473,6 +542,18 @@ const Index = () => {
                 />
                 <PlyFailureAnalysis results={failureResults} />
                 <SafetyMarginSummary summary={safetySummary} />
+                {enableThermalAnalysis && thermalResults.length > 0 && (
+                  <ThermalStressResults results={thermalResults} deltaT={deltaT} />
+                )}
+                {enableBucklingAnalysis && bucklingResult && (
+                  <BucklingResults result={bucklingResult} />
+                )}
+                {progressiveFailureAnalysis && (
+                  <ProgressiveFailureResults analysis={progressiveFailureAnalysis} />
+                )}
+                {interlaminarResults.length > 0 && (
+                  <InterlaminarStressResults results={interlaminarResults} />
+                )}
               </TabsContent>
 
               <TabsContent value="loadcases" className="mt-6">

@@ -22,7 +22,10 @@ const initialState: AppState = {
   innerDiameter: 124,
   operatingTemp: "-40°C to 60°C",
   geometryType: 'tube',
-  plateWidth: 100
+  plateWidth: 100,
+  enableThermalAnalysis: false,
+  enableBucklingAnalysis: false,
+  deltaT: 0
 };
 
 export function useAppState() {

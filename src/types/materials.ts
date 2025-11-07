@@ -12,6 +12,8 @@ export interface Material {
   density: number;
   thickness: number; // mm per ply
   color: string;
+  alpha1?: number; // Longitudinal CTE (1/°C)
+  alpha2?: number; // Transverse CTE (1/°C)
 }
 
 export interface Ply {
@@ -84,4 +86,7 @@ export interface AppState {
   operatingTemp: string;
   geometryType: 'plate' | 'tube';
   plateWidth?: number;
+  enableThermalAnalysis: boolean;
+  enableBucklingAnalysis: boolean;
+  deltaT: number;
 }
