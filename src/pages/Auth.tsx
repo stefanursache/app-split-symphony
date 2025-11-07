@@ -86,7 +86,7 @@ export default function Auth() {
       <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle>Composite Laminate Analysis</CardTitle>
-          <CardDescription>Sign in or create an account to get started</CardDescription>
+          <CardDescription>Sign in or create an account to save your work</CardDescription>
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="signin" className="w-full">
@@ -156,6 +156,19 @@ export default function Auth() {
               </form>
             </TabsContent>
           </Tabs>
+          
+          <div className="mt-6 text-center">
+            <Button 
+              variant="ghost" 
+              onClick={() => navigate('/')}
+              className="w-full"
+            >
+              Continue as Guest
+            </Button>
+            <p className="text-xs text-muted-foreground mt-2">
+              You can use the app without an account, but your work won't be saved
+            </p>
+          </div>
         </CardContent>
       </Card>
     </div>
