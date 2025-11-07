@@ -389,6 +389,13 @@ const Index = () => {
                   loads={state.loads}
                   onLoadChange={updateLoads}
                 />
+                <Button 
+                  onClick={() => handleCalculateStress(true)} 
+                  className="w-full"
+                  disabled={state.plies.length === 0}
+                >
+                  Calculate Stress/Strain
+                </Button>
                 <StressResults results={stressResults} />
               </TabsContent>
 
