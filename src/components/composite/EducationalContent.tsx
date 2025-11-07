@@ -131,6 +131,9 @@ export function EducationalContent() {
                 <p className="text-foreground">|σ₂| ≤ Yᵗ (tension) or Yᶜ (compression)</p>
                 <p className="text-foreground">|τ₁₂| ≤ S</p>
               </div>
+              <p className="text-xs text-muted-foreground mt-2">
+                Failure Index = max(|σ₁|/X, |σ₂|/Y, |τ₁₂|/S)
+              </p>
             </div>
 
             <Separator />
@@ -144,6 +147,15 @@ export function EducationalContent() {
                 <p className="text-foreground">
                   F₁σ₁ + F₂σ₂ + F₁₁σ₁² + F₂₂σ₂² + F₆₆τ₁₂² + 2F₁₂σ₁σ₂ ≤ 1
                 </p>
+              </div>
+              <div className="mt-3 space-y-1 text-xs text-muted-foreground">
+                <p><strong className="text-foreground">Coefficients:</strong></p>
+                <p className="font-mono">F₁ = 1/Xᵗ - 1/Xᶜ</p>
+                <p className="font-mono">F₂ = 1/Yᵗ - 1/Yᶜ</p>
+                <p className="font-mono">F₁₁ = 1/(Xᵗ × Xᶜ)</p>
+                <p className="font-mono">F₂₂ = 1/(Yᵗ × Yᶜ)</p>
+                <p className="font-mono">F₆₆ = 1/S²</p>
+                <p className="font-mono">F₁₂ = -0.5 × √(F₁₁ × F₂₂)</p>
               </div>
             </div>
 
@@ -159,6 +171,205 @@ export function EducationalContent() {
                   (σ₁/X)² - (σ₁σ₂/X²) + (σ₂/Y)² + (τ₁₂/S)² ≤ 1
                 </p>
               </div>
+              <p className="text-xs text-muted-foreground mt-2">
+                Where X, Y, S are the appropriate strengths based on stress signs
+              </p>
+            </div>
+          </div>
+        </Card>
+
+        {/* Stress-Strain Relationships */}
+        <Card className="p-6">
+          <h2 className="text-2xl font-bold text-foreground mb-4">Stress-Strain Relationships</h2>
+          
+          <div className="space-y-4">
+            <div>
+              <h3 className="text-xl font-semibold text-foreground mb-3">Global Strain Field</h3>
+              <div className="bg-muted/50 p-3 rounded-lg text-sm font-mono space-y-1">
+                <p className="text-foreground">εₓ(z) = ε⁰ₓ + z × κₓ</p>
+                <p className="text-foreground">εᵧ(z) = ε⁰ᵧ + z × κᵧ</p>
+                <p className="text-foreground">γₓᵧ(z) = γ⁰ₓᵧ + z × κₓᵧ</p>
+              </div>
+              <p className="text-sm text-muted-foreground mt-2">
+                Where z is the distance from the mid-plane, ε⁰ are mid-plane strains, and κ are curvatures.
+              </p>
+            </div>
+
+            <Separator />
+
+            <div>
+              <h3 className="text-xl font-semibold text-foreground mb-3">Ply Stress Calculation</h3>
+              <div className="bg-muted/50 p-3 rounded-lg text-sm font-mono">
+                <p className="text-foreground">[σ] = [Q̄] × [ε]</p>
+              </div>
+              <p className="text-sm text-muted-foreground mt-2">
+                Global stresses in each ply are computed using the transformed stiffness matrix.
+              </p>
+            </div>
+
+            <Separator />
+
+            <div>
+              <h3 className="text-xl font-semibold text-foreground mb-3">Material Axis Transformation</h3>
+              <div className="bg-muted/50 p-3 rounded-lg text-sm font-mono space-y-1">
+                <p className="text-foreground">σ₁ = σₓcos²θ + σᵧsin²θ + 2τₓᵧsinθcosθ</p>
+                <p className="text-foreground">σ₂ = σₓsin²θ + σᵧcos²θ - 2τₓᵧsinθcosθ</p>
+                <p className="text-foreground">τ₁₂ = -σₓsinθcosθ + σᵧsinθcosθ + τₓᵧ(cos²θ - sin²θ)</p>
+              </div>
+              <p className="text-sm text-muted-foreground mt-2">
+                Transforms global stresses to material principal axes for failure analysis.
+              </p>
+            </div>
+          </div>
+        </Card>
+
+        {/* Engineering Properties */}
+        <Card className="p-6">
+          <h2 className="text-2xl font-bold text-foreground mb-4">Equivalent Engineering Properties</h2>
+          
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground mb-3">
+              The laminate can be treated as an equivalent homogeneous orthotropic material with:
+            </p>
+
+            <div className="bg-muted/50 p-4 rounded-lg space-y-2 text-sm font-mono">
+              <p className="text-foreground">Eₓ = (A₁₁A₂₂ - A₁₂²) / (h × A₂₂)</p>
+              <p className="text-foreground">Eᵧ = (A₁₁A₂₂ - A₁₂²) / (h × A₁₁)</p>
+              <p className="text-foreground">Gₓᵧ = A₆₆ / h</p>
+              <p className="text-foreground">νₓᵧ = A₁₂ / A₂₂</p>
+              <p className="text-foreground">νᵧₓ = A₁₂ / A₁₁</p>
+            </div>
+
+            <p className="text-xs text-muted-foreground mt-2">
+              Where h is the total laminate thickness.
+            </p>
+          </div>
+        </Card>
+
+        {/* Thermal Analysis */}
+        <Card className="p-6">
+          <h2 className="text-2xl font-bold text-foreground mb-4">Thermal Stress Analysis</h2>
+          
+          <div className="space-y-4">
+            <div>
+              <h3 className="text-xl font-semibold text-foreground mb-3">Thermal Forces and Moments</h3>
+              <div className="bg-muted/50 p-3 rounded-lg text-sm font-mono space-y-1">
+                <p className="text-foreground">Nᵗₓ = ΔT × Σₖ (Q̄₁₁α₁ + Q̄₁₂α₂) × tₖ</p>
+                <p className="text-foreground">Nᵗᵧ = ΔT × Σₖ (Q̄₁₂α₁ + Q̄₂₂α₂) × tₖ</p>
+                <p className="text-foreground">Nᵗₓᵧ = ΔT × Σₖ (Q̄₁₆α₁ + Q̄₂₆α₂) × tₖ</p>
+              </div>
+            </div>
+
+            <Separator />
+
+            <div>
+              <h3 className="text-xl font-semibold text-foreground mb-3">Thermal Strains</h3>
+              <div className="bg-muted/50 p-3 rounded-lg text-sm font-mono space-y-1">
+                <p className="text-foreground">εᵗ₁ = α₁ × ΔT</p>
+                <p className="text-foreground">εᵗ₂ = α₂ × ΔT</p>
+              </div>
+              <p className="text-sm text-muted-foreground mt-2">
+                Where α₁ and α₂ are coefficients of thermal expansion in material axes.
+              </p>
+            </div>
+          </div>
+        </Card>
+
+        {/* Buckling Analysis */}
+        <Card className="p-6">
+          <h2 className="text-2xl font-bold text-foreground mb-4">Buckling Analysis</h2>
+          
+          <div className="space-y-4">
+            <div>
+              <h3 className="text-xl font-semibold text-foreground mb-3">Critical Buckling Load (Plates)</h3>
+              <div className="bg-muted/50 p-3 rounded-lg text-sm font-mono">
+                <p className="text-foreground">Nₓᶜʳ = k × π² × D / b²</p>
+              </div>
+              <p className="text-sm text-muted-foreground mt-2">
+                Where k is the buckling coefficient depending on boundary conditions and aspect ratio.
+              </p>
+            </div>
+
+            <Separator />
+
+            <div>
+              <h3 className="text-xl font-semibold text-foreground mb-3">Critical Pressure (Cylindrical Shells)</h3>
+              <div className="bg-muted/50 p-3 rounded-lg text-sm font-mono">
+                <p className="text-foreground">Pᶜʳ = 2 × Eₜ × (t/r)³ / [√(3(1-ν²))]</p>
+              </div>
+              <p className="text-sm text-muted-foreground mt-2">
+                For external pressure on thin-walled cylinders, where r is radius and t is thickness.
+              </p>
+            </div>
+
+            <Separator />
+
+            <div>
+              <h3 className="text-xl font-semibold text-foreground mb-3">Effective Bending Stiffness</h3>
+              <div className="bg-muted/50 p-3 rounded-lg text-sm font-mono space-y-1">
+                <p className="text-foreground">Dₑff = [(D₁₁D₂₂)⁰·⁵ + D₁₂ + 2D₆₆]</p>
+              </div>
+            </div>
+          </div>
+        </Card>
+
+        {/* Interlaminar Stresses */}
+        <Card className="p-6">
+          <h2 className="text-2xl font-bold text-foreground mb-4">Interlaminar Stress Analysis</h2>
+          
+          <div className="space-y-4">
+            <div>
+              <h3 className="text-xl font-semibold text-foreground mb-3">Out-of-Plane Shear Stresses</h3>
+              <p className="text-sm text-muted-foreground mb-3">
+                Calculated using equilibrium equations at ply interfaces:
+              </p>
+              <div className="bg-muted/50 p-3 rounded-lg text-sm font-mono space-y-1">
+                <p className="text-foreground">∂τₓz/∂z = -∂σₓ/∂x - ∂τₓᵧ/∂y</p>
+                <p className="text-foreground">∂τᵧz/∂z = -∂τₓᵧ/∂x - ∂σᵧ/∂y</p>
+              </div>
+            </div>
+
+            <Separator />
+
+            <div>
+              <h3 className="text-xl font-semibold text-foreground mb-3">Interface Stress Concentration</h3>
+              <p className="text-sm text-muted-foreground">
+                Peak interlaminar stresses occur at ply interfaces with large property mismatches, 
+                particularly at free edges where delamination typically initiates.
+              </p>
+            </div>
+          </div>
+        </Card>
+
+        {/* Progressive Failure */}
+        <Card className="p-6">
+          <h2 className="text-2xl font-bold text-foreground mb-4">Progressive Failure Analysis</h2>
+          
+          <div className="space-y-4">
+            <div>
+              <h3 className="text-xl font-semibold text-foreground mb-3">Material Degradation Model</h3>
+              <p className="text-sm text-muted-foreground mb-3">
+                When a ply fails, its stiffness is degraded:
+              </p>
+              <div className="bg-muted/50 p-3 rounded-lg text-sm font-mono space-y-1">
+                <p className="text-foreground">E₁ᵈᵉᵍ = 0.1 × E₁</p>
+                <p className="text-foreground">E₂ᵈᵉᵍ = 0.1 × E₂</p>
+                <p className="text-foreground">G₁₂ᵈᵉᵍ = 0.1 × G₁₂</p>
+              </div>
+              <p className="text-sm text-muted-foreground mt-2">
+                Typically 90% stiffness reduction for failed plies.
+              </p>
+            </div>
+
+            <Separator />
+
+            <div>
+              <h3 className="text-xl font-semibold text-foreground mb-3">Load Redistribution</h3>
+              <p className="text-sm text-muted-foreground">
+                After each ply failure, loads are redistributed to remaining intact plies. 
+                Analysis continues until ultimate failure or all plies have failed. The ultimate 
+                strength is the load at last ply failure.
+              </p>
             </div>
           </div>
         </Card>

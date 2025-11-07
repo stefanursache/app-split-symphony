@@ -494,8 +494,8 @@ const Index = () => {
                 <TabsTrigger value="visualization">Visualization</TabsTrigger>
                 <TabsTrigger value="failure">Failure</TabsTrigger>
                 <TabsTrigger value="loadcases">Load Cases</TabsTrigger>
-                <TabsTrigger value="education">Education</TabsTrigger>
                 <TabsTrigger value="comparison">Stacks</TabsTrigger>
+                <TabsTrigger value="education">Education</TabsTrigger>
               </TabsList>
 
               <TabsContent value="properties" className="mt-6 space-y-6">
@@ -575,10 +575,6 @@ const Index = () => {
                 />
               </TabsContent>
 
-              <TabsContent value="education" className="mt-6">
-                <EducationalContent />
-              </TabsContent>
-
               <TabsContent value="comparison" className="mt-6">
                 <ConfigurationComparison
                   configurations={configurations}
@@ -589,6 +585,10 @@ const Index = () => {
                   onDeleteConfig={handleDeleteConfiguration}
                   isAuthenticated={!!user}
                 />
+              </TabsContent>
+
+              <TabsContent value="education" className="mt-6">
+                <EducationalContent />
               </TabsContent>
             </Tabs>
           </div>
