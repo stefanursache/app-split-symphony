@@ -19,7 +19,7 @@ export function CrossSectionVisualization({ plies, materials }: CrossSectionVisu
     const canvas = new FabricCanvas(canvasRef.current, {
       width: 600,
       height: 400,
-      backgroundColor: 'hsl(var(--card))',
+      backgroundColor: '#ffffff',
       selection: false,
     });
 
@@ -35,14 +35,14 @@ export function CrossSectionVisualization({ plies, materials }: CrossSectionVisu
     if (!canvas) return;
 
     canvas.clear();
-    canvas.backgroundColor = 'hsl(var(--background))';
+    canvas.backgroundColor = '#f8f9fa';
 
     if (plies.length === 0) {
       const noDataText = new FabricText('Add plies to view cross-section', {
         left: 300,
         top: 200,
         fontSize: 16,
-        fill: 'hsl(var(--muted-foreground))',
+        fill: '#6b7280',
         originX: 'center',
         originY: 'center',
         selectable: false,
@@ -90,7 +90,7 @@ export function CrossSectionVisualization({ plies, materials }: CrossSectionVisu
         width: width,
         height: plyHeight,
         fill: material.color,
-        stroke: 'hsl(var(--border))',
+        stroke: '#d1d5db',
         strokeWidth: 2,
         selectable: false,
         shadow: new Shadow({
@@ -149,7 +149,7 @@ export function CrossSectionVisualization({ plies, materials }: CrossSectionVisu
           left: startX - 10,
           top: currentY,
           fontSize: 9,
-          fill: 'hsl(var(--muted-foreground))',
+          fill: '#6b7280',
           originX: 'right',
           selectable: false,
         }
@@ -172,7 +172,7 @@ export function CrossSectionVisualization({ plies, materials }: CrossSectionVisu
         left: startX - 10,
         top: currentY,
         fontSize: 9,
-        fill: 'hsl(var(--muted-foreground))',
+        fill: '#6b7280',
         originX: 'right',
         selectable: false,
       }
@@ -188,7 +188,7 @@ export function CrossSectionVisualization({ plies, materials }: CrossSectionVisu
       top: dimLineY,
       width: width,
       height: 2,
-      fill: 'hsl(var(--primary))',
+      fill: '#3b82f6',
       selectable: false,
     });
     
@@ -197,7 +197,7 @@ export function CrossSectionVisualization({ plies, materials }: CrossSectionVisu
       left: startX - 10,
       top: dimLineY - 8,
       fontSize: 14,
-      fill: 'hsl(var(--primary))',
+      fill: '#3b82f6',
       selectable: false,
     });
     
@@ -206,7 +206,7 @@ export function CrossSectionVisualization({ plies, materials }: CrossSectionVisu
       left: startX + width + 5,
       top: dimLineY - 8,
       fontSize: 14,
-      fill: 'hsl(var(--primary))',
+      fill: '#3b82f6',
       selectable: false,
     });
 
@@ -220,7 +220,7 @@ export function CrossSectionVisualization({ plies, materials }: CrossSectionVisu
       top: dimLineY + 10,
       width: 130,
       height: 25,
-      fill: 'hsl(var(--primary))',
+      fill: '#3b82f6',
       rx: 4,
       ry: 4,
       selectable: false,
@@ -230,7 +230,7 @@ export function CrossSectionVisualization({ plies, materials }: CrossSectionVisu
       left: startX + width / 2,
       top: dimLineY + 22,
       fontSize: 13,
-      fill: 'hsl(var(--primary-foreground))',
+      fill: '#ffffff',
       fontWeight: 'bold',
       originX: 'center',
       originY: 'center',
@@ -245,7 +245,7 @@ export function CrossSectionVisualization({ plies, materials }: CrossSectionVisu
       left: 20,
       top: 30,
       fontSize: 16,
-      fill: 'hsl(var(--muted-foreground))',
+      fill: '#6b7280',
       fontStyle: 'italic',
       selectable: false,
     });
@@ -254,7 +254,7 @@ export function CrossSectionVisualization({ plies, materials }: CrossSectionVisu
       left: 20,
       top: 50,
       fontSize: 14,
-      fill: 'hsl(var(--muted-foreground))',
+      fill: '#6b7280',
       selectable: false,
     });
 

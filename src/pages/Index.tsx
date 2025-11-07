@@ -407,6 +407,11 @@ const Index = () => {
                 stressResults={stressResults}
                 failureResults={failureResults}
                 loadCase={getActiveLoadCase()}
+                geometryType={geometry.type}
+                thermalResults={thermalResults}
+                bucklingResult={bucklingResult}
+                progressiveFailureAnalysis={progressiveFailureAnalysis}
+                interlaminarResults={interlaminarResults}
               />
               {user ? (
                 <Button

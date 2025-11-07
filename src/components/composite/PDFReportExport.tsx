@@ -18,6 +18,11 @@ interface PDFReportExportProps {
     name: string;
     loads: { Nx: number; Ny: number; Nxy: number; Mx: number; My: number; Mxy: number };
   };
+  geometryType?: 'plate' | 'tube';
+  thermalResults?: any[];
+  bucklingResult?: any;
+  progressiveFailureAnalysis?: any;
+  interlaminarResults?: any[];
 }
 
 export function PDFReportExport({
@@ -27,7 +32,12 @@ export function PDFReportExport({
   engineeringProps,
   stressResults,
   failureResults,
-  loadCase
+  loadCase,
+  geometryType = 'plate',
+  thermalResults = [],
+  bucklingResult = null,
+  progressiveFailureAnalysis = null,
+  interlaminarResults = []
 }: PDFReportExportProps) {
   const [isGenerating, setIsGenerating] = useState(false);
 
@@ -95,7 +105,7 @@ export function PDFReportExport({
       yPos += 10;
       doc.text(`Total Thickness: ${engineeringProps.thickness.toFixed(3)} mm`, margin + 10, yPos);
       yPos += 10;
-      doc.text(`Analysis Type: Classical Lamination Theory (CLT)`, margin + 10, yPos);
+      doc.text(`Analysis Type: ${geometryType === 'tube' ? 'Cylindrical Shell Theory' : 'Classical Lamination Theory (CLT)'}`, margin + 10, yPos);
       yPos += 10;
       if (loadCase) {
         doc.text(`Load Case: ${loadCase.name}`, margin + 10, yPos);
@@ -134,7 +144,8 @@ export function PDFReportExport({
         '7. Stress Analysis Results',
         '8. Strain Analysis Results',
         '9. Failure Analysis',
-        '10. Safety Margins'
+        '10. Advanced Analyses',
+        '11. Safety Margins & Conclusions'
       ];
       tocItems.forEach(item => {
         doc.text(item, margin + 10, yPos);
@@ -609,7 +620,176 @@ export function PDFReportExport({
         doc.setFontSize(9);
         doc.setFont('helvetica', 'italic');
         doc.text('Note: Failure Index (FI) > 1.0 indicates failure. Values shown are based on applied safety factors.', margin, yPos);
+        yPos += 15;
       }
+
+      // ============ SECTION 10: ADVANCED ANALYSES ============
+      doc.addPage();
+      yPos = 20;
+      doc.setFontSize(16);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(41, 128, 185);
+      doc.text('10. Advanced Analyses', margin, yPos);
+      doc.setTextColor(0, 0, 0);
+      yPos += 12;
+
+      // Thermal Stress Analysis
+      if (thermalResults && thermalResults.length > 0) {
+        doc.setFontSize(13);
+        doc.setFont('helvetica', 'bold');
+        doc.text('10.1 Thermal Stress Analysis', margin, yPos);
+        yPos += 10;
+
+        const thermalData = [
+          ['Ply', 'Material', 'σ₁ Thermal (MPa)', 'σ₂ Thermal (MPa)', 'τ₁₂ Thermal (MPa)']
+        ];
+
+        thermalResults.forEach((result: any) => {
+          thermalData.push([
+            result.ply.toString(),
+            result.material,
+            result.sigma_1_thermal.toFixed(2),
+            result.sigma_2_thermal.toFixed(2),
+            result.tau_12_thermal.toFixed(2)
+          ]);
+        });
+
+        autoTable(doc, {
+          startY: yPos,
+          head: [thermalData[0]],
+          body: thermalData.slice(1),
+          theme: 'striped',
+          headStyles: { fillColor: [52, 152, 219], fontSize: 9 },
+          styles: { fontSize: 8, halign: 'center' },
+          margin: { left: margin, right: margin }
+        });
+
+        yPos = (doc as any).lastAutoTable.finalY + 15;
+      }
+
+      // Buckling Analysis
+      if (bucklingResult && bucklingResult.buckling_factor) {
+        checkNewPage(50);
+        doc.setFontSize(13);
+        doc.setFont('helvetica', 'bold');
+        doc.text('10.2 Buckling Analysis', margin, yPos);
+        yPos += 10;
+
+        const bucklingData = [
+          ['Parameter', 'Value', 'Unit'],
+          ['Buckling Mode', bucklingResult.buckling_mode, '-'],
+          ['Buckling Factor', bucklingResult.buckling_factor.toFixed(2), '-'],
+          ...(bucklingResult.critical_load_Nx ? [['Critical Nx', bucklingResult.critical_load_Nx.toFixed(2), 'N/mm']] : []),
+          ...(bucklingResult.critical_load_Ny ? [['Critical Ny', bucklingResult.critical_load_Ny.toFixed(2), 'N/mm']] : []),
+          ...(bucklingResult.critical_load_Nxy ? [['Critical Nxy', bucklingResult.critical_load_Nxy.toFixed(2), 'N/mm']] : []),
+          ['Buckling Risk', bucklingResult.is_buckling_concern ? 'HIGH' : 'Low', '-']
+        ];
+
+        autoTable(doc, {
+          startY: yPos,
+          head: [bucklingData[0]],
+          body: bucklingData.slice(1),
+          theme: 'grid',
+          headStyles: { fillColor: [52, 152, 219], fontSize: 9 },
+          styles: { fontSize: 8 },
+          margin: { left: margin, right: margin }
+        });
+
+        yPos = (doc as any).lastAutoTable.finalY + 15;
+      }
+
+      // Progressive Failure Analysis
+      if (progressiveFailureAnalysis && progressiveFailureAnalysis.steps) {
+        checkNewPage(60);
+        doc.setFontSize(13);
+        doc.setFont('helvetica', 'bold');
+        doc.text('10.3 Progressive Failure Analysis', margin, yPos);
+        yPos += 10;
+
+        const progData = [
+          ['Parameter', 'Value'],
+          ...(progressiveFailureAnalysis.firstPlyFailure ? [
+            ['First Ply Failure', `Ply ${progressiveFailureAnalysis.firstPlyFailure.ply} at iteration ${progressiveFailureAnalysis.firstPlyFailure.iteration}`]
+          ] : []),
+          ...(progressiveFailureAnalysis.lastPlyFailure ? [
+            ['Last Ply Failure', `Ply ${progressiveFailureAnalysis.lastPlyFailure.ply} at iteration ${progressiveFailureAnalysis.lastPlyFailure.iteration}`]
+          ] : []),
+          ['Ultimate Strength Factor', `${progressiveFailureAnalysis.ultimateStrength.toFixed(2)}×`],
+          ['Total Iterations', progressiveFailureAnalysis.steps.length.toString()],
+          ['Final Failed Plies', progressiveFailureAnalysis.steps[progressiveFailureAnalysis.steps.length - 1].failedPlies.length.toString()]
+        ];
+
+        autoTable(doc, {
+          startY: yPos,
+          head: [progData[0]],
+          body: progData.slice(1),
+          theme: 'striped',
+          headStyles: { fillColor: [52, 152, 219], fontSize: 9 },
+          styles: { fontSize: 8 },
+          margin: { left: margin, right: margin }
+        });
+
+        yPos = (doc as any).lastAutoTable.finalY + 15;
+      }
+
+      // Interlaminar Stress Analysis
+      if (interlaminarResults && interlaminarResults.length > 0) {
+        checkNewPage(60);
+        doc.setFontSize(13);
+        doc.setFont('helvetica', 'bold');
+        doc.text('10.4 Interlaminar Stress Analysis', margin, yPos);
+        yPos += 10;
+
+        const interlamData = [
+          ['Interface', 'z (mm)', 'σz (MPa)', 'τxz (MPa)', 'τyz (MPa)', 'Risk']
+        ];
+
+        interlaminarResults.forEach((result: any) => {
+          interlamData.push([
+            result.interface_number.toString(),
+            result.z.toFixed(3),
+            result.sigma_z.toFixed(2),
+            result.tau_xz.toFixed(2),
+            result.tau_yz.toFixed(2),
+            result.delamination_risk
+          ]);
+        });
+
+        autoTable(doc, {
+          startY: yPos,
+          head: [interlamData[0]],
+          body: interlamData.slice(1),
+          theme: 'grid',
+          headStyles: { fillColor: [52, 152, 219], fontSize: 8 },
+          styles: { fontSize: 7, halign: 'center' },
+          didParseCell: (data) => {
+            if (data.section === 'body' && data.column.index === 5) {
+              const value = data.cell.text[0];
+              if (value === 'High') {
+                data.cell.styles.textColor = [231, 76, 60];
+                data.cell.styles.fontStyle = 'bold';
+              } else if (value === 'Medium') {
+                data.cell.styles.textColor = [243, 156, 18];
+              } else {
+                data.cell.styles.textColor = [39, 174, 96];
+              }
+            }
+          },
+          margin: { left: margin, right: margin }
+        });
+
+        yPos = (doc as any).lastAutoTable.finalY + 15;
+      }
+
+      // ============ SECTION 11: CONCLUSIONS ============
+      doc.addPage();
+      yPos = 20;
+      doc.setFontSize(16);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(41, 128, 185);
+      doc.text('11. Safety Margins & Conclusions', margin, yPos);
+      doc.setTextColor(0, 0, 0);
+      yPos += 15;
 
       // ============ FINAL PAGE: REFERENCES & NOTES ============
       doc.addPage();
@@ -629,11 +809,15 @@ export function PDFReportExport({
       doc.setFontSize(10);
       
       const methodText = [
-        '• Classical Lamination Theory (CLT) was used for all calculations',
+        `• ${geometryType === 'tube' ? 'Cylindrical Shell Theory with curvature corrections' : 'Classical Lamination Theory (CLT)'} was used for all calculations`,
         '• Plane stress assumption applied to each ply',
         '• Perfect bonding assumed between plies',
         '• Linear elastic material behavior',
-        '• Small deformation theory'
+        '• Small deformation theory',
+        ...(thermalResults && thermalResults.length > 0 ? ['• Thermal stress analysis included'] : []),
+        ...(bucklingResult ? ['• Buckling analysis performed'] : []),
+        ...(progressiveFailureAnalysis ? ['• Progressive failure analysis with ply degradation'] : []),
+        ...(interlaminarResults && interlaminarResults.length > 0 ? ['• Interlaminar stress and delamination analysis'] : [])
       ];
       methodText.forEach(text => {
         doc.text(text, margin + 5, yPos);
