@@ -1,4 +1,7 @@
 import { useState, useMemo, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
+import { User } from '@supabase/supabase-js';
 import { useMaterials } from '@/hooks/useMaterials';
 import { useAppState } from '@/hooks/useAppState';
 import { useConfigurations, Configuration } from '@/hooks/useConfigurations';
@@ -34,6 +37,8 @@ import { Moon, Sun } from 'lucide-react';
 import { GeometryConfig } from '@/types/geometry';
 
 const Index = () => {
+  const navigate = useNavigate();
+  const [user, setUser] = useState<User | null>(null);
   const { materials, addMaterial, updateMaterial } = useMaterials();
   const {
     state,
@@ -71,6 +76,25 @@ const Index = () => {
   const selectedMaterialData = materials[state.selectedMaterial] || null;
 
   const [theme, setTheme] = useState<'light' | 'dark'>('dark');
+
+  // Auth check
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      setUser(session?.user ?? null);
+      if (!session) {
+        navigate('/auth');
+      }
+    });
+
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+      if (!session) {
+        navigate('/auth');
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, [navigate]);
 
   useEffect(() => {
     document.documentElement.classList.toggle('dark', theme === 'dark');
@@ -311,6 +335,15 @@ const Index = () => {
                 failureResults={failureResults}
                 loadCase={getActiveLoadCase()}
               />
+              <Button
+                onClick={async () => {
+                  await supabase.auth.signOut();
+                  navigate('/auth');
+                }}
+                variant="outline"
+              >
+                Sign Out
+              </Button>
               <Button
                 onClick={toggleTheme}
                 variant="outline"
