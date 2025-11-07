@@ -9,6 +9,7 @@ interface MaterialSelectorProps {
   onSelectMaterial: (name: string) => void;
   onEditMaterial: (name: string) => void;
   onAddMaterial: () => void;
+  isAuthenticated?: boolean;
 }
 
 export function MaterialSelector({
@@ -16,7 +17,8 @@ export function MaterialSelector({
   selectedMaterial,
   onSelectMaterial,
   onEditMaterial,
-  onAddMaterial
+  onAddMaterial,
+  isAuthenticated = false
 }: MaterialSelectorProps) {
   return (
     <Card className="p-6">

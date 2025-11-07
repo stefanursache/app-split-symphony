@@ -13,6 +13,7 @@ interface ConfigurationComparisonProps {
   onAddCurrent: () => void;
   onLoadConfig: (config: Configuration) => void;
   onDeleteConfig: (id: string) => void;
+  isAuthenticated?: boolean;
 }
 
 export function ConfigurationComparison({
@@ -22,6 +23,7 @@ export function ConfigurationComparison({
   onAddCurrent,
   onLoadConfig,
   onDeleteConfig,
+  isAuthenticated = false,
 }: ConfigurationComparisonProps) {
   const [selectedConfigs, setSelectedConfigs] = useState<Configuration[]>([]);
 
@@ -58,6 +60,9 @@ export function ConfigurationComparison({
         <Card className="p-12">
           <div className="text-center text-muted-foreground">
             <p className="text-lg mb-2">No saved configurations yet</p>
+            {!isAuthenticated && (
+              <p className="text-sm mt-2 text-amber-600 dark:text-amber-500">Sign in to save configurations</p>
+            )}
             <p className="text-sm">Create and save your first laminate configuration to compare designs</p>
           </div>
         </Card>

@@ -11,9 +11,10 @@ interface SaveConfigurationDialogProps {
   onNewConfig?: () => void;
   disabled?: boolean;
   isUpdate?: boolean;
+  requiresAuth?: boolean;
 }
 
-export function SaveConfigurationDialog({ onSave, onNewConfig, disabled, isUpdate = false }: SaveConfigurationDialogProps) {
+export function SaveConfigurationDialog({ onSave, onNewConfig, disabled, isUpdate = false, requiresAuth = false }: SaveConfigurationDialogProps) {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
@@ -31,7 +32,11 @@ export function SaveConfigurationDialog({ onSave, onNewConfig, disabled, isUpdat
     <div className="flex gap-2">
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogTrigger asChild>
-          <Button disabled={disabled} className="gap-2 flex-1">
+          <Button 
+            disabled={disabled || requiresAuth} 
+            className="gap-2 flex-1"
+            title={requiresAuth ? "Sign in to save configurations" : undefined}
+          >
             {isUpdate ? <Edit className="h-4 w-4" /> : <Save className="h-4 w-4" />}
             {isUpdate ? 'Update' : 'Save'} Configuration
           </Button>

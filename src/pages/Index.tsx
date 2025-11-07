@@ -39,7 +39,7 @@ import { GeometryConfig } from '@/types/geometry';
 const Index = () => {
   const navigate = useNavigate();
   const [user, setUser] = useState<User | null>(null);
-  const { materials, addMaterial, updateMaterial } = useMaterials();
+  const { materials, addMaterial, updateMaterial, deleteMaterial } = useMaterials();
   const {
     state,
     addPly,
@@ -77,24 +77,18 @@ const Index = () => {
 
   const [theme, setTheme] = useState<'light' | 'dark'>('dark');
 
-  // Auth check
+  // Auth check - allow guest access
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       setUser(session?.user ?? null);
-      if (!session) {
-        navigate('/auth');
-      }
     });
 
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
-      if (!session) {
-        navigate('/auth');
-      }
     });
 
     return () => subscription.unsubscribe();
-  }, [navigate]);
+  }, []);
 
   useEffect(() => {
     document.documentElement.classList.toggle('dark', theme === 'dark');
@@ -123,11 +117,24 @@ const Index = () => {
   };
 
   const handleSaveMaterial = (material: Material, oldName?: string) => {
+    if (!user) {
+      toast.error('Please sign in to save materials');
+      return;
+    }
     if (oldName) {
       updateMaterial(oldName, material);
     } else {
       addMaterial(material);
     }
+  };
+
+  const handleDeleteMaterial = (materialName: string) => {
+    if (!user) {
+      toast.error('Please sign in to delete materials');
+      return;
+    }
+    deleteMaterial(materialName);
+    toast.success('Material deleted successfully');
   };
 
   const handleCalculateStress = (createNewCase: boolean = false) => {
@@ -221,6 +228,11 @@ const Index = () => {
   }, [activeLoadCaseId]);
 
   const handleSaveConfiguration = (name: string, description: string) => {
+    if (!user) {
+      toast.error('Please sign in to save configurations');
+      return;
+    }
+    
     const totalThickness = state.plies.reduce((sum, ply) => {
       const material = materials[ply.material];
       return sum + (material?.thickness || 0);
@@ -335,15 +347,24 @@ const Index = () => {
                 failureResults={failureResults}
                 loadCase={getActiveLoadCase()}
               />
-              <Button
-                onClick={async () => {
-                  await supabase.auth.signOut();
-                  navigate('/auth');
-                }}
-                variant="outline"
-              >
-                Sign Out
-              </Button>
+              {user ? (
+                <Button
+                  onClick={async () => {
+                    await supabase.auth.signOut();
+                    toast.success('Signed out successfully');
+                  }}
+                  variant="outline"
+                >
+                  Sign Out
+                </Button>
+              ) : (
+                <Button
+                  onClick={() => navigate('/auth')}
+                  variant="default"
+                >
+                  Sign In
+                </Button>
+              )}
               <Button
                 onClick={toggleTheme}
                 variant="outline"
@@ -371,6 +392,7 @@ const Index = () => {
               onSelectMaterial={setSelectedMaterial}
               onEditMaterial={handleEditMaterial}
               onAddMaterial={handleAddMaterial}
+              isAuthenticated={!!user}
             />
             
             <MaterialProperties material={selectedMaterialData} />
@@ -390,6 +412,7 @@ const Index = () => {
               onNewConfig={handleNewConfiguration}
               disabled={state.plies.length === 0}
               isUpdate={!!loadedConfigId}
+              requiresAuth={!user}
             />
           </div>
 
@@ -479,6 +502,7 @@ const Index = () => {
                   onAddCurrent={() => {}}
                   onLoadConfig={handleLoadConfiguration}
                   onDeleteConfig={handleDeleteConfiguration}
+                  isAuthenticated={!!user}
                 />
               </TabsContent>
             </Tabs>
@@ -491,6 +515,8 @@ const Index = () => {
         onClose={() => setIsEditorOpen(false)}
         material={editingMaterial}
         onSave={handleSaveMaterial}
+        onDelete={handleDeleteMaterial}
+        isAuthenticated={!!user}
       />
     </div>
   );

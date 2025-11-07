@@ -10,9 +10,11 @@ interface MaterialEditorProps {
   onClose: () => void;
   material: Material | null;
   onSave: (material: Material, oldName?: string) => void;
+  onDelete?: (materialName: string) => void;
+  isAuthenticated?: boolean;
 }
 
-export function MaterialEditor({ isOpen, onClose, material, onSave }: MaterialEditorProps) {
+export function MaterialEditor({ isOpen, onClose, material, onSave, onDelete, isAuthenticated = false }: MaterialEditorProps) {
   const [formData, setFormData] = useState<Material>({
     name: '',
     type: '',
@@ -211,13 +213,33 @@ export function MaterialEditor({ isOpen, onClose, material, onSave }: MaterialEd
             </div>
           </div>
 
-          <div className="flex justify-end gap-2 pt-4">
-            <Button type="button" variant="outline" onClick={onClose}>
-              Cancel
-            </Button>
-            <Button type="submit">
-              {material ? 'Update Material' : 'Add Material'}
-            </Button>
+          <div className="flex justify-between gap-2 pt-4">
+            <div>
+              {material && onDelete && (
+                <Button 
+                  type="button" 
+                  variant="destructive" 
+                  onClick={() => {
+                    if (isAuthenticated) {
+                      onDelete(material.name);
+                      onClose();
+                    }
+                  }}
+                  disabled={!isAuthenticated}
+                  title={!isAuthenticated ? "Sign in to delete materials" : undefined}
+                >
+                  Delete Material
+                </Button>
+              )}
+            </div>
+            <div className="flex gap-2">
+              <Button type="button" variant="outline" onClick={onClose}>
+                Cancel
+              </Button>
+              <Button type="submit">
+                {material ? 'Update Material' : 'Add Material'}
+              </Button>
+            </div>
           </div>
         </form>
       </DialogContent>
