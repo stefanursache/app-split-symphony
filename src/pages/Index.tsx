@@ -282,12 +282,18 @@ const Index = () => {
       return;
     }
     
-    const totalThickness = state.plies.reduce((sum, ply) => {
+    // Clean plies to remove any degraded material suffixes before saving
+    const cleanedPlies = state.plies.map(ply => ({
+      material: ply.material.replace(/_degraded_\d+$/, ''), // Remove _degraded_N suffix
+      angle: ply.angle
+    }));
+    
+    const totalThickness = cleanedPlies.reduce((sum, ply) => {
       const material = materials[ply.material];
       return sum + (material?.thickness || 0);
     }, 0);
 
-    const totalWeight = state.plies.reduce((sum, ply) => {
+    const totalWeight = cleanedPlies.reduce((sum, ply) => {
       const material = materials[ply.material];
       return sum + (material ? material.density * material.thickness : 0);
     }, 0);
@@ -298,7 +304,7 @@ const Index = () => {
         loadedConfigId,
         name,
         description,
-        state.plies,
+        cleanedPlies,
         engineeringProps,
         totalThickness,
         totalWeight
@@ -308,7 +314,7 @@ const Index = () => {
       saveConfiguration(
         name,
         description,
-        state.plies,
+        cleanedPlies,
         engineeringProps,
         totalThickness,
         totalWeight
@@ -353,7 +359,21 @@ const Index = () => {
 
   const handleLoadConfiguration = (config: Configuration) => {
     clearPlies();
-    config.plies.forEach(ply => addPly(ply.material, ply.angle));
+    
+    // Filter out any degraded materials and map to base materials
+    const cleanedPlies = config.plies.map(ply => ({
+      material: ply.material.replace(/_degraded_\d+$/, ''), // Remove _degraded_N suffix
+      angle: ply.angle
+    }));
+    
+    // Validate that all materials exist
+    const missingMaterials = cleanedPlies.filter(ply => !materials[ply.material]);
+    if (missingMaterials.length > 0) {
+      toast.error(`Configuration contains unknown materials: ${missingMaterials.map(p => p.material).join(', ')}`);
+      return;
+    }
+    
+    cleanedPlies.forEach(ply => addPly(ply.material, ply.angle));
     setLoadedConfigId(config.id);
     toast.success(`Loaded configuration: ${config.name}`);
   };
