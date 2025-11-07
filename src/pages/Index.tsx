@@ -22,7 +22,7 @@ import { MathematicsExplanation } from '@/components/composite/MathematicsExplan
 import { FailureCriteriaSelector } from '@/components/composite/FailureCriteriaSelector';
 import { PlyFailureAnalysis } from '@/components/composite/PlyFailureAnalysis';
 import { SafetyMarginSummary } from '@/components/composite/SafetyMarginSummary';
-import { LaminateOptimizer } from '@/components/composite/LaminateOptimizer';
+import { EducationalContent } from '@/components/composite/EducationalContent';
 import { LoadCaseManager } from '@/components/composite/LoadCaseManager';
 import { StressVisualization } from '@/components/composite/StressVisualization';
 import { PDFReportExport } from '@/components/composite/PDFReportExport';
@@ -351,11 +351,6 @@ const Index = () => {
     return calculateSafetySummary(failureResults, safetyFactor);
   }, [failureResults, safetyFactor]);
 
-  const handleApplyOptimization = (plies: any[]) => {
-    clearPlies();
-    plies.forEach(ply => addPly(ply.material, ply.angle));
-    setLoadedConfigId(null); // Reset loaded config when applying optimization
-  };
 
   const handleLoadConfiguration = (config: Configuration) => {
     clearPlies();
@@ -499,7 +494,7 @@ const Index = () => {
                 <TabsTrigger value="visualization">Visualization</TabsTrigger>
                 <TabsTrigger value="failure">Failure</TabsTrigger>
                 <TabsTrigger value="loadcases">Load Cases</TabsTrigger>
-                <TabsTrigger value="optimize">Optimize</TabsTrigger>
+                <TabsTrigger value="education">Education</TabsTrigger>
                 <TabsTrigger value="comparison">Stacks</TabsTrigger>
               </TabsList>
 
@@ -580,12 +575,8 @@ const Index = () => {
                 />
               </TabsContent>
 
-              <TabsContent value="optimize" className="mt-6">
-                <LaminateOptimizer
-                  currentPlies={state.plies}
-                  materials={materials}
-                  onApplySuggestion={handleApplyOptimization}
-                />
+              <TabsContent value="education" className="mt-6">
+                <EducationalContent />
               </TabsContent>
 
               <TabsContent value="comparison" className="mt-6">
