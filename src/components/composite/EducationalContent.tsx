@@ -116,6 +116,307 @@ export function EducationalContent() {
           </div>
         </Card>
 
+        {/* Formula Correlations */}
+        <Card className="p-6">
+          <h2 className="text-2xl font-bold text-foreground mb-4">Formula Correlations & Analysis Flow</h2>
+          
+          <p className="text-muted-foreground leading-relaxed mb-4">
+            The formulas used in this application are interconnected and follow a systematic workflow. 
+            Understanding these correlations is essential for proper composite laminate analysis.
+          </p>
+
+          <div className="space-y-6">
+            {/* Step 1 */}
+            <div>
+              <h3 className="text-xl font-semibold text-foreground mb-3">
+                Step 1: Material Properties → Reduced Stiffness Matrix (Q)
+              </h3>
+              <p className="text-sm text-muted-foreground mb-2">
+                The analysis begins with individual ply material properties (E₁, E₂, G₁₂, ν₁₂) which are 
+                used to calculate the <strong>reduced stiffness matrix Q</strong> in the material coordinate system:
+              </p>
+              <div className="bg-muted/50 p-3 rounded-lg text-sm font-mono space-y-1">
+                <p className="text-foreground">Q₁₁ = E₁ / (1 - ν₁₂ν₂₁)</p>
+                <p className="text-foreground">Q₂₂ = E₂ / (1 - ν₁₂ν₂₁)</p>
+                <p className="text-foreground">Q₁₂ = ν₁₂E₂ / (1 - ν₁₂ν₂₁)</p>
+                <p className="text-foreground">Q₆₆ = G₁₂</p>
+              </div>
+              <p className="text-xs text-muted-foreground mt-2 italic">
+                → This Q matrix characterizes the stiffness of a single ply in its own coordinate system (1-2 axes).
+              </p>
+            </div>
+
+            <Separator />
+
+            {/* Step 2 */}
+            <div>
+              <h3 className="text-xl font-semibold text-foreground mb-3">
+                Step 2: Q Matrix + Ply Angle → Transformed Stiffness Matrix (Q̄)
+              </h3>
+              <p className="text-sm text-muted-foreground mb-2">
+                Each ply is oriented at an angle θ. The Q matrix is transformed to the laminate coordinate system 
+                (x-y) using the transformation matrix T:
+              </p>
+              <div className="bg-muted/50 p-3 rounded-lg text-sm font-mono">
+                <p className="text-foreground">Q̄ᵢⱼ = T × Qᵢⱼ × Tᵀ</p>
+              </div>
+              <p className="text-xs text-muted-foreground mt-2 italic">
+                → This Q̄ matrix accounts for fiber orientation and allows all plies to be analyzed in a common 
+                coordinate system.
+              </p>
+            </div>
+
+            <Separator />
+
+            {/* Step 3 */}
+            <div>
+              <h3 className="text-xl font-semibold text-foreground mb-3">
+                Step 3: Q̄ Matrices + Ply Positions → ABD Matrix
+              </h3>
+              <p className="text-sm text-muted-foreground mb-2">
+                The transformed stiffness matrices Q̄ for all plies are integrated through the thickness 
+                using ply positions (zₖ) to obtain the <strong>ABD stiffness matrix</strong>:
+              </p>
+              <div className="bg-muted/50 p-3 rounded-lg text-sm font-mono space-y-1">
+                <p className="text-foreground">Aᵢⱼ = Σₖ (Q̄ᵢⱼ)ₖ × (zₖ - zₖ₋₁)  [Extensional stiffness]</p>
+                <p className="text-foreground">Bᵢⱼ = (1/2) × Σₖ (Q̄ᵢⱼ)ₖ × (zₖ² - zₖ₋₁²)  [Coupling stiffness]</p>
+                <p className="text-foreground">Dᵢⱼ = (1/3) × Σₖ (Q̄ᵢⱼ)ₖ × (zₖ³ - zₖ₋₁³)  [Bending stiffness]</p>
+              </div>
+              <p className="text-xs text-muted-foreground mt-2 italic">
+                → The ABD matrix characterizes the entire laminate's response to forces (N) and moments (M). 
+                The A matrix relates to in-plane loads, D to bending, and B to extension-bending coupling.
+              </p>
+            </div>
+
+            <Separator />
+
+            {/* Step 4 */}
+            <div>
+              <h3 className="text-xl font-semibold text-foreground mb-3">
+                Step 4: ABD Matrix + Applied Loads → Mid-plane Strains & Curvatures
+              </h3>
+              <p className="text-sm text-muted-foreground mb-2">
+                Using Classical Lamination Theory (CLT), applied forces (N) and moments (M) are related 
+                to mid-plane strains (ε⁰) and curvatures (κ):
+              </p>
+              <div className="bg-muted/50 p-3 rounded-lg text-sm font-mono">
+                <p className="text-foreground">[N, M]ᵀ = [A, B; B, D] × [ε⁰, κ]ᵀ</p>
+              </div>
+              <p className="text-sm text-muted-foreground mt-2">
+                Inverting this relationship:
+              </p>
+              <div className="bg-muted/50 p-3 rounded-lg text-sm font-mono">
+                <p className="text-foreground">[ε⁰, κ]ᵀ = [A, B; B, D]⁻¹ × [N, M]ᵀ</p>
+              </div>
+              <p className="text-xs text-muted-foreground mt-2 italic">
+                → This gives us the global deformation response of the laminate to the applied loads.
+              </p>
+            </div>
+
+            <Separator />
+
+            {/* Step 5 */}
+            <div>
+              <h3 className="text-xl font-semibold text-foreground mb-3">
+                Step 5: ε⁰ & κ + Position → Strain Distribution Through Thickness
+              </h3>
+              <p className="text-sm text-muted-foreground mb-2">
+                Strains vary linearly through the thickness. At any position z from the mid-plane:
+              </p>
+              <div className="bg-muted/50 p-3 rounded-lg text-sm font-mono space-y-1">
+                <p className="text-foreground">εₓ(z) = ε⁰ₓ + z × κₓ</p>
+                <p className="text-foreground">εᵧ(z) = ε⁰ᵧ + z × κᵧ</p>
+                <p className="text-foreground">γₓᵧ(z) = γ⁰ₓᵧ + z × κₓᵧ</p>
+              </div>
+              <p className="text-xs text-muted-foreground mt-2 italic">
+                → This allows calculation of strains at any specific ply location through the laminate thickness.
+              </p>
+            </div>
+
+            <Separator />
+
+            {/* Step 6 */}
+            <div>
+              <h3 className="text-xl font-semibold text-foreground mb-3">
+                Step 6: Strains + Q̄ → Global Stresses in Each Ply
+              </h3>
+              <p className="text-sm text-muted-foreground mb-2">
+                Using the transformed stiffness matrix Q̄ and the strains at each ply location, 
+                we calculate global stresses (x-y coordinate system):
+              </p>
+              <div className="bg-muted/50 p-3 rounded-lg text-sm font-mono">
+                <p className="text-foreground">[σₓ, σᵧ, τₓᵧ]ᵀ = [Q̄] × [εₓ, εᵧ, γₓᵧ]ᵀ</p>
+              </div>
+              <p className="text-xs text-muted-foreground mt-2 italic">
+                → These are the stresses in the laminate coordinate system for each ply.
+              </p>
+            </div>
+
+            <Separator />
+
+            {/* Step 7 */}
+            <div>
+              <h3 className="text-xl font-semibold text-foreground mb-3">
+                Step 7: Global Stresses → Material Axis Stresses
+              </h3>
+              <p className="text-sm text-muted-foreground mb-2">
+                For failure analysis, global stresses must be transformed back to the material principal 
+                axes (1-2) for each ply using its fiber angle θ:
+              </p>
+              <div className="bg-muted/50 p-3 rounded-lg text-sm font-mono space-y-1">
+                <p className="text-foreground">σ₁ = σₓcos²θ + σᵧsin²θ + 2τₓᵧsinθcosθ</p>
+                <p className="text-foreground">σ₂ = σₓsin²θ + σᵧcos²θ - 2τₓᵧsinθcosθ</p>
+                <p className="text-foreground">τ₁₂ = -σₓsinθcosθ + σᵧsinθcosθ + τₓᵧ(cos²θ - sin²θ)</p>
+              </div>
+              <p className="text-xs text-muted-foreground mt-2 italic">
+                → Material axis stresses (σ₁, σ₂, τ₁₂) are needed because material strengths are defined 
+                in the fiber direction.
+              </p>
+            </div>
+
+            <Separator />
+
+            {/* Step 8 */}
+            <div>
+              <h3 className="text-xl font-semibold text-foreground mb-3">
+                Step 8: Material Stresses + Strengths → Failure Analysis
+              </h3>
+              <p className="text-sm text-muted-foreground mb-2">
+                The material axis stresses are compared against material strengths using failure criteria:
+              </p>
+              <div className="space-y-3 text-sm">
+                <div>
+                  <p className="font-semibold text-foreground">Maximum Stress:</p>
+                  <div className="bg-muted/50 p-2 rounded font-mono text-xs">
+                    Failure Index = max(|σ₁|/X, |σ₂|/Y, |τ₁₂|/S)
+                  </div>
+                </div>
+                <div>
+                  <p className="font-semibold text-foreground">Tsai-Wu:</p>
+                  <div className="bg-muted/50 p-2 rounded font-mono text-xs">
+                    F₁σ₁ + F₂σ₂ + F₁₁σ₁² + F₂₂σ₂² + F₆₆τ₁₂² + 2F₁₂σ₁σ₂ ≤ 1
+                  </div>
+                </div>
+                <div>
+                  <p className="font-semibold text-foreground">Tsai-Hill:</p>
+                  <div className="bg-muted/50 p-2 rounded font-mono text-xs">
+                    (σ₁/X)² - (σ₁σ₂/X²) + (σ₂/Y)² + (τ₁₂/S)² ≤ 1
+                  </div>
+                </div>
+              </div>
+              <p className="text-xs text-muted-foreground mt-2 italic">
+                → Failure indices &gt; 1 indicate ply failure. Different criteria provide different predictions 
+                based on their assumptions about failure mechanisms.
+              </p>
+            </div>
+
+            <Separator />
+
+            {/* Thermal Extension */}
+            <div>
+              <h3 className="text-xl font-semibold text-foreground mb-3">
+                Thermal Analysis Extension
+              </h3>
+              <p className="text-sm text-muted-foreground mb-2">
+                When temperature changes (ΔT) are present, thermal effects are superimposed on mechanical loads:
+              </p>
+              <div className="space-y-2 text-sm">
+                <div>
+                  <p className="font-semibold text-foreground">1. Thermal strains in material axes:</p>
+                  <div className="bg-muted/50 p-2 rounded font-mono text-xs">
+                    εᵗ₁ = α₁ × ΔT,  εᵗ₂ = α₂ × ΔT
+                  </div>
+                </div>
+                <div>
+                  <p className="font-semibold text-foreground">2. Thermal forces and moments:</p>
+                  <div className="bg-muted/50 p-2 rounded font-mono text-xs">
+                    Nᵗ = ΔT × Σₖ (Q̄ᵢⱼ × αₖ) × tₖ
+                  </div>
+                </div>
+                <div>
+                  <p className="font-semibold text-foreground">3. Total loading:</p>
+                  <div className="bg-muted/50 p-2 rounded font-mono text-xs">
+                    N_total = N_mechanical + N_thermal
+                  </div>
+                </div>
+              </div>
+              <p className="text-xs text-muted-foreground mt-2 italic">
+                → Thermal loads are added to mechanical loads before solving the CLT equations (Step 4).
+              </p>
+            </div>
+
+            <Separator />
+
+            {/* Progressive Failure */}
+            <div>
+              <h3 className="text-xl font-semibold text-foreground mb-3">
+                Progressive Failure Analysis Loop
+              </h3>
+              <p className="text-sm text-muted-foreground mb-2">
+                For progressive failure, the analysis cycles through Steps 1-8 iteratively:
+              </p>
+              <ol className="list-decimal list-inside space-y-2 text-sm text-muted-foreground ml-2">
+                <li>Perform complete analysis (Steps 1-8) with current material properties</li>
+                <li>Identify first ply failure (highest failure index)</li>
+                <li>If failure detected, degrade that ply's material properties:
+                  <div className="bg-muted/50 p-2 rounded font-mono text-xs mt-1 ml-4">
+                    E₁ᵈᵉᵍ = 0.1 × E₁,  E₂ᵈᵉᵍ = 0.1 × E₂,  G₁₂ᵈᵉᵍ = 0.1 × G₁₂
+                  </div>
+                </li>
+                <li>Return to Step 1 with updated material properties</li>
+                <li>Continue until ultimate failure (multiple plies failed) or loads are safe</li>
+              </ol>
+              <p className="text-xs text-muted-foreground mt-2 italic">
+                → This simulates load redistribution as plies fail progressively, providing more realistic 
+                failure predictions than first-ply failure alone.
+              </p>
+            </div>
+
+            <Separator />
+
+            {/* Additional Analyses */}
+            <div>
+              <h3 className="text-xl font-semibold text-foreground mb-3">
+                Additional Analysis Correlations
+              </h3>
+              
+              <div className="space-y-3 text-sm">
+                <div>
+                  <p className="font-semibold text-foreground">Equivalent Properties (from ABD):</p>
+                  <div className="bg-muted/50 p-2 rounded font-mono text-xs space-y-1">
+                    <p>Eₓ = (A₁₁A₂₂ - A₁₂²) / (h × A₂₂)</p>
+                    <p>Gₓᵧ = A₆₆ / h</p>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    → The ABD matrix (Step 3) is used to calculate equivalent homogeneous properties for simplified design.
+                  </p>
+                </div>
+
+                <div>
+                  <p className="font-semibold text-foreground">Buckling (from D matrix):</p>
+                  <div className="bg-muted/50 p-2 rounded font-mono text-xs">
+                    Nₓᶜʳ = k × π² × Dₑff / b²
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    → The bending stiffness D from the ABD matrix determines buckling resistance.
+                  </p>
+                </div>
+
+                <div>
+                  <p className="font-semibold text-foreground">Interlaminar Stresses (from in-plane stresses):</p>
+                  <div className="bg-muted/50 p-2 rounded font-mono text-xs">
+                    ∂τₓz/∂z = -∂σₓ/∂x - ∂τₓᵧ/∂y
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    → In-plane stress gradients (Step 6) are used with equilibrium equations to estimate 
+                    out-of-plane shear stresses that can cause delamination.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </Card>
+
         {/* Failure Criteria */}
         <Card className="p-6">
           <h2 className="text-2xl font-bold text-foreground mb-4">Failure Analysis Methods</h2>
