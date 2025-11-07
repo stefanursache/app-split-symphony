@@ -8,6 +8,7 @@ import {
   calculateStressesFromStrains
 } from './cltCalculations';
 import { GeometryConfig } from '@/types/geometry';
+import { calculateCylindricalShellStresses } from './cylindricalShellTheory';
 
 export function calculateEngineeringProperties(
   plies: Ply[],
@@ -74,21 +75,27 @@ export function calculateStressStrain(
   if (plies.length === 0) return [];
 
   // Use cylindrical shell theory for tubes
-  if (geometry.type === 'tube' && geometry.innerDiameter) {
-    const totalThickness = plies.reduce((sum, ply) => {
-      const material = materials[ply.material];
-      return sum + (material?.thickness || 0);
-    }, 0);
-    
-    const innerRadius = geometry.innerDiameter / 2;
-    const outerRadius = innerRadius + totalThickness;
-    
-    const { calculateCylindricalShellStresses } = require('./cylindricalShellTheory');
-    return calculateCylindricalShellStresses(plies, materials, loads, {
-      innerRadius,
-      outerRadius,
-      length: geometry.length || 1000
-    });
+  if (geometry.type === 'tube' && geometry.innerDiameter !== undefined) {
+    try {
+      const totalThickness = plies.reduce((sum, ply) => {
+        const material = materials[ply.material];
+        return sum + (material?.thickness || 0);
+      }, 0);
+      
+      const innerRadius = geometry.innerDiameter / 2;
+      const outerRadius = innerRadius + totalThickness;
+      
+      console.log('Using Cylindrical Shell Theory:', { innerRadius, outerRadius, totalThickness });
+      
+      return calculateCylindricalShellStresses(plies, materials, loads, {
+        innerRadius,
+        outerRadius,
+        length: geometry.length || 1000
+      });
+    } catch (error) {
+      console.error('Error in cylindrical shell calculation:', error);
+      // Fall back to flat plate theory
+    }
   }
 
   // Calculate ABD matrix for flat plates

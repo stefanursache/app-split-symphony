@@ -156,7 +156,6 @@ const Index = () => {
   };
 
   const handleCalculateStress = () => {
-    console.log('🟢 CALCULATE STRESS CALLED, plies count:', state.plies.length);
     if (state.plies.length === 0) {
       toast.error('Please add plies before calculating');
       return;
@@ -237,10 +236,8 @@ const Index = () => {
 
   // Load the loads when active load case changes, but don't auto-calculate
   useEffect(() => {
-    console.log('🔵 LOAD CASE EFFECT TRIGGERED, activeLoadCaseId:', activeLoadCaseId);
     const activeCase = getActiveLoadCase();
     if (activeCase) {
-      console.log('🔵 Updating loads from active case:', activeCase.name);
       updateLoads(activeCase.loads);
     }
   }, [activeLoadCaseId]);
