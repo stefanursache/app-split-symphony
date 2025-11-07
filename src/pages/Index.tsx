@@ -155,7 +155,7 @@ const Index = () => {
     toast.success('Material deleted successfully');
   };
 
-  const handleCalculateStress = (createNewCase: boolean = false) => {
+  const handleCalculateStress = () => {
     if (state.plies.length === 0) {
       toast.error('Please add plies before calculating');
       return;
@@ -222,50 +222,13 @@ const Index = () => {
     const interlaminar = calculateInterlaminarStresses(state.plies, materials, state.loads);
     setInterlaminarResults(interlaminar);
 
-    if (createNewCase) {
-      // Check if a similar load case already exists
-      const existingCase = loadCases.find(lc => 
-        lc.loads.Nx === state.loads.Nx &&
-        lc.loads.Ny === state.loads.Ny &&
-        lc.loads.Nxy === state.loads.Nxy &&
-        lc.loads.Mx === state.loads.Mx &&
-        lc.loads.My === state.loads.My &&
-        lc.loads.Mxy === state.loads.Mxy
-      );
-
-      if (existingCase) {
-        // Update existing similar load case instead of creating new one
-        updateLoadCase(existingCase.id, {
-          results: {
-            stress: results,
-            failure: failureAnalysis
-          }
-        });
-        setActiveLoadCaseId(existingCase.id);
-        toast.info(`Updated existing load case: ${existingCase.name}`);
-      } else {
-        // Create a new load case with the results
-        const newCaseId = addLoadCase({
-          name: `Case ${loadCases.length + 1}`,
-          description: `Nx: ${state.loads.Nx}N/mm, Ny: ${state.loads.Ny}N/mm, Nxy: ${state.loads.Nxy}N/mm, Mx: ${state.loads.Mx}N, My: ${state.loads.My}N, Mxy: ${state.loads.Mxy}N`,
-          loads: { ...state.loads },
-          results: {
-            stress: results,
-            failure: failureAnalysis
-          }
-        });
-        setActiveLoadCaseId(newCaseId);
-        toast.success('New load case created');
+    // Update current active load case with results
+    updateLoadCase(activeLoadCaseId, {
+      results: {
+        stress: results,
+        failure: failureAnalysis
       }
-    } else {
-      // Update existing load case
-      updateLoadCase(activeLoadCaseId, {
-        results: {
-          stress: results,
-          failure: failureAnalysis
-        }
-      });
-    }
+    });
   };
 
   const handleRunLoadCase = (loadCaseId: string) => {
@@ -275,7 +238,7 @@ const Index = () => {
       updateLoads(loadCase.loads);
       // Switch to stress tab and run analysis
       setActiveTab('stress');
-      setTimeout(() => handleCalculateStress(false), 100);
+      setTimeout(() => handleCalculateStress(), 100);
     }
   };
 
@@ -511,7 +474,7 @@ const Index = () => {
                   onLoadChange={updateLoads}
                 />
                 <Button 
-                  onClick={() => handleCalculateStress(true)} 
+                  onClick={handleCalculateStress} 
                   className="w-full"
                   disabled={state.plies.length === 0}
                 >
