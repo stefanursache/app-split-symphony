@@ -40,6 +40,9 @@ export function performProgressiveFailureAnalysis(
   innerDiameter: number,
   maxIterations: number = 100
 ): ProgressiveFailureAnalysis {
+  // CRITICAL: Create a deep copy of plies to avoid mutating the original array
+  const workingPlies: Ply[] = plies.map(ply => ({ ...ply }));
+  
   const steps: ProgressiveFailureStep[] = [];
   let currentMaterials = { ...materials };
   let failedPlies = new Set<number>();
@@ -56,9 +59,9 @@ export function performProgressiveFailureAnalysis(
     length: 1000
   };
   
-  let stressResults = calculateStressStrain(plies, currentMaterials, loads, geometry);
+  let stressResults = calculateStressStrain(workingPlies, currentMaterials, loads, geometry);
   let failureResults = calculateFailureAnalysis(
-    plies,
+    workingPlies,
     currentMaterials,
     stressResults,
     safetyFactor,
@@ -81,7 +84,7 @@ export function performProgressiveFailureAnalysis(
   });
 
   // Progressive failure loop
-  while (iteration < maxIterations && failedPlies.size < plies.length) {
+  while (iteration < maxIterations && failedPlies.size < workingPlies.length) {
     iteration++;
 
     // Check if any new plies have failed (failure index >= 1.0)
@@ -101,7 +104,7 @@ export function performProgressiveFailureAnalysis(
         }
 
         // Degrade material properties for failed ply
-        const plyMaterial = plies[index].material;
+        const plyMaterial = workingPlies[index].material;
         const originalMaterial = materials[plyMaterial];
         
         // Create degraded material (reduce stiffness)
@@ -115,7 +118,8 @@ export function performProgressiveFailureAnalysis(
         // Create unique degraded material name for this ply
         const degradedName = `${plyMaterial}_degraded_${index}`;
         currentMaterials[degradedName] = degradedMaterial;
-        plies[index].material = degradedName;
+        // Update WORKING COPY only, not the original!
+        workingPlies[index].material = degradedName;
       }
     });
 
@@ -132,9 +136,9 @@ export function performProgressiveFailureAnalysis(
       };
 
       // Recalculate with increased loads
-      stressResults = calculateStressStrain(plies, currentMaterials, scaledLoads, geometry);
+      stressResults = calculateStressStrain(workingPlies, currentMaterials, scaledLoads, geometry);
       failureResults = calculateFailureAnalysis(
-        plies,
+        workingPlies,
         currentMaterials,
         stressResults,
         safetyFactor,
@@ -151,9 +155,9 @@ export function performProgressiveFailureAnalysis(
         Mxy: loads.Mxy * loadMultiplier
       };
 
-      stressResults = calculateStressStrain(plies, currentMaterials, currentLoads, geometry);
+      stressResults = calculateStressStrain(workingPlies, currentMaterials, currentLoads, geometry);
       failureResults = calculateFailureAnalysis(
-        plies,
+        workingPlies,
         currentMaterials,
         stressResults,
         safetyFactor,
@@ -175,7 +179,7 @@ export function performProgressiveFailureAnalysis(
     });
 
     // Check for complete failure (all plies failed or catastrophic failure)
-    if (failedPlies.size === plies.length || maxFailureIndex > 10) {
+    if (failedPlies.size === workingPlies.length || maxFailureIndex > 10) {
       lastPlyFailure = {
         ply: criticalPlyIndex + 1,
         iteration,
