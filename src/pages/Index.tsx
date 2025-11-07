@@ -221,14 +221,6 @@ const Index = () => {
     // Interlaminar stress analysis (default)
     const interlaminar = calculateInterlaminarStresses(state.plies, materials, state.loads);
     setInterlaminarResults(interlaminar);
-
-    // Update current active load case with results
-    updateLoadCase(activeLoadCaseId, {
-      results: {
-        stress: results,
-        failure: failureAnalysis
-      }
-    });
   };
 
   const handleRunLoadCase = (loadCaseId: string) => {
@@ -248,7 +240,7 @@ const Index = () => {
     if (activeCase) {
       updateLoads(activeCase.loads);
     }
-  }, [activeLoadCaseId]);
+  }, [activeLoadCaseId, getActiveLoadCase]);
 
   const handleSaveConfiguration = (name: string, description: string) => {
     if (!user) {
