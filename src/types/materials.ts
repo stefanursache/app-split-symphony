@@ -20,9 +20,12 @@ export interface Ply {
 }
 
 export interface Loads {
-  axial: number;
-  bending: number;
-  torsion: number;
+  Nx: number;  // Axial force per unit width (N/mm)
+  Ny: number;  // Transverse force per unit width (N/mm)
+  Nxy: number; // In-plane shear force per unit width (N/mm)
+  Mx: number;  // Bending moment per unit width (N·mm/mm = N)
+  My: number;  // Transverse bending moment per unit width (N)
+  Mxy: number; // Twisting moment per unit width (N)
 }
 
 export interface EngineeringProperties {

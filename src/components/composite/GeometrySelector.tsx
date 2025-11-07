@@ -7,22 +7,22 @@ import { GeometryType, GeometryConfig } from '@/types/geometry';
 interface GeometrySelectorProps {
   geometry: GeometryConfig;
   onGeometryChange: (geometry: GeometryConfig) => void;
+  totalThickness: number;
 }
 
-export function GeometrySelector({ geometry, onGeometryChange }: GeometrySelectorProps) {
+export function GeometrySelector({ geometry, onGeometryChange, totalThickness }: GeometrySelectorProps) {
   const handleTypeChange = (type: GeometryType) => {
     onGeometryChange({
       ...geometry,
       type,
       ...(type === 'tube' ? {
-        outerDiameter: geometry.outerDiameter || 130,
         innerDiameter: geometry.innerDiameter || 124
-      } : {
-        width: geometry.width || 100,
-        length: geometry.length || 100
-      })
+      } : {})
     });
   };
+
+  const innerDiameter = geometry.innerDiameter || 124;
+  const outerDiameter = innerDiameter + (2 * totalThickness);
 
   return (
     <Card className="p-6">
@@ -54,28 +54,13 @@ export function GeometrySelector({ geometry, onGeometryChange }: GeometrySelecto
         {geometry.type === 'tube' ? (
           <div className="space-y-3">
             <div>
-              <Label htmlFor="outerDiameter" className="text-sm">
-                Outer Diameter (mm)
-              </Label>
-              <Input
-                id="outerDiameter"
-                type="number"
-                value={geometry.outerDiameter || 130}
-                onChange={(e) => onGeometryChange({
-                  ...geometry,
-                  outerDiameter: parseFloat(e.target.value) || 0
-                })}
-                className="mt-1"
-              />
-            </div>
-            <div>
               <Label htmlFor="innerDiameter" className="text-sm">
                 Inner Diameter (mm)
               </Label>
               <Input
                 id="innerDiameter"
                 type="number"
-                value={geometry.innerDiameter || 124}
+                value={innerDiameter}
                 onChange={(e) => onGeometryChange({
                   ...geometry,
                   innerDiameter: parseFloat(e.target.value) || 0
@@ -83,30 +68,24 @@ export function GeometrySelector({ geometry, onGeometryChange }: GeometrySelecto
                 className="mt-1"
               />
             </div>
-            <p className="text-xs text-muted-foreground">
-              Wall thickness: {((geometry.outerDiameter || 130) - (geometry.innerDiameter || 124)) / 2} mm
-            </p>
+            <div className="bg-muted/30 p-3 rounded-md border border-border">
+              <p className="text-xs text-muted-foreground mb-1">Calculated dimensions:</p>
+              <p className="text-sm">
+                <span className="font-medium">Outer Diameter:</span> {outerDiameter.toFixed(2)} mm
+              </p>
+              <p className="text-sm">
+                <span className="font-medium">Wall Thickness:</span> {totalThickness.toFixed(2)} mm
+              </p>
+            </div>
           </div>
         ) : (
-          <div className="space-y-3">
-            <div>
-              <Label htmlFor="width" className="text-sm">
-                Width (mm)
-              </Label>
-              <Input
-                id="width"
-                type="number"
-                value={geometry.width || 100}
-                onChange={(e) => onGeometryChange({
-                  ...geometry,
-                  width: parseFloat(e.target.value) || 0
-                })}
-                className="mt-1"
-                placeholder="Per unit width analysis"
-              />
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Loads will be applied as forces/moments per unit width
+          <div className="bg-muted/30 p-3 rounded-md border border-border">
+            <p className="text-sm text-muted-foreground">
+              Classical Lamination Theory analyzes the laminate on a <span className="font-medium">per-unit-width basis</span>.
+            </p>
+            <p className="text-xs text-muted-foreground mt-2">
+              Loads are applied as forces/moments per unit width (N/mm, N). 
+              Actual plate dimensions do not affect stress/strain calculations.
             </p>
           </div>
         )}

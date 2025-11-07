@@ -1,82 +1,138 @@
 import { Card } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Loads } from '@/types/materials';
-import { Activity } from 'lucide-react';
+import { Info } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface LoadInputsProps {
   loads: Loads;
-  onUpdateLoads: (loads: Partial<Loads>) => void;
-  onCalculate: () => void;
+  onLoadChange: (loads: Partial<Loads>) => void;
 }
 
-export function LoadInputs({ loads, onUpdateLoads, onCalculate }: LoadInputsProps) {
+export function LoadInputs({ loads, onLoadChange }: LoadInputsProps) {
   return (
     <Card className="p-6">
-      <div className="flex items-center gap-2 mb-4">
-        <Activity className="h-5 w-5 text-primary" />
-        <h3 className="text-lg font-semibold text-foreground">Load Inputs</h3>
-      </div>
-
+      <h3 className="text-lg font-semibold mb-4 text-foreground">Applied Loads (per unit width)</h3>
+      
       <div className="space-y-4">
-        <div>
-          <Label htmlFor="axialLoad" className="flex items-center justify-between">
-            <span>Axial Load, F<sub>z</sub> (N)</span>
-            <span className="text-xs text-muted-foreground font-normal">Along z-axis</span>
-          </Label>
-          <Input
-            id="axialLoad"
-            type="number"
-            value={loads.axial}
-            onChange={(e) => onUpdateLoads({ axial: Number(e.target.value) })}
-            className="mt-1"
-            placeholder="e.g., 4750"
-          />
-          <p className="text-xs text-muted-foreground mt-1">
-            Positive = Tension, Negative = Compression
+        <div className="bg-muted/30 p-3 rounded-md mb-4">
+          <p className="text-xs text-muted-foreground">
+            All loads are specified per unit width for CLT analysis
           </p>
         </div>
 
-        <div>
-          <Label htmlFor="bendingLoad" className="flex items-center justify-between">
-            <span>Bending Moment, M<sub>x</sub> (N·mm)</span>
-            <span className="text-xs text-muted-foreground font-normal">About x-axis</span>
-          </Label>
-          <Input
-            id="bendingLoad"
-            type="number"
-            value={loads.bending}
-            onChange={(e) => onUpdateLoads({ bending: Number(e.target.value) })}
-            className="mt-1"
-            placeholder="e.g., 10000"
-          />
-          <p className="text-xs text-muted-foreground mt-1">
-            Causes bending in y-z plane
-          </p>
+        {/* In-plane forces */}
+        <div className="space-y-3">
+          <h4 className="text-sm font-semibold text-foreground flex items-center gap-2">
+            In-Plane Forces (N/mm)
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger>
+                  <Info className="h-4 w-4 text-muted-foreground" />
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Force per unit width applied in the plane of the laminate</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </h4>
+          
+          <div>
+            <Label htmlFor="Nx" className="text-sm">
+              Nx (Axial)
+            </Label>
+            <Input
+              id="Nx"
+              type="number"
+              value={loads.Nx}
+              onChange={(e) => onLoadChange({ Nx: parseFloat(e.target.value) || 0 })}
+              className="mt-1"
+            />
+          </div>
+          
+          <div>
+            <Label htmlFor="Ny" className="text-sm">
+              Ny (Transverse)
+            </Label>
+            <Input
+              id="Ny"
+              type="number"
+              value={loads.Ny}
+              onChange={(e) => onLoadChange({ Ny: parseFloat(e.target.value) || 0 })}
+              className="mt-1"
+            />
+          </div>
+          
+          <div>
+            <Label htmlFor="Nxy" className="text-sm">
+              Nxy (In-plane Shear)
+            </Label>
+            <Input
+              id="Nxy"
+              type="number"
+              value={loads.Nxy}
+              onChange={(e) => onLoadChange({ Nxy: parseFloat(e.target.value) || 0 })}
+              className="mt-1"
+            />
+          </div>
         </div>
 
-        <div>
-          <Label htmlFor="torsionLoad" className="flex items-center justify-between">
-            <span>Torsional Moment, M<sub>z</sub> (N·mm)</span>
-            <span className="text-xs text-muted-foreground font-normal">About z-axis</span>
-          </Label>
-          <Input
-            id="torsionLoad"
-            type="number"
-            value={loads.torsion}
-            onChange={(e) => onUpdateLoads({ torsion: Number(e.target.value) })}
-            className="mt-1"
-            placeholder="e.g., 5000"
-          />
-          <p className="text-xs text-muted-foreground mt-1">
-            Twisting moment along length
-          </p>
+        {/* Moments */}
+        <div className="space-y-3 pt-4 border-t border-border">
+          <h4 className="text-sm font-semibold text-foreground flex items-center gap-2">
+            Moments (N)
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger>
+                  <Info className="h-4 w-4 text-muted-foreground" />
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Moment per unit width (N·mm/mm = N)</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </h4>
+          
+          <div>
+            <Label htmlFor="Mx" className="text-sm">
+              Mx (Bending about x-axis)
+            </Label>
+            <Input
+              id="Mx"
+              type="number"
+              value={loads.Mx}
+              onChange={(e) => onLoadChange({ Mx: parseFloat(e.target.value) || 0 })}
+              className="mt-1"
+            />
+          </div>
+          
+          <div>
+            <Label htmlFor="My" className="text-sm">
+              My (Bending about y-axis)
+            </Label>
+            <Input
+              id="My"
+              type="number"
+              value={loads.My}
+              onChange={(e) => onLoadChange({ My: parseFloat(e.target.value) || 0 })}
+              className="mt-1"
+            />
+          </div>
+          
+          <div>
+            <Label htmlFor="Mxy" className="text-sm">
+              Mxy (Twisting)
+            </Label>
+            <Input
+              id="Mxy"
+              type="number"
+              value={loads.Mxy}
+              onChange={(e) => onLoadChange({ Mxy: parseFloat(e.target.value) || 0 })}
+              className="mt-1"
+            />
+          </div>
         </div>
-
-        <Button onClick={onCalculate} className="w-full">
-          Calculate Stress/Strain
-        </Button>
       </div>
     </Card>
   );

@@ -1,14 +1,11 @@
 import { useState } from 'react';
+import { Loads } from '@/types/materials';
 
 export interface LoadCase {
   id: string;
   name: string;
   description: string;
-  loads: {
-    axial: number;
-    bending: number;
-    torsion: number;
-  };
+  loads: Loads;
   results?: {
     stress: any[];
     failure: any[];
@@ -20,31 +17,31 @@ const defaultLoadCases: LoadCase[] = [
     id: 'compression',
     name: 'Compression',
     description: 'Axial compression loading',
-    loads: { axial: -4750, bending: 0, torsion: 0 }
+    loads: { Nx: -4750, Ny: 0, Nxy: 0, Mx: 0, My: 0, Mxy: 0 }
   },
   {
     id: 'tension',
     name: 'Tension',
     description: 'Axial tension loading',
-    loads: { axial: 4750, bending: 0, torsion: 0 }
+    loads: { Nx: 4750, Ny: 0, Nxy: 0, Mx: 0, My: 0, Mxy: 0 }
   },
   {
     id: 'bending',
-    name: 'Bending',
-    description: 'Pure bending moment',
-    loads: { axial: 0, bending: 10000, torsion: 0 }
+    name: 'Bending X',
+    description: 'Pure bending moment about x-axis',
+    loads: { Nx: 0, Ny: 0, Nxy: 0, Mx: 10000, My: 0, Mxy: 0 }
   },
   {
     id: 'torsion',
-    name: 'Torsion',
-    description: 'Pure torsional loading',
-    loads: { axial: 0, bending: 0, torsion: 5000 }
+    name: 'Twisting',
+    description: 'Pure twisting moment',
+    loads: { Nx: 0, Ny: 0, Nxy: 0, Mx: 0, My: 0, Mxy: 5000 }
   },
   {
     id: 'combined',
     name: 'Combined Loading',
-    description: 'Axial + Bending + Torsion',
-    loads: { axial: 3000, bending: 5000, torsion: 2000 }
+    description: 'Axial + Bending + Twisting',
+    loads: { Nx: 3000, Ny: 0, Nxy: 0, Mx: 5000, My: 0, Mxy: 2000 }
   }
 ];
 

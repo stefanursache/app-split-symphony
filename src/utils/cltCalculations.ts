@@ -100,49 +100,7 @@ export function calculatePlyPositions(
   return positions;
 }
 
-// Transform loads for flat plate (per unit width)
-export function transformLoadsForPlate(loads: {
-  axial: number;
-  bending: number;
-  torsion: number;
-}): { Nx: number, Ny: number, Nxy: number, Mx: number, My: number, Mxy: number } {
-  return {
-    Nx: loads.axial,      // N (force per unit width)
-    Ny: 0,                // No transverse load
-    Nxy: 0,               // No in-plane shear
-    Mx: loads.bending,    // N·mm/mm (moment per unit width)
-    My: 0,                // No transverse moment
-    Mxy: loads.torsion    // Twisting moment per unit width
-  };
-}
-
-// Transform loads for circular tube
-export function transformLoadsForTube(
-  loads: { axial: number; bending: number; torsion: number },
-  geometry: GeometryConfig,
-  totalThickness: number
-): { Nx: number, Ny: number, Nxy: number, Mx: number, My: number, Mxy: number } {
-  const Do = geometry.outerDiameter || 130;
-  const Di = geometry.innerDiameter || 124;
-  const r_mean = (Do + Di) / 4;
-  const area = Math.PI * (Do * Do - Di * Di) / 4;
-  const I = Math.PI * (Math.pow(Do, 4) - Math.pow(Di, 4)) / 64;
-  const J = Math.PI * (Math.pow(Do, 4) - Math.pow(Di, 4)) / 32;
-
-  // Convert to resultant forces and moments
-  const Nx = loads.axial / (2 * Math.PI * r_mean); // Force per unit length of circumference
-  const Mx = loads.bending / (2 * Math.PI * r_mean); // Moment per unit length
-  const Nxy = loads.torsion * r_mean / (2 * Math.PI * r_mean * r_mean); // Shear flow
-
-  return {
-    Nx,
-    Ny: 0,    // Hoop stress (would come from pressure)
-    Nxy,
-    Mx,
-    My: 0,
-    Mxy: 0
-  };
-}
+// No load transformation functions needed - loads are now input directly
 
 // Calculate strains at a given z-position
 export function calculateStrainsAtZ(

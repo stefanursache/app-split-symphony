@@ -5,9 +5,12 @@ const initialState: AppState = {
   plies: [],
   selectedMaterial: 'Fiberglass EC9-136',
   loads: {
-    axial: 4750,
-    bending: 0,
-    torsion: 0
+    Nx: 4750,
+    Ny: 0,
+    Nxy: 0,
+    Mx: 0,
+    My: 0,
+    Mxy: 0
   },
   activeTab: 'properties',
   activeLoadCase: 'compression',

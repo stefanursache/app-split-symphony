@@ -1,15 +1,13 @@
-import { Material, Ply, EngineeringProperties, StressResult } from '@/types/materials';
-import { GeometryConfig } from '@/types/geometry';
+import { Ply, Material, EngineeringProperties, StressResult, Loads } from '@/types/materials';
 import { calculateABDMatrix } from './abdMatrix';
-import {
-  calculateStrainsAndCurvatures,
+import { 
+  calculateStrainsAndCurvatures, 
   calculatePlyPositions,
-  transformLoadsForPlate,
-  transformLoadsForTube,
   calculateStrainsAtZ,
   transformStrainsToMaterial,
   calculateStressesFromStrains
 } from './cltCalculations';
+import { GeometryConfig } from '@/types/geometry';
 
 export function calculateEngineeringProperties(
   plies: Ply[],
@@ -70,29 +68,16 @@ export function calculateEngineeringProperties(
 export function calculateStressStrain(
   plies: Ply[],
   materials: Record<string, Material>,
-  loads: { axial: number; bending: number; torsion: number },
+  loads: Loads,
   geometry: GeometryConfig
 ): StressResult[] {
   if (plies.length === 0) return [];
 
-  const totalThickness = plies.reduce(
-    (sum, ply) => sum + (materials[ply.material]?.thickness || 0),
-    0
-  );
-
   // Calculate ABD matrix
   const abdMatrix = calculateABDMatrix(plies, materials);
 
-  // Transform loads based on geometry type
-  const transformedLoads = geometry.type === 'plate'
-    ? transformLoadsForPlate(loads)
-    : transformLoadsForTube(loads, geometry, totalThickness);
-
-  // Calculate mid-plane strains and curvatures
-  const { strains, curvatures } = calculateStrainsAndCurvatures(
-    abdMatrix,
-    transformedLoads
-  );
+  // Calculate mid-plane strains and curvatures directly from loads
+  const { strains, curvatures } = calculateStrainsAndCurvatures(abdMatrix, loads);
 
   // Get ply positions through thickness
   const plyPositions = calculatePlyPositions(plies, materials);

@@ -16,7 +16,7 @@ interface PDFReportExportProps {
   failureResults: any[];
   loadCase?: {
     name: string;
-    loads: { axial: number; bending: number; torsion: number };
+    loads: { Nx: number; Ny: number; Nxy: number; Mx: number; My: number; Mxy: number };
   };
 }
 
@@ -416,9 +416,12 @@ export function PDFReportExport({
 
         const loadData = [
           ['Load Component', 'Symbol', 'Value', 'Unit'],
-          ['Axial Force', 'Nₓ', loadCase.loads.axial.toFixed(2), 'N'],
-          ['Bending Moment', 'Mₓ', loadCase.loads.bending.toFixed(2), 'N·mm'],
-          ['Torsional Moment', 'Mₜ', loadCase.loads.torsion.toFixed(2), 'N·mm']
+          ['Axial Force', 'Nₓ', loadCase.loads.Nx.toFixed(2), 'N/mm'],
+          ['Transverse Force', 'Nᵧ', loadCase.loads.Ny.toFixed(2), 'N/mm'],
+          ['In-plane Shear', 'Nₓᵧ', loadCase.loads.Nxy.toFixed(2), 'N/mm'],
+          ['Bending Moment X', 'Mₓ', loadCase.loads.Mx.toFixed(2), 'N'],
+          ['Bending Moment Y', 'Mᵧ', loadCase.loads.My.toFixed(2), 'N'],
+          ['Twisting Moment', 'Mₓᵧ', loadCase.loads.Mxy.toFixed(2), 'N']
         ];
 
         autoTable(doc, {

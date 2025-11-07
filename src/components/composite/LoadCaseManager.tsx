@@ -37,9 +37,12 @@ export function LoadCaseManager({
   const [newLoadCase, setNewLoadCase] = useState({
     name: '',
     description: '',
-    axial: 0,
-    bending: 0,
-    torsion: 0
+    Nx: 0,
+    Ny: 0,
+    Nxy: 0,
+    Mx: 0,
+    My: 0,
+    Mxy: 0
   });
 
   const handleAddLoadCase = () => {
@@ -47,17 +50,23 @@ export function LoadCaseManager({
       name: newLoadCase.name,
       description: newLoadCase.description,
       loads: {
-        axial: newLoadCase.axial,
-        bending: newLoadCase.bending,
-        torsion: newLoadCase.torsion
+        Nx: newLoadCase.Nx,
+        Ny: newLoadCase.Ny,
+        Nxy: newLoadCase.Nxy,
+        Mx: newLoadCase.Mx,
+        My: newLoadCase.My,
+        Mxy: newLoadCase.Mxy
       }
     });
     setNewLoadCase({
       name: '',
       description: '',
-      axial: 0,
-      bending: 0,
-      torsion: 0
+      Nx: 0,
+      Ny: 0,
+      Nxy: 0,
+      Mx: 0,
+      My: 0,
+      Mxy: 0
     });
     setIsDialogOpen(false);
   };
@@ -100,33 +109,64 @@ export function LoadCaseManager({
                   rows={2}
                 />
               </div>
-              <div className="grid grid-cols-3 gap-3">
-                <div>
-                  <Label htmlFor="axial">Axial (N)</Label>
-                  <Input
-                    id="axial"
-                    type="number"
-                    value={newLoadCase.axial}
-                    onChange={(e) => setNewLoadCase(prev => ({ ...prev, axial: Number(e.target.value) }))}
-                  />
+              <div className="space-y-3">
+                <div className="grid grid-cols-3 gap-3">
+                  <div>
+                    <Label htmlFor="Nx">Nx (N/mm)</Label>
+                    <Input
+                      id="Nx"
+                      type="number"
+                      value={newLoadCase.Nx}
+                      onChange={(e) => setNewLoadCase(prev => ({ ...prev, Nx: Number(e.target.value) }))}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="Ny">Ny (N/mm)</Label>
+                    <Input
+                      id="Ny"
+                      type="number"
+                      value={newLoadCase.Ny}
+                      onChange={(e) => setNewLoadCase(prev => ({ ...prev, Ny: Number(e.target.value) }))}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="Nxy">Nxy (N/mm)</Label>
+                    <Input
+                      id="Nxy"
+                      type="number"
+                      value={newLoadCase.Nxy}
+                      onChange={(e) => setNewLoadCase(prev => ({ ...prev, Nxy: Number(e.target.value) }))}
+                    />
+                  </div>
                 </div>
-                <div>
-                  <Label htmlFor="bending">Bending (N·mm)</Label>
-                  <Input
-                    id="bending"
-                    type="number"
-                    value={newLoadCase.bending}
-                    onChange={(e) => setNewLoadCase(prev => ({ ...prev, bending: Number(e.target.value) }))}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="torsion">Torsion (N·mm)</Label>
-                  <Input
-                    id="torsion"
-                    type="number"
-                    value={newLoadCase.torsion}
-                    onChange={(e) => setNewLoadCase(prev => ({ ...prev, torsion: Number(e.target.value) }))}
-                  />
+                <div className="grid grid-cols-3 gap-3">
+                  <div>
+                    <Label htmlFor="Mx">Mx (N)</Label>
+                    <Input
+                      id="Mx"
+                      type="number"
+                      value={newLoadCase.Mx}
+                      onChange={(e) => setNewLoadCase(prev => ({ ...prev, Mx: Number(e.target.value) }))}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="My">My (N)</Label>
+                    <Input
+                      id="My"
+                      type="number"
+                      value={newLoadCase.My}
+                      onChange={(e) => setNewLoadCase(prev => ({ ...prev, My: Number(e.target.value) }))}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="Mxy">Mxy (N)</Label>
+                    <Input
+                      id="Mxy"
+                      type="number"
+                      value={newLoadCase.Mxy}
+                      onChange={(e) => setNewLoadCase(prev => ({ ...prev, Mxy: Number(e.target.value) }))}
+                    />
+                  </div>
                 </div>
               </div>
               <Button onClick={handleAddLoadCase} className="w-full" disabled={!newLoadCase.name}>
@@ -154,16 +194,16 @@ export function LoadCaseManager({
                   <p className="text-xs text-muted-foreground mt-1">{loadCase.description}</p>
                   <div className="grid grid-cols-3 gap-2 mt-2 text-xs">
                     <div>
-                      <span className="text-muted-foreground">Axial:</span>
-                      <span className="ml-1 font-mono text-foreground">{loadCase.loads.axial} N</span>
+                      <span className="text-muted-foreground">Nx:</span>
+                      <span className="ml-1 font-mono text-foreground">{loadCase.loads.Nx} N/mm</span>
                     </div>
                     <div>
-                      <span className="text-muted-foreground">Bend:</span>
-                      <span className="ml-1 font-mono text-foreground">{loadCase.loads.bending} N·mm</span>
+                      <span className="text-muted-foreground">Mx:</span>
+                      <span className="ml-1 font-mono text-foreground">{loadCase.loads.Mx} N</span>
                     </div>
                     <div>
-                      <span className="text-muted-foreground">Torsion:</span>
-                      <span className="ml-1 font-mono text-foreground">{loadCase.loads.torsion} N·mm</span>
+                      <span className="text-muted-foreground">Mxy:</span>
+                      <span className="ml-1 font-mono text-foreground">{loadCase.loads.Mxy} N</span>
                     </div>
                   </div>
                 </div>

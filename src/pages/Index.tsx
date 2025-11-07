@@ -65,7 +65,6 @@ const Index = () => {
   const [loadedConfigId, setLoadedConfigId] = useState<string | null>(null);
   const [geometry, setGeometry] = useState<GeometryConfig>({
     type: 'tube',
-    outerDiameter: state.outerDiameter,
     innerDiameter: state.innerDiameter
   });
 
@@ -134,9 +133,12 @@ const Index = () => {
     if (createNewCase) {
       // Check if a similar load case already exists
       const existingCase = loadCases.find(lc => 
-        lc.loads.axial === state.loads.axial &&
-        lc.loads.bending === state.loads.bending &&
-        lc.loads.torsion === state.loads.torsion
+        lc.loads.Nx === state.loads.Nx &&
+        lc.loads.Ny === state.loads.Ny &&
+        lc.loads.Nxy === state.loads.Nxy &&
+        lc.loads.Mx === state.loads.Mx &&
+        lc.loads.My === state.loads.My &&
+        lc.loads.Mxy === state.loads.Mxy
       );
 
       if (existingCase) {
@@ -153,7 +155,7 @@ const Index = () => {
         // Create a new load case with the results
         const newCaseId = addLoadCase({
           name: `Case ${loadCases.length + 1}`,
-          description: `Fz: ${state.loads.axial}N, Mx: ${state.loads.bending}N·mm, Mz: ${state.loads.torsion}N·mm`,
+          description: `Nx: ${state.loads.Nx}N/mm, Ny: ${state.loads.Ny}N/mm, Nxy: ${state.loads.Nxy}N/mm, Mx: ${state.loads.Mx}N, My: ${state.loads.My}N, Mxy: ${state.loads.Mxy}N`,
           loads: { ...state.loads },
           results: {
             stress: results,
@@ -368,7 +370,7 @@ const Index = () => {
                 <TabsTrigger value="failure">Failure</TabsTrigger>
                 <TabsTrigger value="loadcases">Load Cases</TabsTrigger>
                 <TabsTrigger value="optimize">Optimize</TabsTrigger>
-                <TabsTrigger value="comparison">Compare</TabsTrigger>
+                <TabsTrigger value="comparison">Stacks</TabsTrigger>
               </TabsList>
 
               <TabsContent value="properties" className="mt-6 space-y-6">
@@ -381,11 +383,11 @@ const Index = () => {
                 <GeometrySelector
                   geometry={geometry}
                   onGeometryChange={setGeometry}
+                  totalThickness={engineeringProps.thickness}
                 />
                 <LoadInputs
                   loads={state.loads}
-                  onUpdateLoads={updateLoads}
-                  onCalculate={() => handleCalculateStress(true)}
+                  onLoadChange={updateLoads}
                 />
                 <StressResults results={stressResults} />
               </TabsContent>
