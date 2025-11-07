@@ -55,6 +55,7 @@ export function useAppState() {
   };
 
   const clearPlies = () => {
+    console.log('🔴 CLEAR PLIES CALLED', new Error().stack);
     setState(prev => ({
       ...prev,
       plies: []
