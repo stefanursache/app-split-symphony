@@ -9,6 +9,6 @@ export interface GeometryConfig {
 }
 
 export const DEFAULT_GEOMETRY: GeometryConfig = {
-  type: 'tube',
+  type: 'plate',
   innerDiameter: 124
 };

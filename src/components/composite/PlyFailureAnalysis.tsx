@@ -1,6 +1,8 @@
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { FailureResult } from '@/utils/failureAnalysis';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Info } from 'lucide-react';
 
 interface PlyFailureAnalysisProps {
   results: FailureResult[];
@@ -62,13 +64,37 @@ export function PlyFailureAnalysis({ results }: PlyFailureAnalysisProps) {
                 </span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-muted-foreground">Safety Margin:</span>
+                <span className="text-muted-foreground flex items-center gap-1">
+                  Safety Margin:
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Info className="h-3 w-3 text-muted-foreground" />
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p className="max-w-xs">Safety Margin = (SF - 1) × 100%. Indicates how much margin exists beyond failure. Positive values mean the ply is safe, negative values indicate failure.</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </span>
                 <span className={result.isPassed ? 'text-cyan-400' : 'text-destructive'}>
                   {result.safetyMargin.toFixed(1)}%
                 </span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-muted-foreground">Failure Mode:</span>
+                <span className="text-muted-foreground flex items-center gap-1">
+                  Failure Mode:
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Info className="h-3 w-3 text-muted-foreground" />
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p className="max-w-xs">Indicates the type of failure and location. Examples: Longitudinal tension/compression, transverse tension/compression, or shear failure at top or bottom surface.</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </span>
                 <span className="text-foreground">{result.failureMode}</span>
               </div>
             </div>

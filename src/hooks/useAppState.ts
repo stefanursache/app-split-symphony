@@ -21,7 +21,7 @@ const initialState: AppState = {
   outerDiameter: 130,
   innerDiameter: 124,
   operatingTemp: "-40°C to 60°C",
-  geometryType: 'tube',
+  geometryType: 'plate',
   plateWidth: 100,
   enableThermalAnalysis: false,
   enableBucklingAnalysis: false,

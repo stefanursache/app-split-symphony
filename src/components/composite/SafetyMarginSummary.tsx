@@ -1,6 +1,7 @@
 import { Card } from '@/components/ui/card';
-import { Check } from 'lucide-react';
+import { Check, Info } from 'lucide-react';
 import { SafetySummary } from '@/utils/failureAnalysis';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface SafetyMarginSummaryProps {
   summary: SafetySummary | null;
@@ -19,7 +20,19 @@ export function SafetyMarginSummary({ summary }: SafetyMarginSummaryProps) {
 
       <div className="space-y-3">
         <div className="bg-primary/10 rounded-lg p-4 flex items-center justify-between">
-          <span className="text-foreground font-medium">Minimum Safety Factor</span>
+          <span className="text-foreground font-medium flex items-center gap-2">
+            Minimum Safety Factor
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Info className="h-3 w-3 text-muted-foreground" />
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p className="max-w-xs">SF = 1 / FI. The lowest safety factor across all plies. Values above 1.0 indicate the laminate is safe.</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </span>
           <span className="text-2xl font-bold text-cyan-400">
             {summary.minimumSafetyFactor.toFixed(2)}
           </span>
