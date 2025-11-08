@@ -43,7 +43,7 @@ import { Material } from '@/types/materials';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Moon, Sun } from 'lucide-react';
-import { GeometryConfig } from '@/types/geometry';
+import { GeometryConfig, DEFAULT_GEOMETRY } from '@/types/geometry';
 
 const Index = () => {
   const navigate = useNavigate();
@@ -78,7 +78,7 @@ const Index = () => {
   const [failureCriterion, setFailureCriterion] = useState<'max_stress' | 'tsai_wu' | 'tsai_hill'>('max_stress');
   const [loadedConfigId, setLoadedConfigId] = useState<string | null>(null);
   const [geometry, setGeometry] = useState<GeometryConfig>({
-    type: 'tube',
+    type: DEFAULT_GEOMETRY.type,
     innerDiameter: state.innerDiameter
   });
   
