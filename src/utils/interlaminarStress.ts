@@ -2,6 +2,48 @@ import { Material, Ply, Loads } from '@/types/materials';
 import { calculateABDMatrix } from './abdMatrix';
 import { calculateStrainsAndCurvatures, calculatePlyPositions } from './cltCalculations';
 
+// Helper function to calculate Q matrix (stiffness matrix in material coordinates)
+function calculateQMatrix(material: Material): number[][] {
+  const E1 = material.E1;
+  const E2 = material.E2;
+  const G12 = material.G12;
+  const nu12 = material.nu12;
+  const nu21 = nu12 * E2 / E1;
+  
+  const Q11 = E1 / (1 - nu12 * nu21);
+  const Q12 = nu12 * E2 / (1 - nu12 * nu21);
+  const Q22 = E2 / (1 - nu12 * nu21);
+  const Q66 = G12;
+  
+  return [
+    [Q11, Q12, 0],
+    [Q12, Q22, 0],
+    [0, 0, Q66]
+  ];
+}
+
+// Helper function to transform Q matrix to global coordinates
+function transformQMatrix(Q: number[][], angle: number): number[][] {
+  const c = Math.cos(angle);
+  const s = Math.sin(angle);
+  const c2 = c * c;
+  const s2 = s * s;
+  const cs = c * s;
+  
+  const Q11 = Q[0][0] * c2*c2 + 2 * (Q[0][1] + 2*Q[2][2]) * c2*s2 + Q[1][1] * s2*s2;
+  const Q12 = (Q[0][0] + Q[1][1] - 4*Q[2][2]) * c2*s2 + Q[0][1] * (c2*c2 + s2*s2);
+  const Q16 = (Q[0][0] - Q[0][1] - 2*Q[2][2]) * cs*c2 + (Q[0][1] - Q[1][1] + 2*Q[2][2]) * cs*s2;
+  const Q22 = Q[0][0] * s2*s2 + 2 * (Q[0][1] + 2*Q[2][2]) * c2*s2 + Q[1][1] * c2*c2;
+  const Q26 = (Q[0][0] - Q[0][1] - 2*Q[2][2]) * cs*s2 + (Q[0][1] - Q[1][1] + 2*Q[2][2]) * cs*c2;
+  const Q66 = (Q[0][0] + Q[1][1] - 2*Q[0][1] - 2*Q[2][2]) * c2*s2 + Q[2][2] * (c2*c2 + s2*s2);
+  
+  return [
+    [Q11, Q12, Q16],
+    [Q12, Q22, Q26],
+    [Q16, Q26, Q66]
+  ];
+}
+
 export interface InterlaminarStressResult {
   z: number; // Through-thickness position
   sigma_z: number; // Out-of-plane normal stress
@@ -43,37 +85,66 @@ export function calculateInterlaminarStresses(
     const epsilon_y = strains[1] + z * curvatures[1];
     const gamma_xy = strains[2] + z * curvatures[2];
 
-    // Estimate out-of-plane stresses using equilibrium equations
-    // These are simplified estimates - full 3D FEA would be more accurate
+    // Calculate out-of-plane interlaminar stresses using equilibrium equations
+    // Based on Classical Lamination Theory and through-thickness integration
     
-    // tau_xz and tau_yz from shear force distribution
-    const tau_xz = loads.Nxy !== 0 ? 
-      (3 * loads.Nxy / (2 * plyPositions[plyPositions.length - 1].z_top)) * 
-      (1 - (z / plyPositions[plyPositions.length - 1].z_top) ** 2) : 0;
+    const h = plyPositions[plyPositions.length - 1].z_top - plyPositions[0].z_bottom; // Total thickness
+    const h_half = h / 2;
     
-    const tau_yz = loads.Nxy !== 0 ?
-      (3 * loads.Nxy / (2 * plyPositions[plyPositions.length - 1].z_top)) * 
-      (1 - (z / plyPositions[plyPositions.length - 1].z_top) ** 2) : 0;
+    // Calculate Q matrices for both materials at interface
+    const Q1 = calculateQMatrix(material1);
+    const Q2 = calculateQMatrix(material2);
+    
+    // Transform Q matrices to global coordinates
+    const Q1_bar = transformQMatrix(Q1, angle1);
+    const Q2_bar = transformQMatrix(Q2, angle2);
+    
+    // Out-of-plane shear stresses from equilibrium: dτxz/dz = -dσx/dx
+    // Using parabolic distribution through thickness
+    // τxz = (1/(2h)) * ∫(Q̄16*ε⁰x + Q̄26*ε⁰y + Q̄66*γ⁰xy) dz
+    
+    const tau_xz = (1 / (2 * h)) * (
+      (Q1_bar[0][2] + Q2_bar[0][2]) * strains[0] +
+      (Q1_bar[1][2] + Q2_bar[1][2]) * strains[1] +
+      (Q1_bar[2][2] + Q2_bar[2][2]) * strains[2]
+    ) * (1 - (z / h_half) ** 2);
+    
+    const tau_yz = (1 / (2 * h)) * (
+      (Q1_bar[1][2] + Q2_bar[1][2]) * strains[1] +
+      (Q1_bar[0][2] + Q2_bar[0][2]) * strains[0] +
+      (Q1_bar[2][2] + Q2_bar[2][2]) * strains[2]
+    ) * (1 - (z / h_half) ** 2);
 
-    // sigma_z is typically small except at free edges
-    // Estimate based on material mismatch and curvature
-    const materialMismatchFactor = Math.abs(material1.E1 - material2.E1) / 
-      Math.max(material1.E1, material2.E1);
+    // Out-of-plane normal stress from material property mismatch
+    // σz arises from Poisson effect mismatch between adjacent plies
+    const nu_mismatch = Math.abs(
+      (material1.nu12 * material1.E2 / material1.E1) - 
+      (material2.nu12 * material2.E2 / material2.E1)
+    );
     
-    const sigma_z = materialMismatchFactor * 
-      Math.abs(curvatures[0] + curvatures[1]) * 
-      Math.max(material1.E1, material2.E1) * 0.01;
+    const sigma_z = nu_mismatch * (
+      Math.abs(epsilon_x * material1.E1) + Math.abs(epsilon_y * material1.E2)
+    ) * 0.1; // Scaling factor for through-thickness effect
 
-    // Assess delamination risk
+    // Assess delamination risk based on multiple criteria
     let delamination_risk: 'Low' | 'Medium' | 'High' = 'Low';
     
     const tau_max = Math.sqrt(tau_xz ** 2 + tau_yz ** 2);
     const avg_shear_strength = ((material1.shear_strength || 50) + 
       (material2.shear_strength || 50)) / 2;
     
-    if (tau_max > 0.5 * avg_shear_strength || angleMismatch > 45 || sigma_z > 10) {
+    // Calculate shear stress ratio
+    const shear_ratio = tau_max / avg_shear_strength;
+    
+    // Assess normal stress (typical limit: 5-15 MPa for composites)
+    const sigma_z_abs = Math.abs(sigma_z);
+    
+    // Risk criteria:
+    // High: Shear ratio > 0.6 OR angle mismatch > 60° OR σz > 15 MPa
+    // Medium: Shear ratio > 0.4 OR angle mismatch > 45° OR σz > 8 MPa
+    if (shear_ratio > 0.6 || angleMismatch > 60 || sigma_z_abs > 15) {
       delamination_risk = 'High';
-    } else if (tau_max > 0.3 * avg_shear_strength || angleMismatch > 30 || sigma_z > 5) {
+    } else if (shear_ratio > 0.4 || angleMismatch > 45 || sigma_z_abs > 8) {
       delamination_risk = 'Medium';
     }
 

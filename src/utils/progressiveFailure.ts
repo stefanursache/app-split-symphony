@@ -33,7 +33,7 @@ export function performProgressiveFailureAnalysis(
   plies: Ply[],
   materials: Record<string, Material>,
   loads: Loads,
-  safetyFactor: number,
+  safetyFactor: number | null,
   failureCriterion: 'max_stress' | 'tsai_wu' | 'tsai_hill',
   geometryType: 'plate' | 'tube',
   outerDiameter: number,
@@ -50,6 +50,10 @@ export function performProgressiveFailureAnalysis(
   let firstPlyFailure: ProgressiveFailureAnalysis['firstPlyFailure'] = null;
   let lastPlyFailure: ProgressiveFailureAnalysis['lastPlyFailure'] = null;
   let loadMultiplier = 1.0;
+  
+  // For progressive failure, we analyze WITHOUT safety factor applied to loads
+  // We want to find the actual failure sequence
+  const analysisWithoutSF = null;
 
   // Initial analysis
   const geometry = {
@@ -64,7 +68,7 @@ export function performProgressiveFailureAnalysis(
     workingPlies,
     currentMaterials,
     stressResults,
-    safetyFactor,
+    analysisWithoutSF, // Don't apply safety factor during progressive analysis
     failureCriterion
   );
 
@@ -141,7 +145,7 @@ export function performProgressiveFailureAnalysis(
         workingPlies,
         currentMaterials,
         stressResults,
-        safetyFactor,
+        analysisWithoutSF, // Don't apply safety factor during progressive analysis
         failureCriterion
       );
     } else {
@@ -160,7 +164,7 @@ export function performProgressiveFailureAnalysis(
         workingPlies,
         currentMaterials,
         stressResults,
-        safetyFactor,
+        analysisWithoutSF, // Don't apply safety factor during progressive analysis
         failureCriterion
       );
     }

@@ -120,15 +120,20 @@ export function calculateFailureAnalysis(
       ? `${failureModeBottom} (bottom surface)` 
       : `${failureModeTop} (top surface)`;
 
-    // If safety factor is null, calculate it from failure index
-    // Safety factor = 1 / Failure Index
+    // Calculate actual safety factor: SF = 1 / FI
+    // This represents how many times the load can be increased before failure
     const calculatedSafetyFactor = failureIndex > 0 ? 1 / failureIndex : Infinity;
-    const appliedSafetyFactor = safetyFactor !== null ? safetyFactor : calculatedSafetyFactor;
     
-    const safetyMargin = ((1 / failureIndex) - 1) * 100;
+    // Safety margin: percentage above unity (FI=1)
+    // SM = (1/FI - 1) * 100 = (SF - 1) * 100
+    const safetyMargin = failureIndex > 0 ? ((1 / failureIndex) - 1) * 100 : Infinity;
+    
+    // Check if ply passes:
+    // - If safety factor specified: FI * SF < 1 (equivalent to: actual SF > required SF)
+    // - If no safety factor: FI < 1 (ply hasn't failed yet)
     const isPassed = safetyFactor !== null 
       ? failureIndex * safetyFactor < 1 
-      : true; // If no safety factor specified, only check failure index < 1
+      : failureIndex < 1;
 
     return {
       ply: index + 1,
