@@ -11,9 +11,9 @@ import {
 
 interface FailureCriteriaSelectorProps {
   failureCriterion: string;
-  safetyFactor: number;
+  safetyFactor: number | null;
   onCriterionChange: (criterion: string) => void;
-  onSafetyFactorChange: (factor: number) => void;
+  onSafetyFactorChange: (factor: number | null) => void;
 }
 
 export function FailureCriteriaSelector({
@@ -44,18 +44,22 @@ export function FailureCriteriaSelector({
         </div>
 
         <div>
-          <Label htmlFor="safetyFactor">Safety Factor:</Label>
+          <Label htmlFor="safetyFactor">Safety Factor (Optional):</Label>
           <Input
             id="safetyFactor"
             type="number"
             step="0.1"
             min="1"
-            value={safetyFactor}
-            onChange={(e) => onSafetyFactorChange(Number(e.target.value))}
+            value={safetyFactor ?? ''}
+            onChange={(e) => {
+              const value = e.target.value;
+              onSafetyFactorChange(value === '' ? null : Number(value));
+            }}
+            placeholder="Leave empty to calculate per layer"
             className="mt-1"
           />
           <p className="text-sm text-muted-foreground mt-1">
-            Minimum recommended: 1.5-2.0
+            If not specified, safety factor will be calculated for each layer based on failure index
           </p>
         </div>
       </div>

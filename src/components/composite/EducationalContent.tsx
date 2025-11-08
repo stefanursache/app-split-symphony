@@ -18,6 +18,10 @@ export function EducationalContent() {
             The tool enables engineers and researchers to design, analyze, and optimize composite structures for various 
             applications including aerospace, automotive, marine, and civil engineering.
           </p>
+          <p className="text-muted-foreground leading-relaxed mt-3">
+            Created by <span className="font-semibold text-foreground">PhD candidate Ursache Stefan</span> and 
+            co-authored by <span className="font-semibold text-foreground">Vlad Nitoiu</span>.
+          </p>
         </Card>
 
         {/* Mathematical Foundation */}
@@ -777,20 +781,6 @@ export function EducationalContent() {
           </div>
         </Card>
 
-        {/* Applications */}
-        <Card className="p-6">
-          <h2 className="text-2xl font-bold text-foreground mb-4">Application Scope</h2>
-          
-          <div className="space-y-3 text-sm text-muted-foreground">
-            <p><strong className="text-foreground">Aerospace:</strong> Aircraft structures, satellite components, UAV frames</p>
-            <p><strong className="text-foreground">Automotive:</strong> Chassis components, body panels, drive shafts</p>
-            <p><strong className="text-foreground">Marine:</strong> Boat hulls, masts, propeller shafts</p>
-            <p><strong className="text-foreground">Civil Engineering:</strong> Bridge decks, reinforcement systems, architectural elements</p>
-            <p><strong className="text-foreground">Sports Equipment:</strong> Bicycle frames, tennis rackets, skis</p>
-            <p><strong className="text-foreground">Pressure Vessels:</strong> Storage tanks, piping systems</p>
-          </div>
-        </Card>
-
         {/* Credits */}
         <Card className="p-6 bg-primary/5 border-primary/20">
           <div className="text-center space-y-2">
@@ -798,6 +788,9 @@ export function EducationalContent() {
             <Separator className="my-4" />
             <p className="text-lg text-foreground font-semibold">
               Developed by PhD Candidate Ursache Stefan
+            </p>
+            <p className="text-lg text-foreground font-semibold">
+              Co-authored by Vlad Nitoiu
             </p>
             <p className="text-sm text-muted-foreground mt-2">
               This tool represents cutting-edge research in composite materials analysis and design optimization.

@@ -15,7 +15,7 @@ const initialState: AppState = {
   activeTab: 'properties',
   activeLoadCase: 'compression',
   comparisonConfigs: [],
-  safetyFactor: 1.5,
+  safetyFactor: null,
   failureCriterion: 'max_stress',
   editingMaterial: null,
   outerDiameter: 130,

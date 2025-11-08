@@ -78,7 +78,7 @@ export interface AppState {
   activeTab: string;
   activeLoadCase: string;
   comparisonConfigs: any[];
-  safetyFactor: number;
+  safetyFactor: number | null;
   failureCriterion: string;
   editingMaterial: string | null;
   outerDiameter: number;

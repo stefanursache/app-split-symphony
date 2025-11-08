@@ -74,7 +74,7 @@ const Index = () => {
   const [editingMaterial, setEditingMaterial] = useState<Material | null>(null);
   const [stressResults, setStressResults] = useState<any[]>([]);
   const [failureResults, setFailureResults] = useState<FailureResult[]>([]);
-  const [safetyFactor, setSafetyFactor] = useState(1.5);
+  const [safetyFactor, setSafetyFactor] = useState<number | null>(null);
   const [failureCriterion, setFailureCriterion] = useState<'max_stress' | 'tsai_wu' | 'tsai_hill'>('max_stress');
   const [loadedConfigId, setLoadedConfigId] = useState<string | null>(null);
   const [geometry, setGeometry] = useState<GeometryConfig>({

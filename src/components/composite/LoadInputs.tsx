@@ -49,6 +49,9 @@ export function LoadInputs({ loads, onLoadChange }: LoadInputsProps) {
               onChange={(e) => onLoadChange({ Nx: parseFloat(e.target.value) || 0 })}
               className="mt-1"
             />
+            <p className="text-xs text-muted-foreground mt-1">
+              Negative values indicate compression
+            </p>
           </div>
           
           <div>

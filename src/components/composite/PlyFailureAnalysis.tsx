@@ -56,6 +56,12 @@ export function PlyFailureAnalysis({ results }: PlyFailureAnalysisProps) {
                 </span>
               </div>
               <div className="flex items-center justify-between">
+                <span className="text-muted-foreground">Calculated Safety Factor:</span>
+                <span className={result.isPassed ? 'text-cyan-400' : 'text-destructive'}>
+                  {result.failureIndex > 0 ? (1 / result.failureIndex).toFixed(2) : 'N/A'}
+                </span>
+              </div>
+              <div className="flex items-center justify-between">
                 <span className="text-muted-foreground">Safety Margin:</span>
                 <span className={result.isPassed ? 'text-cyan-400' : 'text-destructive'}>
                   {result.safetyMargin.toFixed(1)}%

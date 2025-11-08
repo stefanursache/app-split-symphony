@@ -28,7 +28,7 @@ export function calculateFailureAnalysis(
     sigma_2_top: number; 
     tau_12_top: number;
   }>,
-  safetyFactor: number,
+  safetyFactor: number | null,
   failureCriterion: 'max_stress' | 'tsai_wu' | 'tsai_hill'
 ): FailureResult[] {
   return plies.map((ply, index) => {
@@ -120,8 +120,15 @@ export function calculateFailureAnalysis(
       ? `${failureModeBottom} (bottom surface)` 
       : `${failureModeTop} (top surface)`;
 
+    // If safety factor is null, calculate it from failure index
+    // Safety factor = 1 / Failure Index
+    const calculatedSafetyFactor = failureIndex > 0 ? 1 / failureIndex : Infinity;
+    const appliedSafetyFactor = safetyFactor !== null ? safetyFactor : calculatedSafetyFactor;
+    
     const safetyMargin = ((1 / failureIndex) - 1) * 100;
-    const isPassed = failureIndex * safetyFactor < 1;
+    const isPassed = safetyFactor !== null 
+      ? failureIndex * safetyFactor < 1 
+      : true; // If no safety factor specified, only check failure index < 1
 
     return {
       ply: index + 1,
@@ -242,7 +249,7 @@ function calculateTsaiHillFailure(
 
 export function calculateSafetySummary(
   failureResults: FailureResult[],
-  safetyFactor: number
+  safetyFactor: number | null
 ): SafetySummary {
   if (failureResults.length === 0) {
     return {
@@ -256,7 +263,9 @@ export function calculateSafetySummary(
   const maxFailureIndex = Math.max(...failureResults.map(r => r.failureIndex));
   const criticalPly = failureResults.find(r => r.failureIndex === maxFailureIndex)?.ply || 0;
   const minimumSafetyFactor = 1 / maxFailureIndex;
-  const designMeetsSafety = maxFailureIndex * safetyFactor < 1;
+  const designMeetsSafety = safetyFactor !== null 
+    ? maxFailureIndex * safetyFactor < 1 
+    : maxFailureIndex < 1; // If no safety factor, check if failure index < 1
 
   return {
     minimumSafetyFactor,
