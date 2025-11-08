@@ -1,8 +1,9 @@
 import { Card } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { StressResult } from '@/types/materials';
-import { TrendingUp, TrendingDown, ArrowUpDown } from 'lucide-react';
+import { TrendingUp, TrendingDown, ArrowUpDown, Info } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface StressResultsProps {
   results: StressResult[];
@@ -37,10 +38,66 @@ export function StressResults({ results }: StressResultsProps) {
       
       <Tabs defaultValue="material" className="w-full">
         <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="material">Material Axes</TabsTrigger>
-          <TabsTrigger value="global">Global Axes</TabsTrigger>
-          <TabsTrigger value="principal">Principal</TabsTrigger>
-          <TabsTrigger value="strain">Strains</TabsTrigger>
+          <TabsTrigger value="material">
+            <span className="flex items-center gap-1">
+              Material Axes
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Info className="h-3 w-3 text-muted-foreground" />
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p className="max-w-xs">Material axes (1-2): Aligned with fiber direction. σ₁ is along the fibers (longitudinal), σ₂ is perpendicular to fibers (transverse), τ₁₂ is in-plane shear.</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </span>
+          </TabsTrigger>
+          <TabsTrigger value="global">
+            <span className="flex items-center gap-1">
+              Global Axes
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Info className="h-3 w-3 text-muted-foreground" />
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p className="max-w-xs">Global axes (x-y): Fixed coordinate system for the laminate. σₓ is axial stress, σᵧ is hoop/transverse stress, τₓᵧ is in-plane shear.</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </span>
+          </TabsTrigger>
+          <TabsTrigger value="principal">
+            <span className="flex items-center gap-1">
+              Principal
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Info className="h-3 w-3 text-muted-foreground" />
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p className="max-w-xs">Principal stresses: Maximum and minimum normal stresses at oriented planes where shear stress is zero. Shows critical stress state.</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </span>
+          </TabsTrigger>
+          <TabsTrigger value="strain">
+            <span className="flex items-center gap-1">
+              Strains
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Info className="h-3 w-3 text-muted-foreground" />
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p className="max-w-xs">Material strains: Deformations in material coordinates. ε₁ and ε₂ are normal strains, γ₁₂ is shear strain (in microstrain, με).</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </span>
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="material" className="mt-4 space-y-4">
