@@ -471,11 +471,10 @@ const Index = () => {
           {/* Right Side - Properties and Analysis */}
           <div className="lg:col-span-2 space-y-6">
             <Tabs value={state.activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="grid w-full grid-cols-5">
+              <TabsList className="grid w-full grid-cols-4">
                 <TabsTrigger value="properties">Properties</TabsTrigger>
                 <TabsTrigger value="stress">Stress</TabsTrigger>
                 <TabsTrigger value="failure">Failure</TabsTrigger>
-                <TabsTrigger value="comparison">Stacks</TabsTrigger>
                 <TabsTrigger value="education">Education</TabsTrigger>
               </TabsList>
 
@@ -614,18 +613,6 @@ const Index = () => {
                 {interlaminarResults.length > 0 && (
                   <InterlaminarStressResults results={interlaminarResults} />
                 )}
-              </TabsContent>
-
-              <TabsContent value="comparison" className="mt-6">
-                <ConfigurationComparison
-                  configurations={configurations}
-                  loading={configsLoading}
-                  currentConfig={state.plies.length > 0 ? handleAddCurrentToComparison() : null}
-                  onAddCurrent={() => {}}
-                  onLoadConfig={handleLoadConfiguration}
-                  onDeleteConfig={handleDeleteConfiguration}
-                  isAuthenticated={!!user}
-                />
               </TabsContent>
 
               <TabsContent value="education" className="mt-6">

@@ -15,10 +15,10 @@ export function CrossSectionVisualization({ plies, materials }: CrossSectionVisu
   useEffect(() => {
     if (!canvasRef.current) return;
 
-    // Initialize canvas
+    // Initialize canvas with responsive dimensions
     const canvas = new FabricCanvas(canvasRef.current, {
-      width: 600,
-      height: 400,
+      width: 480,
+      height: 360,
       backgroundColor: '#ffffff',
       selection: false,
     });
@@ -40,8 +40,8 @@ export function CrossSectionVisualization({ plies, materials }: CrossSectionVisu
     if (plies.length === 0) {
       // Create a subtle background pattern
       const backgroundRect = new Rect({
-        left: 150,
-        top: 140,
+        left: 90,
+        top: 120,
         width: 300,
         height: 120,
         fill: '#f1f5f9',
@@ -56,8 +56,8 @@ export function CrossSectionVisualization({ plies, materials }: CrossSectionVisu
 
       // Main message
       const noDataText = new FabricText('No plies added yet', {
-        left: 300,
-        top: 180,
+        left: 240,
+        top: 160,
         fontSize: 18,
         fill: '#475569',
         fontWeight: 'bold',
@@ -69,8 +69,8 @@ export function CrossSectionVisualization({ plies, materials }: CrossSectionVisu
 
       // Instructional text
       const instructionText = new FabricText('Add plies from the Ply Stack Builder', {
-        left: 300,
-        top: 210,
+        left: 240,
+        top: 190,
         fontSize: 13,
         fill: '#64748b',
         originX: 'center',
@@ -89,12 +89,12 @@ export function CrossSectionVisualization({ plies, materials }: CrossSectionVisu
       return sum + (material?.thickness || 0);
     }, 0);
 
-    const maxHeight = 320;
-    const width = 450;
+    const maxHeight = 280;
+    const width = 360;
     const scale = maxHeight / Math.max(totalThickness, 1);
     
     let currentY = 30;
-    const startX = 75;
+    const startX = 60;
     let zPosition = -totalThickness / 2;
 
     plies.forEach((ply, index) => {
@@ -335,8 +335,8 @@ export function CrossSectionVisualization({ plies, materials }: CrossSectionVisu
         </div>
       )}
 
-      <div className="flex justify-center bg-background rounded-lg p-4 border border-border">
-        <canvas ref={canvasRef} className="rounded-lg" />
+      <div className="flex justify-center bg-background rounded-lg p-2 border border-border overflow-hidden">
+        <canvas ref={canvasRef} className="rounded-lg max-w-full" />
       </div>
 
       {/* Info Footer */}
