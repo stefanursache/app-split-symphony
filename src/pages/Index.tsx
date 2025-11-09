@@ -44,6 +44,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Moon, Sun } from 'lucide-react';
 import { GeometryConfig, DEFAULT_GEOMETRY } from '@/types/geometry';
+import logo from '@/assets/logo.png';
 
 const Index = () => {
   const navigate = useNavigate();
@@ -393,13 +394,16 @@ const Index = () => {
       <header className="border-b border-border bg-card sticky top-0 z-50">
         <div className="container mx-auto px-4 py-6">
           <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-foreground">
-                Composite Laminate Structural Analysis
-              </h1>
-              <p className="text-muted-foreground mt-1">
-                Hybrid Composite Design Tool
-              </p>
+            <div className="flex items-center gap-4">
+              <img src={logo} alt="Composite Analysis Logo" className="h-12 w-12" />
+              <div>
+                <h1 className="text-3xl font-bold text-foreground">
+                  Composite Laminate Structural Analysis
+                </h1>
+                <p className="text-muted-foreground mt-1">
+                  Hybrid Composite Design Tool
+                </p>
+              </div>
             </div>
             <div className="flex items-center gap-3">
               <PDFReportExport
