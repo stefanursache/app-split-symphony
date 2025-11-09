@@ -41,6 +41,12 @@ import { performProgressiveFailureAnalysis, ProgressiveFailureAnalysis } from '@
 import { calculateInterlaminarStresses, InterlaminarStressResult } from '@/utils/interlaminarStress';
 import { Material } from '@/types/materials';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import { Button } from '@/components/ui/button';
 import { Moon, Sun } from 'lucide-react';
 import { GeometryConfig, DEFAULT_GEOMETRY } from '@/types/geometry';
@@ -457,55 +463,94 @@ const Index = () => {
 
       <main className="container mx-auto px-4 py-8">
         <div className="grid lg:grid-cols-3 gap-6">
-          {/* Left Panel - Configuration */}
-          <div className="lg:col-span-1 space-y-6">
-            <MaterialSelector
-              materials={materials}
-              selectedMaterial={state.selectedMaterial}
-              onSelectMaterial={setSelectedMaterial}
-              onEditMaterial={handleEditMaterial}
-              onAddMaterial={handleAddMaterial}
-              isAuthenticated={!!user}
-            />
-            
-            <MaterialProperties material={selectedMaterialData} />
-            
-            <PlyStack
-              plies={state.plies}
-              materials={materials}
-              selectedMaterial={state.selectedMaterial}
-              onAddPly={addPly}
-              onRemovePly={removePly}
-              onUpdatePly={updatePly}
-              onClearPlies={clearPlies}
-            />
-
-            <SaveConfigurationDialog
-              onSave={handleSaveConfiguration}
-              onNewConfig={handleNewConfiguration}
-              disabled={state.plies.length === 0}
-              isUpdate={!!loadedConfigId}
-              requiresAuth={!user}
-            />
+          {/* Left Side - Cross Section View */}
+          <div className="lg:col-span-1">
+            <CrossSectionVisualization plies={state.plies} materials={materials} />
           </div>
 
-          {/* Right Panel - Analysis */}
+          {/* Right Side - Properties and Analysis */}
           <div className="lg:col-span-2 space-y-6">
             <Tabs value={state.activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="grid w-full grid-cols-7">
+              <TabsList className="grid w-full grid-cols-6">
                 <TabsTrigger value="properties">Properties</TabsTrigger>
+                <TabsTrigger value="stack">Ply Stack</TabsTrigger>
                 <TabsTrigger value="stress">Stress</TabsTrigger>
-                <TabsTrigger value="visualization">Visualization</TabsTrigger>
                 <TabsTrigger value="failure">Failure</TabsTrigger>
-                <TabsTrigger value="loadcases">Load Cases</TabsTrigger>
                 <TabsTrigger value="comparison">Stacks</TabsTrigger>
                 <TabsTrigger value="education">Education</TabsTrigger>
               </TabsList>
 
-              <TabsContent value="properties" className="mt-6 space-y-6">
-                <ABDMatrixDisplay matrix={abdMatrix} />
-                <EngineeringProperties properties={engineeringProps} />
-                <CrossSectionVisualization plies={state.plies} materials={materials} />
+              <TabsContent value="properties" className="mt-6">
+                <Accordion type="multiple" defaultValue={["materials", "loadcases", "configurations"]} className="space-y-4">
+                  <AccordionItem value="materials" className="border rounded-lg px-6">
+                    <AccordionTrigger className="text-lg font-semibold hover:no-underline">
+                      Material Selection
+                    </AccordionTrigger>
+                    <AccordionContent className="space-y-4 pt-4">
+                      <MaterialSelector
+                        materials={materials}
+                        selectedMaterial={state.selectedMaterial}
+                        onSelectMaterial={setSelectedMaterial}
+                        onEditMaterial={handleEditMaterial}
+                        onAddMaterial={handleAddMaterial}
+                        isAuthenticated={!!user}
+                      />
+                      <MaterialProperties material={selectedMaterialData} />
+                    </AccordionContent>
+                  </AccordionItem>
+
+                  <AccordionItem value="loadcases" className="border rounded-lg px-6">
+                    <AccordionTrigger className="text-lg font-semibold hover:no-underline">
+                      Load Cases
+                    </AccordionTrigger>
+                    <AccordionContent className="space-y-4 pt-4">
+                      <LoadCaseManager
+                        loadCases={loadCases}
+                        activeLoadCaseId={activeLoadCaseId}
+                        onSelectLoadCase={setActiveLoadCaseId}
+                        onAddLoadCase={addLoadCase}
+                        onDeleteLoadCase={deleteLoadCase}
+                        onRunAnalysis={handleRunLoadCase}
+                      />
+                    </AccordionContent>
+                  </AccordionItem>
+
+                  <AccordionItem value="configurations" className="border rounded-lg px-6">
+                    <AccordionTrigger className="text-lg font-semibold hover:no-underline">
+                      Saved Configurations
+                    </AccordionTrigger>
+                    <AccordionContent className="space-y-4 pt-4">
+                      <SaveConfigurationDialog
+                        onSave={handleSaveConfiguration}
+                        onNewConfig={handleNewConfiguration}
+                        disabled={state.plies.length === 0}
+                        isUpdate={!!loadedConfigId}
+                        requiresAuth={!user}
+                      />
+                      <ConfigurationComparison
+                        configurations={configurations}
+                        loading={configsLoading}
+                        currentConfig={state.plies.length > 0 ? handleAddCurrentToComparison() : null}
+                        onAddCurrent={() => {}}
+                        onLoadConfig={handleLoadConfiguration}
+                        onDeleteConfig={handleDeleteConfiguration}
+                        isAuthenticated={!!user}
+                      />
+                    </AccordionContent>
+                  </AccordionItem>
+                </Accordion>
+              </TabsContent>
+
+              <TabsContent value="stack" className="mt-6 space-y-6">
+                <PlyStack
+                  plies={state.plies}
+                  materials={materials}
+                  selectedMaterial={state.selectedMaterial}
+                  onAddPly={addPly}
+                  onRemovePly={removePly}
+                  onUpdatePly={updatePly}
+                  onClearPlies={clearPlies}
+                />
               </TabsContent>
 
               <TabsContent value="stress" className="mt-6 space-y-6">
@@ -525,10 +570,9 @@ const Index = () => {
                 >
                   Calculate Stress/Strain
                 </Button>
+                <ABDMatrixDisplay matrix={abdMatrix} />
+                <EngineeringProperties properties={engineeringProps} />
                 <StressResults results={stressResults} />
-              </TabsContent>
-
-              <TabsContent value="visualization" className="mt-6 space-y-6">
                 <StressVisualization
                   plies={state.plies}
                   materials={materials}
@@ -566,17 +610,6 @@ const Index = () => {
                 {interlaminarResults.length > 0 && (
                   <InterlaminarStressResults results={interlaminarResults} />
                 )}
-              </TabsContent>
-
-              <TabsContent value="loadcases" className="mt-6">
-                <LoadCaseManager
-                  loadCases={loadCases}
-                  activeLoadCaseId={activeLoadCaseId}
-                  onSelectLoadCase={setActiveLoadCaseId}
-                  onAddLoadCase={addLoadCase}
-                  onDeleteLoadCase={deleteLoadCase}
-                  onRunAnalysis={handleRunLoadCase}
-                />
               </TabsContent>
 
               <TabsContent value="comparison" className="mt-6">
