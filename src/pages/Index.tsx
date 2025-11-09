@@ -83,6 +83,13 @@ const Index = () => {
   const [failureResults, setFailureResults] = useState<FailureResult[]>([]);
   const [safetyFactor, setSafetyFactor] = useState<number | null>(null);
   const [failureCriterion, setFailureCriterion] = useState<'max_stress' | 'tsai_wu' | 'tsai_hill'>('max_stress');
+  
+  // Auto-recalculate when failure criterion or safety factor changes
+  useEffect(() => {
+    if (stressResults.length > 0) {
+      handleCalculateStress();
+    }
+  }, [failureCriterion, safetyFactor]);
   const [loadedConfigId, setLoadedConfigId] = useState<string | null>(null);
   const [geometry, setGeometry] = useState<GeometryConfig>({
     type: DEFAULT_GEOMETRY.type,
