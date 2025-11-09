@@ -471,9 +471,8 @@ const Index = () => {
           {/* Right Side - Properties and Analysis */}
           <div className="lg:col-span-2 space-y-6">
             <Tabs value={state.activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="grid w-full grid-cols-6">
+              <TabsList className="grid w-full grid-cols-5">
                 <TabsTrigger value="properties">Properties</TabsTrigger>
-                <TabsTrigger value="stack">Ply Stack</TabsTrigger>
                 <TabsTrigger value="stress">Stress</TabsTrigger>
                 <TabsTrigger value="failure">Failure</TabsTrigger>
                 <TabsTrigger value="comparison">Stacks</TabsTrigger>
@@ -481,7 +480,7 @@ const Index = () => {
               </TabsList>
 
               <TabsContent value="properties" className="mt-6">
-                <Accordion type="multiple" defaultValue={["materials", "loadcases", "configurations"]} className="space-y-4">
+                <Accordion type="multiple" defaultValue={["materials", "plystack", "loadcases", "configurations"]} className="space-y-4">
                   <AccordionItem value="materials" className="border rounded-lg px-6">
                     <AccordionTrigger className="text-lg font-semibold hover:no-underline">
                       Material Selection
@@ -496,6 +495,23 @@ const Index = () => {
                         isAuthenticated={!!user}
                       />
                       <MaterialProperties material={selectedMaterialData} />
+                    </AccordionContent>
+                  </AccordionItem>
+
+                  <AccordionItem value="plystack" className="border rounded-lg px-6">
+                    <AccordionTrigger className="text-lg font-semibold hover:no-underline">
+                      Ply Stack Builder
+                    </AccordionTrigger>
+                    <AccordionContent className="pt-4">
+                      <PlyStack
+                        plies={state.plies}
+                        materials={materials}
+                        selectedMaterial={state.selectedMaterial}
+                        onAddPly={addPly}
+                        onRemovePly={removePly}
+                        onUpdatePly={updatePly}
+                        onClearPlies={clearPlies}
+                      />
                     </AccordionContent>
                   </AccordionItem>
 
@@ -539,18 +555,6 @@ const Index = () => {
                     </AccordionContent>
                   </AccordionItem>
                 </Accordion>
-              </TabsContent>
-
-              <TabsContent value="stack" className="mt-6 space-y-6">
-                <PlyStack
-                  plies={state.plies}
-                  materials={materials}
-                  selectedMaterial={state.selectedMaterial}
-                  onAddPly={addPly}
-                  onRemovePly={removePly}
-                  onUpdatePly={updatePly}
-                  onClearPlies={clearPlies}
-                />
               </TabsContent>
 
               <TabsContent value="stress" className="mt-6 space-y-6">

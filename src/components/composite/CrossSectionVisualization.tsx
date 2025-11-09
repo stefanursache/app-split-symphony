@@ -38,16 +38,47 @@ export function CrossSectionVisualization({ plies, materials }: CrossSectionVisu
     canvas.backgroundColor = '#f8f9fa';
 
     if (plies.length === 0) {
-      const noDataText = new FabricText('Add plies to view cross-section', {
+      // Create a subtle background pattern
+      const backgroundRect = new Rect({
+        left: 150,
+        top: 140,
+        width: 300,
+        height: 120,
+        fill: '#f1f5f9',
+        stroke: '#cbd5e1',
+        strokeWidth: 2,
+        strokeDashArray: [8, 4],
+        rx: 8,
+        ry: 8,
+        selectable: false,
+      });
+      canvas.add(backgroundRect);
+
+      // Main message
+      const noDataText = new FabricText('No plies added yet', {
         left: 300,
-        top: 200,
-        fontSize: 16,
-        fill: '#6b7280',
+        top: 180,
+        fontSize: 18,
+        fill: '#475569',
+        fontWeight: 'bold',
         originX: 'center',
         originY: 'center',
         selectable: false,
       });
       canvas.add(noDataText);
+
+      // Instructional text
+      const instructionText = new FabricText('Add plies from the Ply Stack Builder', {
+        left: 300,
+        top: 210,
+        fontSize: 13,
+        fill: '#64748b',
+        originX: 'center',
+        originY: 'center',
+        selectable: false,
+      });
+      canvas.add(instructionText);
+
       canvas.renderAll();
       return;
     }
