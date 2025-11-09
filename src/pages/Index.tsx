@@ -479,7 +479,7 @@ const Index = () => {
               </TabsList>
 
               <TabsContent value="properties" className="mt-6">
-                <Accordion type="multiple" defaultValue={["materials", "plystack", "loadcases", "configurations"]} className="space-y-4">
+                <Accordion type="multiple" defaultValue={["materials", "plystack", "configurations"]} className="space-y-4">
                   <AccordionItem value="materials" className="border rounded-lg px-6">
                     <AccordionTrigger className="text-lg font-semibold hover:no-underline">
                       Material Selection
@@ -510,22 +510,6 @@ const Index = () => {
                         onRemovePly={removePly}
                         onUpdatePly={updatePly}
                         onClearPlies={clearPlies}
-                      />
-                    </AccordionContent>
-                  </AccordionItem>
-
-                  <AccordionItem value="loadcases" className="border rounded-lg px-6">
-                    <AccordionTrigger className="text-lg font-semibold hover:no-underline">
-                      Load Cases
-                    </AccordionTrigger>
-                    <AccordionContent className="space-y-4 pt-4">
-                      <LoadCaseManager
-                        loadCases={loadCases}
-                        activeLoadCaseId={activeLoadCaseId}
-                        onSelectLoadCase={setActiveLoadCaseId}
-                        onAddLoadCase={addLoadCase}
-                        onDeleteLoadCase={deleteLoadCase}
-                        onRunAnalysis={handleRunLoadCase}
                       />
                     </AccordionContent>
                   </AccordionItem>
@@ -562,17 +546,43 @@ const Index = () => {
                   onGeometryChange={setGeometry}
                   totalThickness={engineeringProps.thickness}
                 />
-                <LoadInputs
-                  loads={state.loads}
-                  onLoadChange={updateLoads}
-                />
-                <Button 
-                  onClick={handleCalculateStress} 
-                  className="w-full"
-                  disabled={state.plies.length === 0}
-                >
-                  Calculate Stress/Strain
-                </Button>
+                
+                <Accordion type="multiple" defaultValue={["appliedloads"]} className="space-y-4">
+                  <AccordionItem value="appliedloads" className="border rounded-lg px-6">
+                    <AccordionTrigger className="text-lg font-semibold hover:no-underline">
+                      Applied Loads
+                    </AccordionTrigger>
+                    <AccordionContent className="space-y-4 pt-4">
+                      <LoadInputs
+                        loads={state.loads}
+                        onLoadChange={updateLoads}
+                      />
+                      <Button 
+                        onClick={handleCalculateStress} 
+                        className="w-full"
+                        disabled={state.plies.length === 0}
+                      >
+                        Calculate Stress/Strain
+                      </Button>
+                    </AccordionContent>
+                  </AccordionItem>
+
+                  <AccordionItem value="loadcases" className="border rounded-lg px-6">
+                    <AccordionTrigger className="text-lg font-semibold hover:no-underline">
+                      Load Cases
+                    </AccordionTrigger>
+                    <AccordionContent className="pt-4">
+                      <LoadCaseManager
+                        loadCases={loadCases}
+                        activeLoadCaseId={activeLoadCaseId}
+                        onSelectLoadCase={setActiveLoadCaseId}
+                        onAddLoadCase={addLoadCase}
+                        onDeleteLoadCase={deleteLoadCase}
+                        onRunAnalysis={handleRunLoadCase}
+                      />
+                    </AccordionContent>
+                  </AccordionItem>
+                </Accordion>
                 <ABDMatrixDisplay matrix={abdMatrix} />
                 <EngineeringProperties properties={engineeringProps} />
                 <StressResults results={stressResults} />
