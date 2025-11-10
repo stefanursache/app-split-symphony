@@ -411,15 +411,7 @@ const Index = () => {
         <div className="container mx-auto px-4 py-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <img src={logo} alt="Composite Analysis Logo" className="h-12 w-12" />
-              <div>
-                <h1 className="text-3xl font-bold text-foreground">
-                  Composite Laminate Structural Analysis
-                </h1>
-                <p className="text-muted-foreground mt-1">
-                  Hybrid Composite Design Tool
-                </p>
-              </div>
+              <img src={logo} alt="CLSA Logo" className="h-[75px] w-[75px]" />
             </div>
             <div className="flex items-center gap-3">
               <PDFReportExport
