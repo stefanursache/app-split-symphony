@@ -33,6 +33,8 @@ import { BucklingResults } from '@/components/composite/BucklingResults';
 import { ProgressiveFailureResults } from '@/components/composite/ProgressiveFailureResults';
 import { InterlaminarStressResults } from '@/components/composite/InterlaminarStressResults';
 import { HowToUseGuide } from '@/components/composite/HowToUseGuide';
+import { FEAExport } from '@/components/composite/FEAExport';
+import { ExperimentalValidation } from '@/components/composite/ExperimentalValidation';
 import { calculateEngineeringProperties, calculateStressStrain } from '@/utils/calculations';
 import { calculateABDMatrix } from '@/utils/abdMatrix';
 import { calculateFailureAnalysis, calculateSafetySummary, FailureResult } from '@/utils/failureAnalysis';
@@ -594,6 +596,12 @@ const Index = () => {
                 </Accordion>
                 <ABDMatrixDisplay matrix={abdMatrix} />
                 <EngineeringProperties properties={engineeringProps} />
+                <FEAExport 
+                  plies={state.plies}
+                  materials={materials}
+                  geometry={geometry}
+                />
+                <ExperimentalValidation stressResults={stressResults} />
                 <StressResults results={stressResults} />
                 <StressVisualization
                   plies={state.plies}
