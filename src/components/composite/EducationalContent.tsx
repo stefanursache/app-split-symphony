@@ -57,17 +57,40 @@ export function EducationalContent() {
 
           <h3 className="text-xl font-semibold text-foreground mb-3">ABD Matrix Components</h3>
           
+          <p className="text-sm text-muted-foreground mb-4">
+            The ABD matrix relates forces and moments to mid-plane strains and curvatures:
+          </p>
+          
+          <div className="bg-muted/50 p-4 rounded-lg mb-4">
+            <p className="text-sm font-mono text-foreground mb-2">
+              [Nₓ, Nᵧ, Nₓᵧ]ᵀ = [A][ε⁰] + [B][κ]
+            </p>
+            <p className="text-sm font-mono text-foreground">
+              [Mₓ, Mᵧ, Mₓᵧ]ᵀ = [B][ε⁰] + [D][κ]
+            </p>
+          </div>
+
+          <div className="space-y-3 text-sm text-muted-foreground mb-4">
+            <p><strong className="text-foreground">Where:</strong></p>
+            <ul className="list-disc list-inside space-y-1 ml-4">
+              <li><strong>Nₓ, Nᵧ, Nₓᵧ</strong> = Resultant in-plane forces (normal and shear)</li>
+              <li><strong>Mₓ, Mᵧ, Mₓᵧ</strong> = Resultant bending and twisting moments</li>
+              <li><strong>ε⁰</strong> = Mid-plane strains [ε⁰ₓ, ε⁰ᵧ, γ⁰ₓᵧ]</li>
+              <li><strong>κ</strong> = Curvatures [κₓ, κᵧ, κₓᵧ]</li>
+            </ul>
+          </div>
+          
           <div className="space-y-4">
             <div>
               <h4 className="font-semibold text-foreground mb-2">A Matrix (Extensional Stiffness):</h4>
               <div className="bg-muted/50 p-3 rounded-lg mb-2">
                 <p className="text-sm font-mono text-foreground">
-                  Aᵢⱼ = Σₖ (Q̄ᵢⱼ)ₖ × (zₖ - zₖ₋₁)
+                  Aᵢⱼ = Σₖ₌₁ⁿ (Q̄ᵢⱼ)ₖ × (hₖ - hₖ₋₁)
                 </p>
               </div>
               <p className="text-sm text-muted-foreground">
-                Represents the in-plane stiffness of the laminate. Non-zero B matrix indicates coupling between 
-                extension and bending.
+                Represents the in-plane (extensional) stiffness of the laminate. Terms A₁₆ and A₂₆ introduce coupling 
+                behavior by relating shear strains to normal stresses. If these terms are non-zero, the laminate is unbalanced.
               </p>
             </div>
 
@@ -75,11 +98,13 @@ export function EducationalContent() {
               <h4 className="font-semibold text-foreground mb-2">B Matrix (Coupling Stiffness):</h4>
               <div className="bg-muted/50 p-3 rounded-lg mb-2">
                 <p className="text-sm font-mono text-foreground">
-                  Bᵢⱼ = (1/2) × Σₖ (Q̄ᵢⱼ)ₖ × (zₖ² - zₖ₋₁²)
+                  Bᵢⱼ = (1/2) × Σₖ₌₁ⁿ (Q̄ᵢⱼ)ₖ × (hₖ² - hₖ₋₁²)
                 </p>
               </div>
               <p className="text-sm text-muted-foreground">
-                Coupling between bending and extension. Zero for symmetric laminates.
+                Coupling between bending and extension. Zero for symmetric laminates. These terms generally connect 
+                bending strains with normal stress resultants, apart from B₁₆ and B₂₆, which relate twisting curvature 
+                to normal stress resultants.
               </p>
             </div>
 
@@ -87,11 +112,12 @@ export function EducationalContent() {
               <h4 className="font-semibold text-foreground mb-2">D Matrix (Bending Stiffness):</h4>
               <div className="bg-muted/50 p-3 rounded-lg mb-2">
                 <p className="text-sm font-mono text-foreground">
-                  Dᵢⱼ = (1/3) × Σₖ (Q̄ᵢⱼ)ₖ × (zₖ³ - zₖ₋₁³)
+                  Dᵢⱼ = (1/3) × Σₖ₌₁ⁿ (Q̄ᵢⱼ)ₖ × (hₖ³ - hₖ₋₁³)
                 </p>
               </div>
               <p className="text-sm text-muted-foreground">
-                Represents the bending stiffness of the laminate.
+                Represents the bending stiffness of the laminate and connects plate curvatures to bending moments. 
+                D₁₆ and D₂₆ couple torsion to bending.
               </p>
             </div>
           </div>
@@ -99,23 +125,38 @@ export function EducationalContent() {
           <Separator className="my-4" />
 
           <h3 className="text-xl font-semibold text-foreground mb-3">Transformed Stiffness Matrix</h3>
+          <p className="text-sm text-muted-foreground mb-4">
+            To express the stress-strain relationship in the global x-y axes, the transformed stiffness matrix [Q̄] is used. 
+            This represents the stiffness of the lamina with respect to the x-y axes and is obtained by transforming 
+            the principal stiffness matrix [Q]:
+          </p>
+          
           <div className="bg-muted/50 p-4 rounded-lg mb-4">
-            <p className="text-sm font-mono text-foreground mb-2">
-              Q̄ᵢⱼ = T × Qᵢⱼ × Tᵀ
+            <p className="text-sm font-mono text-foreground mb-3">
+              [Q̄] = [T]⁻¹[Q][T]
+            </p>
+            <p className="text-sm font-mono text-foreground">
+              [σₓ, σᵧ, τₓᵧ]ᵀ = [Q̄₁₁ Q̄₁₂ Q̄₁₆; Q̄₁₂ Q̄₂₂ Q̄₂₆; Q̄₁₆ Q̄₂₆ Q̄₆₆][εₓ, εᵧ, γₓᵧ]ᵀ
             </p>
           </div>
-          <p className="text-sm text-muted-foreground mb-4">
-            Where <strong>Q̄</strong> is the transformed reduced stiffness matrix for each ply at angle θ, 
-            and <strong>T</strong> is the transformation matrix based on cos(θ) and sin(θ).
-          </p>
+
+          <div className="space-y-2 text-sm text-muted-foreground mb-4">
+            <p><strong className="text-foreground">Transformation Matrix [T]:</strong></p>
+            <div className="bg-muted/50 p-3 rounded-lg space-y-1">
+              <p className="font-mono">[T] = [m² n² 2mn; n² m² -2mn; -mn mn m²-n²]</p>
+              <p className="font-mono mt-2">where: m = cos(θ), n = sin(θ)</p>
+              <p className="text-xs mt-2">θ is the angle between the x-axis and the fiber (1-axis) direction</p>
+            </div>
+          </div>
 
           <div className="space-y-2 text-sm text-muted-foreground">
-            <p><strong className="text-foreground">Reduced Stiffness Components:</strong></p>
+            <p><strong className="text-foreground">Reduced Stiffness Matrix [Q] Components:</strong></p>
             <div className="bg-muted/50 p-3 rounded-lg space-y-1">
               <p className="font-mono">Q₁₁ = E₁ / (1 - ν₁₂ν₂₁)</p>
               <p className="font-mono">Q₂₂ = E₂ / (1 - ν₁₂ν₂₁)</p>
               <p className="font-mono">Q₁₂ = ν₁₂E₂ / (1 - ν₁₂ν₂₁)</p>
               <p className="font-mono">Q₆₆ = G₁₂</p>
+              <p className="text-xs mt-2">where: ν₂₁ = ν₁₂ × E₂ / E₁</p>
             </div>
           </div>
         </Card>
@@ -288,24 +329,47 @@ export function EducationalContent() {
               <p className="text-sm text-muted-foreground mb-2">
                 The material axis stresses are compared against material strengths using failure criteria:
               </p>
-              <div className="space-y-3 text-sm">
+              <div className="space-y-4 text-sm">
                 <div>
-                  <p className="font-semibold text-foreground">Maximum Stress:</p>
-                  <div className="bg-muted/50 p-2 rounded font-mono text-xs">
-                    Failure Index = max(|σ₁|/X, |σ₂|/Y, |τ₁₂|/S)
+                  <p className="font-semibold text-foreground">Maximum Stress Theory:</p>
+                  <p className="text-xs text-muted-foreground mb-2">
+                    Non-interactive criterion where failure occurs if any stress on the principal axes exceeds the strength:
+                  </p>
+                  <div className="bg-muted/50 p-2 rounded font-mono text-xs space-y-1">
+                    <p>σ₁/F₁ₜ ≥ 1 (when σ₁ &gt; 0, tension)</p>
+                    <p>|σ₁|/F₁c ≥ 1 (when σ₁ &lt; 0, compression)</p>
+                    <p>σ₂/F₂ₜ ≥ 1 (when σ₂ &gt; 0, tension)</p>
+                    <p>|σ₂|/F₂c ≥ 1 (when σ₂ &lt; 0, compression)</p>
+                    <p>|τ₁₂|/F₆ ≥ 1 (shear)</p>
                   </div>
                 </div>
                 <div>
-                  <p className="font-semibold text-foreground">Tsai-Wu:</p>
-                  <div className="bg-muted/50 p-2 rounded font-mono text-xs">
-                    F₁σ₁ + F₂σ₂ + F₁₁σ₁² + F₂₂σ₂² + F₆₆τ₁₂² + 2F₁₂σ₁σ₂ ≤ 1
+                  <p className="font-semibold text-foreground">Tsai-Wu Criterion:</p>
+                  <p className="text-xs text-muted-foreground mb-2">
+                    Interactive polynomial failure criterion:
+                  </p>
+                  <div className="bg-muted/50 p-2 rounded font-mono text-xs space-y-1">
+                    <p>F₁σ₁ + F₂σ₂ + F₁₁σ₁² + F₂₂σ₂² + F₆₆τ₁₂² + 2F₁₂σ₁σ₂ = 1</p>
+                    <p className="text-xs mt-2">Strength coefficients:</p>
+                    <p>F₁ = (1/F₁ₜ) - (1/F₁c)</p>
+                    <p>F₂ = (1/F₂ₜ) - (1/F₂c)</p>
+                    <p>F₁₁ = 1/(F₁ₜ × F₁c)</p>
+                    <p>F₂₂ = 1/(F₂ₜ × F₂c)</p>
+                    <p>F₆₆ = 1/F₆²</p>
+                    <p>-1/(2√(F₁₁F₂₂)) ≤ F₁₂ ≤ 0</p>
                   </div>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    For safety factor R: R²a + Rb - 1 = 0, where R = (-b + √(b² + 4a))/(2a)
+                  </p>
                 </div>
                 <div>
-                  <p className="font-semibold text-foreground">Tsai-Hill:</p>
+                  <p className="font-semibold text-foreground">Tsai-Hill Criterion:</p>
                   <div className="bg-muted/50 p-2 rounded font-mono text-xs">
                     (σ₁/X)² - (σ₁σ₂/X²) + (σ₂/Y)² + (τ₁₂/S)² ≤ 1
                   </div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    where X, Y, S are the appropriate strengths (tension/compression)
+                  </p>
                 </div>
               </div>
               <p className="text-xs text-muted-foreground mt-2 italic">
@@ -328,19 +392,31 @@ export function EducationalContent() {
                 <div>
                   <p className="font-semibold text-foreground">1. Thermal strains in material axes:</p>
                   <div className="bg-muted/50 p-2 rounded font-mono text-xs">
-                    εᵗ₁ = α₁ × ΔT,  εᵗ₂ = α₂ × ΔT
+                    ε₁ᵀ = α₁ × ΔT
+                  </div>
+                  <div className="bg-muted/50 p-2 rounded font-mono text-xs mt-1">
+                    ε₂ᵀ = α₂ × ΔT
+                  </div>
+                  <div className="bg-muted/50 p-2 rounded font-mono text-xs mt-1">
+                    γ₁₂ᵀ = 0
                   </div>
                 </div>
                 <div>
                   <p className="font-semibold text-foreground">2. Thermal forces and moments:</p>
                   <div className="bg-muted/50 p-2 rounded font-mono text-xs">
-                    Nᵗ = ΔT × Σₖ (Q̄ᵢⱼ × αₖ) × tₖ
+                    [Nₓᵀ, Nᵧᵀ, Nₓᵧᵀ]ᵀ = Σₖ₌₁ⁿ [Q̄₁₁ Q̄₁₂ Q̄₁₆; Q̄₁₂ Q̄₂₂ Q̄₂₆; Q̄₁₆ Q̄₂₆ Q̄₆₆]ₖ × [εₓᵀ, εᵧᵀ, γₓᵧᵀ]ᵀₖ
+                  </div>
+                  <div className="bg-muted/50 p-2 rounded font-mono text-xs mt-1">
+                    [Mₓᵀ, Mᵧᵀ, Mₓᵧᵀ]ᵀ = Σₖ₌₁ⁿ [Q̄₁₁ Q̄₁₂ Q̄₁₆; Q̄₁₂ Q̄₂₂ Q̄₂₆; Q̄₁₆ Q̄₂₆ Q̄₆₆]ₖ × [εₓᵀ, εᵧᵀ, γₓᵧᵀ]ᵀₖ × zₖ
                   </div>
                 </div>
                 <div>
-                  <p className="font-semibold text-foreground">3. Total loading:</p>
+                  <p className="font-semibold text-foreground">3. Total loading (superposition):</p>
                   <div className="bg-muted/50 p-2 rounded font-mono text-xs">
-                    N_total = N_mechanical + N_thermal
+                    [Nₓ_total, Nᵧ_total, Nₓᵧ_total]ᵀ = [Nₓ, Nᵧ, Nₓᵧ]ᵀ + [Nₓᵀ, Nᵧᵀ, Nₓᵧᵀ]ᵀ
+                  </div>
+                  <div className="bg-muted/50 p-2 rounded font-mono text-xs mt-1">
+                    [Mₓ_total, Mᵧ_total, Mₓᵧ_total]ᵀ = [Mₓ, Mᵧ, Mₓᵧ]ᵀ + [Mₓᵀ, Mᵧᵀ, Mₓᵧᵀ]ᵀ
                   </div>
                 </div>
               </div>
