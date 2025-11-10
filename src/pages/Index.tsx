@@ -32,6 +32,7 @@ import { ThermalStressResults } from '@/components/composite/ThermalStressResult
 import { BucklingResults } from '@/components/composite/BucklingResults';
 import { ProgressiveFailureResults } from '@/components/composite/ProgressiveFailureResults';
 import { InterlaminarStressResults } from '@/components/composite/InterlaminarStressResults';
+import { HowToUseGuide } from '@/components/composite/HowToUseGuide';
 import { calculateEngineeringProperties, calculateStressStrain } from '@/utils/calculations';
 import { calculateABDMatrix } from '@/utils/abdMatrix';
 import { calculateFailureAnalysis, calculateSafetySummary, FailureResult } from '@/utils/failureAnalysis';
@@ -470,9 +471,10 @@ const Index = () => {
 
       <main className="container mx-auto px-4 py-8">
         <div className="grid lg:grid-cols-3 gap-6">
-          {/* Left Side - Cross Section View */}
-          <div className="lg:col-span-1">
+          {/* Left Side - Cross Section View and Guide */}
+          <div className="lg:col-span-1 space-y-6">
             <CrossSectionVisualization plies={state.plies} materials={materials} />
+            <HowToUseGuide />
           </div>
 
           {/* Right Side - Properties and Analysis */}

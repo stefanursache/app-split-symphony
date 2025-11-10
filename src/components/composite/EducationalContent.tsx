@@ -818,69 +818,6 @@ export function EducationalContent() {
           </div>
         </Card>
 
-        {/* How to Use */}
-        <Card className="p-6">
-          <h2 className="text-2xl font-bold text-foreground mb-4">How to Use This Application</h2>
-          
-          <div className="space-y-4">
-            <div>
-              <h3 className="text-lg font-semibold text-foreground mb-2">Step 1: Material Selection</h3>
-              <p className="text-sm text-muted-foreground">
-                Choose from predefined materials or create custom materials by defining their mechanical properties 
-                (E₁, E₂, G₁₂, ν₁₂, strength values, density, thickness).
-              </p>
-            </div>
-
-            <div>
-              <h3 className="text-lg font-semibold text-foreground mb-2">Step 2: Build Ply Stack</h3>
-              <p className="text-sm text-muted-foreground">
-                Add plies to your laminate by selecting materials and defining fiber orientation angles. 
-                The order matters - plies are numbered from bottom to top.
-              </p>
-            </div>
-
-            <div>
-              <h3 className="text-lg font-semibold text-foreground mb-2">Step 3: Review Properties</h3>
-              <p className="text-sm text-muted-foreground">
-                Check the "Properties" tab to view the ABD stiffness matrix, equivalent engineering properties, 
-                and cross-section visualization of your laminate.
-              </p>
-            </div>
-
-            <div>
-              <h3 className="text-lg font-semibold text-foreground mb-2">Step 4: Define Loading</h3>
-              <p className="text-sm text-muted-foreground">
-                In the "Stress" tab, select geometry type (flat plate, tube, or pressure vessel), then input 
-                force resultants (Nx, Ny, Nxy) and moment resultants (Mx, My, Mxy).
-              </p>
-            </div>
-
-            <div>
-              <h3 className="text-lg font-semibold text-foreground mb-2">Step 5: Run Analysis</h3>
-              <p className="text-sm text-muted-foreground">
-                Click "Calculate Stress/Strain" to perform the analysis. Results include ply-by-ply stresses, 
-                strains, and failure indices. View visualizations in the "Visualization" tab.
-              </p>
-            </div>
-
-            <div>
-              <h3 className="text-lg font-semibold text-foreground mb-2">Step 6: Failure Analysis</h3>
-              <p className="text-sm text-muted-foreground">
-                Switch to the "Failure" tab to configure failure criteria, safety factors, and enable advanced 
-                analysis options (thermal, buckling, progressive failure).
-              </p>
-            </div>
-
-            <div>
-              <h3 className="text-lg font-semibold text-foreground mb-2">Step 7: Save & Compare</h3>
-              <p className="text-sm text-muted-foreground">
-                Save your configurations for future use and compare different laminate designs in the "Stacks" 
-                tab to optimize your design. Use "Load Cases" to save different loading scenarios.
-              </p>
-            </div>
-          </div>
-        </Card>
-
         {/* Credits */}
         <Card className="p-6 bg-primary/5 border-primary/20">
           <div className="text-center space-y-2">
