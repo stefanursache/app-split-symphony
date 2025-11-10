@@ -490,7 +490,7 @@ const Index = () => {
               </TabsList>
 
               <TabsContent value="properties" className="mt-6">
-                <Accordion type="multiple" defaultValue={["materials", "plystack", "configurations"]} className="space-y-4">
+                <Accordion type="multiple" defaultValue={["materials", "plystack", "configurations", "fea-export", "experimental-validation"]} className="space-y-4">
                   <AccordionItem value="materials" className="border rounded-lg px-6">
                     <AccordionTrigger className="text-lg font-semibold hover:no-underline">
                       Material Selection
@@ -546,30 +546,28 @@ const Index = () => {
                         onDeleteConfig={handleDeleteConfiguration}
                         isAuthenticated={!!user}
                       />
-                      
-                      <Accordion type="multiple" defaultValue={["fea-export", "experimental-validation"]} className="mt-4">
-                        <AccordionItem value="fea-export" className="border rounded-lg px-4">
-                          <AccordionTrigger className="text-base font-medium hover:no-underline">
-                            Finite Element Export
-                          </AccordionTrigger>
-                          <AccordionContent className="pt-4">
-                            <FEAExport 
-                              plies={state.plies}
-                              materials={materials}
-                              geometry={geometry}
-                            />
-                          </AccordionContent>
-                        </AccordionItem>
+                    </AccordionContent>
+                  </AccordionItem>
 
-                        <AccordionItem value="experimental-validation" className="border rounded-lg px-4">
-                          <AccordionTrigger className="text-base font-medium hover:no-underline">
-                            Experimental Data Validation
-                          </AccordionTrigger>
-                          <AccordionContent className="pt-4">
-                            <ExperimentalValidation stressResults={stressResults} />
-                          </AccordionContent>
-                        </AccordionItem>
-                      </Accordion>
+                  <AccordionItem value="fea-export" className="border rounded-lg px-6">
+                    <AccordionTrigger className="text-lg font-semibold hover:no-underline">
+                      Finite Element Export
+                    </AccordionTrigger>
+                    <AccordionContent className="pt-4">
+                      <FEAExport 
+                        plies={state.plies}
+                        materials={materials}
+                        geometry={geometry}
+                      />
+                    </AccordionContent>
+                  </AccordionItem>
+
+                  <AccordionItem value="experimental-validation" className="border rounded-lg px-6">
+                    <AccordionTrigger className="text-lg font-semibold hover:no-underline">
+                      Experimental Data Validation
+                    </AccordionTrigger>
+                    <AccordionContent className="pt-4">
+                      <ExperimentalValidation stressResults={stressResults} />
                     </AccordionContent>
                   </AccordionItem>
                 </Accordion>
