@@ -546,6 +546,30 @@ const Index = () => {
                         onDeleteConfig={handleDeleteConfiguration}
                         isAuthenticated={!!user}
                       />
+                      
+                      <Accordion type="multiple" defaultValue={["fea-export", "experimental-validation"]} className="mt-4">
+                        <AccordionItem value="fea-export" className="border rounded-lg px-4">
+                          <AccordionTrigger className="text-base font-medium hover:no-underline">
+                            Finite Element Export
+                          </AccordionTrigger>
+                          <AccordionContent className="pt-4">
+                            <FEAExport 
+                              plies={state.plies}
+                              materials={materials}
+                              geometry={geometry}
+                            />
+                          </AccordionContent>
+                        </AccordionItem>
+
+                        <AccordionItem value="experimental-validation" className="border rounded-lg px-4">
+                          <AccordionTrigger className="text-base font-medium hover:no-underline">
+                            Experimental Data Validation
+                          </AccordionTrigger>
+                          <AccordionContent className="pt-4">
+                            <ExperimentalValidation stressResults={stressResults} />
+                          </AccordionContent>
+                        </AccordionItem>
+                      </Accordion>
                     </AccordionContent>
                   </AccordionItem>
                 </Accordion>
@@ -596,12 +620,6 @@ const Index = () => {
                 </Accordion>
                 <ABDMatrixDisplay matrix={abdMatrix} />
                 <EngineeringProperties properties={engineeringProps} />
-                <FEAExport 
-                  plies={state.plies}
-                  materials={materials}
-                  geometry={geometry}
-                />
-                <ExperimentalValidation stressResults={stressResults} />
                 <StressResults results={stressResults} />
                 <StressVisualization
                   plies={state.plies}
