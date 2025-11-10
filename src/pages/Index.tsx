@@ -408,12 +408,12 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b border-border bg-card sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <img src={logo} alt="CLSA Logo" className="h-[60px] w-auto" />
+        <div className="container mx-auto px-4 py-3 md:py-6">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2 md:gap-4 flex-shrink-0">
+              <img src={logo} alt="CLSA Logo" className="h-[40px] md:h-[60px] w-auto" />
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-1.5 md:gap-3">
               <PDFReportExport
                 plies={state.plies}
                 materials={materials}
@@ -435,6 +435,7 @@ const Index = () => {
                     toast.success('Signed out successfully');
                   }}
                   variant="outline"
+                  className="hidden md:inline-flex"
                 >
                   Sign Out
                 </Button>
@@ -442,6 +443,7 @@ const Index = () => {
                 <Button
                   onClick={() => navigate('/auth')}
                   variant="default"
+                  className="hidden md:inline-flex"
                 >
                   Sign In
                 </Button>
@@ -450,12 +452,12 @@ const Index = () => {
                 onClick={toggleTheme}
                 variant="outline"
                 size="icon"
-                className="rounded-full"
+                className="rounded-full flex-shrink-0 h-9 w-9 md:h-10 md:w-10"
               >
                 {theme === 'dark' ? (
-                  <Sun className="h-5 w-5" />
+                  <Sun className="h-4 w-4 md:h-5 md:w-5" />
                 ) : (
-                  <Moon className="h-5 w-5" />
+                  <Moon className="h-4 w-4 md:h-5 md:w-5" />
                 )}
               </Button>
             </div>
