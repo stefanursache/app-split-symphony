@@ -124,39 +124,63 @@ export function EducationalContent() {
 
           <Separator className="my-4" />
 
-          <h3 className="text-xl font-semibold text-foreground mb-3">Transformed Stiffness Matrix</h3>
+          <h3 className="text-xl font-semibold text-foreground mb-3">Transformation Matrix [T]</h3>
+          <p className="text-sm text-muted-foreground mb-4">
+            The transformation matrix [T] is used to transform material properties from the principal material 
+            coordinate system (1-2 axes aligned with fibers) to the global laminate coordinate system (x-y axes). 
+            This matrix accounts for the fiber orientation angle θ.
+          </p>
+          
+          <div className="space-y-2 text-sm text-muted-foreground mb-4">
+            <p><strong className="text-foreground">Transformation Matrix [T]:</strong></p>
+            <div className="bg-muted/50 p-3 rounded-lg space-y-1">
+              <p className="font-mono">
+                [T] = [m²    n²    2mn  ]
+              </p>
+              <p className="font-mono">
+                      [n²    m²   -2mn  ]
+              </p>
+              <p className="font-mono">
+                      [-mn   mn   m²-n² ]
+              </p>
+              <p className="font-mono mt-3">where:</p>
+              <p className="font-mono ml-4">m = cos(θ)</p>
+              <p className="font-mono ml-4">n = sin(θ)</p>
+              <p className="text-xs mt-2">
+                <strong>θ</strong> is the angle between the x-axis (laminate reference) and the 1-axis (fiber direction)
+              </p>
+            </div>
+          </div>
+
+          <Separator className="my-4" />
+
+          <h3 className="text-xl font-semibold text-foreground mb-3">Transformed Stiffness Matrix [Q̄]</h3>
           <p className="text-sm text-muted-foreground mb-4">
             To express the stress-strain relationship in the global x-y axes, the transformed stiffness matrix [Q̄] is used. 
             This represents the stiffness of the lamina with respect to the x-y axes and is obtained by transforming 
-            the principal stiffness matrix [Q]:
+            the principal stiffness matrix [Q] using the transformation matrix [T]:
           </p>
           
           <div className="bg-muted/50 p-4 rounded-lg mb-4">
             <p className="text-sm font-mono text-foreground mb-3">
-              [Q̄] = [T]⁻¹[Q][T]
+              [Q̄] = [T]⁻¹ × [Q] × [T]
+            </p>
+            <p className="text-sm text-muted-foreground mb-3">
+              The stress-strain relation in the x-y coordinate system is then:
             </p>
             <p className="text-sm font-mono text-foreground">
-              [σₓ, σᵧ, τₓᵧ]ᵀ = [Q̄₁₁ Q̄₁₂ Q̄₁₆; Q̄₁₂ Q̄₂₂ Q̄₂₆; Q̄₁₆ Q̄₂₆ Q̄₆₆][εₓ, εᵧ, γₓᵧ]ᵀ
+              [σₓ, σᵧ, τₓᵧ]ᵀ = [Q̄₁₁ Q̄₁₂ Q̄₁₆; Q̄₁₂ Q̄₂₂ Q̄₂₆; Q̄₁₆ Q̄₂₆ Q̄₆₆] × [εₓ, εᵧ, γₓᵧ]ᵀ
             </p>
-          </div>
-
-          <div className="space-y-2 text-sm text-muted-foreground mb-4">
-            <p><strong className="text-foreground">Transformation Matrix [T]:</strong></p>
-            <div className="bg-muted/50 p-3 rounded-lg space-y-1">
-              <p className="font-mono">[T] = [m² n² 2mn; n² m² -2mn; -mn mn m²-n²]</p>
-              <p className="font-mono mt-2">where: m = cos(θ), n = sin(θ)</p>
-              <p className="text-xs mt-2">θ is the angle between the x-axis and the fiber (1-axis) direction</p>
-            </div>
           </div>
 
           <div className="space-y-2 text-sm text-muted-foreground">
-            <p><strong className="text-foreground">Reduced Stiffness Matrix [Q] Components:</strong></p>
+            <p><strong className="text-foreground">Reduced Stiffness Matrix [Q] Components (in material axes):</strong></p>
             <div className="bg-muted/50 p-3 rounded-lg space-y-1">
               <p className="font-mono">Q₁₁ = E₁ / (1 - ν₁₂ν₂₁)</p>
               <p className="font-mono">Q₂₂ = E₂ / (1 - ν₁₂ν₂₁)</p>
               <p className="font-mono">Q₁₂ = ν₁₂E₂ / (1 - ν₁₂ν₂₁)</p>
               <p className="font-mono">Q₆₆ = G₁₂</p>
-              <p className="text-xs mt-2">where: ν₂₁ = ν₁₂ × E₂ / E₁</p>
+              <p className="text-xs mt-2">where: ν₂₁ = ν₁₂ × E₂ / E₁ (reciprocal Poisson's ratio)</p>
             </div>
           </div>
         </Card>
