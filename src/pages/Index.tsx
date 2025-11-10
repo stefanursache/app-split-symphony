@@ -411,7 +411,7 @@ const Index = () => {
         <div className="container mx-auto px-4 py-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <img src={logo} alt="CLSA Logo" className="h-[75px] w-[75px]" />
+              <img src={logo} alt="CLSA Logo" className="h-[100px] w-auto" />
             </div>
             <div className="flex items-center gap-3">
               <PDFReportExport
