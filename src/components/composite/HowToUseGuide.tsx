@@ -4,7 +4,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 export function HowToUseGuide() {
   return (
     <Card className="p-6">
-      <Accordion type="single" collapsible defaultValue="guide">
+      <Accordion type="single" collapsible>
         <AccordionItem value="guide" className="border-none">
           <AccordionTrigger className="text-lg font-semibold hover:no-underline">
             How to Use This Application
