@@ -2,6 +2,8 @@ import { Card } from '@/components/ui/card';
 import { Ply, Material } from '@/types/materials';
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { ChevronDown } from 'lucide-react';
 
 interface MathematicsExplanationProps {
   plies: Ply[];
@@ -145,43 +147,57 @@ export function MathematicsExplanation({ plies, materials }: MathematicsExplanat
   return (
     <ScrollArea className="h-[calc(100vh-12rem)]">
       <div className="space-y-6 pr-4">
-        <Card className="p-6">
-          <h2 className="text-2xl font-bold mb-4 text-foreground">Classical Lamination Theory (CLT)</h2>
-          <div className="space-y-4 text-sm text-muted-foreground">
-            <p>
-              Classical Lamination Theory is used to predict the behavior of composite laminates under mechanical loads.
-              The theory relates forces and moments to strains and curvatures through the ABD matrix.
-            </p>
-            <div className="bg-muted/30 p-4 rounded border border-border">
-              <div className="font-mono text-xs">
-                <div>⎧ N ⎫   ⎡ A | B ⎤ ⎧ ε⁰ ⎫</div>
-                <div>⎨   ⎬ = ⎢ ——|—— ⎥ ⎨   ⎬</div>
-                <div>⎩ M ⎭   ⎣ B | D ⎦ ⎩ κ  ⎭</div>
+        <Collapsible defaultOpen={true}>
+          <Card className="p-6">
+            <CollapsibleTrigger className="flex items-center justify-between w-full group">
+              <h2 className="text-2xl font-bold text-foreground">Classical Lamination Theory (CLT)</h2>
+              <ChevronDown className="h-5 w-5 transition-transform group-data-[state=open]:rotate-180" />
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <div className="space-y-4 text-sm text-muted-foreground mt-4">
+                <p>
+                  Classical Lamination Theory is used to predict the behavior of composite laminates under mechanical loads.
+                  The theory relates forces and moments to strains and curvatures through the ABD matrix.
+                </p>
+                <div className="bg-muted/30 p-4 rounded border border-border">
+                  <div className="font-mono text-xs">
+                    <div>⎧ N ⎫   ⎡ A | B ⎤ ⎧ ε⁰ ⎫</div>
+                    <div>⎨   ⎬ = ⎢ ——|—— ⎥ ⎨   ⎬</div>
+                    <div>⎩ M ⎭   ⎣ B | D ⎦ ⎩ κ  ⎭</div>
+                  </div>
+                  <div className="mt-2 text-xs">
+                    <p>where:</p>
+                    <ul className="list-disc list-inside ml-2 space-y-1">
+                      <li>N = resultant in-plane forces [N/mm]</li>
+                      <li>M = resultant moments [N·mm/mm]</li>
+                      <li>ε⁰ = mid-plane strains</li>
+                      <li>κ = curvatures [1/mm]</li>
+                      <li>A = extensional stiffness matrix</li>
+                      <li>B = coupling stiffness matrix</li>
+                      <li>D = bending stiffness matrix</li>
+                    </ul>
+                  </div>
+                </div>
               </div>
-              <div className="mt-2 text-xs">
-                <p>where:</p>
-                <ul className="list-disc list-inside ml-2 space-y-1">
-                  <li>N = resultant in-plane forces [N/mm]</li>
-                  <li>M = resultant moments [N·mm/mm]</li>
-                  <li>ε⁰ = mid-plane strains</li>
-                  <li>κ = curvatures [1/mm]</li>
-                  <li>A = extensional stiffness matrix</li>
-                  <li>B = coupling stiffness matrix</li>
-                  <li>D = bending stiffness matrix</li>
-                </ul>
-              </div>
-            </div>
-          </div>
-        </Card>
+            </CollapsibleContent>
+          </Card>
+        </Collapsible>
 
-        <Card className="p-6">
-          <h3 className="text-xl font-bold mb-4 text-foreground">Configuration Summary</h3>
-          <div className="text-sm space-y-2">
-            <p className="text-muted-foreground">Total number of plies: <span className="text-foreground font-semibold">{plies.length}</span></p>
-            <p className="text-muted-foreground">Total thickness: <span className="text-foreground font-semibold">{totalThickness.toFixed(3)} mm</span></p>
-            <p className="text-muted-foreground">Midplane location: <span className="text-foreground font-semibold">z = 0 mm (at {(-totalThickness/2).toFixed(3)} to {(totalThickness/2).toFixed(3)} mm)</span></p>
-          </div>
-        </Card>
+        <Collapsible defaultOpen={true}>
+          <Card className="p-6">
+            <CollapsibleTrigger className="flex items-center justify-between w-full group">
+              <h3 className="text-xl font-bold text-foreground">Configuration Summary</h3>
+              <ChevronDown className="h-5 w-5 transition-transform group-data-[state=open]:rotate-180" />
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <div className="text-sm space-y-2 mt-4">
+                <p className="text-muted-foreground">Total number of plies: <span className="text-foreground font-semibold">{plies.length}</span></p>
+                <p className="text-muted-foreground">Total thickness: <span className="text-foreground font-semibold">{totalThickness.toFixed(3)} mm</span></p>
+                <p className="text-muted-foreground">Midplane location: <span className="text-foreground font-semibold">z = 0 mm (at {(-totalThickness/2).toFixed(3)} to {(totalThickness/2).toFixed(3)} mm)</span></p>
+              </div>
+            </CollapsibleContent>
+          </Card>
+        </Collapsible>
 
         {steps.map((step, idx) => (
           <Card key={idx} className="p-6">
@@ -240,26 +256,33 @@ export function MathematicsExplanation({ plies, materials }: MathematicsExplanat
           </Card>
         ))}
 
-        <Card className="p-6">
-          <h3 className="text-xl font-bold mb-4 text-foreground">Final ABD Matrix</h3>
-          <p className="text-sm text-muted-foreground mb-4">
-            Sum of all ply contributions to obtain the complete laminate stiffness matrices.
-          </p>
-          <div className="space-y-4">
-            {renderMatrix(A, 'A - Extensional Stiffness (N/mm)')}
-            {renderMatrix(B, 'B - Coupling Stiffness (N)')}
-            {renderMatrix(D, 'D - Bending Stiffness (N·mm)')}
-          </div>
-          
-          <div className="mt-6 p-4 bg-muted/30 rounded border border-border">
-            <h4 className="font-semibold mb-2 text-foreground">Interpretation</h4>
-            <ul className="text-xs text-muted-foreground space-y-2 list-disc list-inside">
-              <li><strong>A matrix:</strong> Controls in-plane response. Diagonal terms are extensional stiffnesses in x, y, and shear.</li>
-              <li><strong>B matrix:</strong> Represents bending-extension coupling. Zero for symmetric laminates.</li>
-              <li><strong>D matrix:</strong> Controls bending and twisting response. Analogous to moment of inertia.</li>
-            </ul>
-          </div>
-        </Card>
+        <Collapsible defaultOpen={true}>
+          <Card className="p-6">
+            <CollapsibleTrigger className="flex items-center justify-between w-full group">
+              <h3 className="text-xl font-bold text-foreground">Final ABD Matrix</h3>
+              <ChevronDown className="h-5 w-5 transition-transform group-data-[state=open]:rotate-180" />
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <p className="text-sm text-muted-foreground mb-4 mt-4">
+                Sum of all ply contributions to obtain the complete laminate stiffness matrices.
+              </p>
+              <div className="space-y-4">
+                {renderMatrix(A, 'A - Extensional Stiffness (N/mm)')}
+                {renderMatrix(B, 'B - Coupling Stiffness (N)')}
+                {renderMatrix(D, 'D - Bending Stiffness (N·mm)')}
+              </div>
+              
+              <div className="mt-6 p-4 bg-muted/30 rounded border border-border">
+                <h4 className="font-semibold mb-2 text-foreground">Interpretation</h4>
+                <ul className="text-xs text-muted-foreground space-y-2 list-disc list-inside">
+                  <li><strong>A matrix:</strong> Controls in-plane response. Diagonal terms are extensional stiffnesses in x, y, and shear.</li>
+                  <li><strong>B matrix:</strong> Represents bending-extension coupling. Zero for symmetric laminates.</li>
+                  <li><strong>D matrix:</strong> Controls bending and twisting response. Analogous to moment of inertia.</li>
+                </ul>
+              </div>
+            </CollapsibleContent>
+          </Card>
+        </Collapsible>
       </div>
     </ScrollArea>
   );
