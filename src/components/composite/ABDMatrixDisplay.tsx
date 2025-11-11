@@ -58,7 +58,7 @@ export function ABDMatrixDisplay({ matrix, plies, materials }: ABDMatrixDisplayP
       <Separator className="my-6" />
 
       <div className="space-y-4">
-        <Collapsible defaultOpen={true}>
+        <Collapsible defaultOpen={false}>
           <CollapsibleTrigger className="flex items-center justify-between w-full group">
             <h4 className="text-base font-semibold text-foreground">Classical Lamination Theory (CLT)</h4>
             <ChevronDown className="h-5 w-5 transition-transform group-data-[state=open]:rotate-180" />
@@ -92,7 +92,7 @@ export function ABDMatrixDisplay({ matrix, plies, materials }: ABDMatrixDisplayP
           </CollapsibleContent>
         </Collapsible>
 
-        <Collapsible defaultOpen={true}>
+        <Collapsible defaultOpen={false}>
           <CollapsibleTrigger className="flex items-center justify-between w-full group">
             <h4 className="text-base font-semibold text-foreground">Configuration Summary</h4>
             <ChevronDown className="h-5 w-5 transition-transform group-data-[state=open]:rotate-180" />
@@ -106,7 +106,7 @@ export function ABDMatrixDisplay({ matrix, plies, materials }: ABDMatrixDisplayP
           </CollapsibleContent>
         </Collapsible>
 
-        <Collapsible defaultOpen={true}>
+        <Collapsible defaultOpen={false}>
           <CollapsibleTrigger className="flex items-center justify-between w-full group">
             <h4 className="text-base font-semibold text-foreground">Final ABD Matrix</h4>
             <ChevronDown className="h-5 w-5 transition-transform group-data-[state=open]:rotate-180" />
