@@ -75,17 +75,18 @@ export function PlyStack({
   }, [plies, materials]);
 
   return (
-    <Card className="p-6">
-      <div className="flex items-center justify-between mb-4">
+    <Card className="p-3 sm:p-6 w-full min-w-0">
+      <div className="flex items-center justify-between mb-4 gap-2 flex-wrap">
         <div className="flex items-center gap-2">
-          <Layers className="h-5 w-5 text-primary" />
-          <h2 className="text-xl font-semibold text-foreground">Ply Stack</h2>
+          <Layers className="h-4 w-4 sm:h-5 sm:w-5 text-primary flex-shrink-0" />
+          <h2 className="text-base sm:text-xl font-semibold text-foreground">Ply Stack</h2>
         </div>
         <Button
           onClick={onClearPlies}
           variant="outline"
           size="sm"
           disabled={plies.length === 0}
+          className="text-xs sm:text-sm"
         >
           Clear All
         </Button>

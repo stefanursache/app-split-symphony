@@ -34,23 +34,23 @@ export function ConfigurationActions({ config, onLoad, onDelete }: Configuration
 
   return (
     <>
-      <div className="flex gap-2">
+      <div className="flex gap-2 w-full">
         <Button
           onClick={handleLoad}
           variant="outline"
           size="sm"
-          className="flex-1"
+          className="flex-1 text-xs sm:text-sm"
         >
-          <Download className="h-4 w-4 mr-2" />
+          <Download className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
           Load
         </Button>
         <Button
           onClick={() => setShowDeleteDialog(true)}
           variant="outline"
           size="sm"
-          className="text-destructive hover:text-destructive"
+          className="text-destructive hover:text-destructive px-2 sm:px-4"
         >
-          <Trash2 className="h-4 w-4" />
+          <Trash2 className="h-3 w-3 sm:h-4 sm:w-4" />
         </Button>
       </div>
 

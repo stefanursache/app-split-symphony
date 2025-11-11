@@ -514,27 +514,27 @@ const Index = () => {
         </div>
       </header>
 
-      <main className="container mx-auto px-2 sm:px-4 py-8 max-w-full overflow-x-hidden">
-        <div className="grid lg:grid-cols-3 gap-4 sm:gap-6">
+      <main className="container mx-auto px-2 sm:px-4 py-8 max-w-full">
+        <div className="grid lg:grid-cols-3 gap-4 sm:gap-6 w-full">
           {/* Left Side - Cross Section View and Guide */}
-          <div className="lg:col-span-1 space-y-6">
+          <div className="lg:col-span-1 space-y-6 w-full min-w-0">
             <CrossSectionVisualization plies={state.plies} materials={materials} />
             <HowToUseGuide />
           </div>
 
           {/* Right Side - Properties and Analysis */}
-          <div className="lg:col-span-2 space-y-6">
+          <div className="lg:col-span-2 space-y-6 w-full min-w-0">
             <Tabs value={state.activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="grid w-full grid-cols-4 text-xs sm:text-sm">
-                <TabsTrigger value="properties">Properties</TabsTrigger>
-                <TabsTrigger value="stress">Stress</TabsTrigger>
-                <TabsTrigger value="failure">Failure</TabsTrigger>
-                <TabsTrigger value="education">Education</TabsTrigger>
+              <TabsList className="grid w-full grid-cols-4 text-xs sm:text-sm h-auto">
+                <TabsTrigger value="properties" className="text-[10px] sm:text-sm px-1 sm:px-3">Properties</TabsTrigger>
+                <TabsTrigger value="stress" className="text-[10px] sm:text-sm px-1 sm:px-3">Stress</TabsTrigger>
+                <TabsTrigger value="failure" className="text-[10px] sm:text-sm px-1 sm:px-3">Failure</TabsTrigger>
+                <TabsTrigger value="education" className="text-[10px] sm:text-sm px-1 sm:px-3">Education</TabsTrigger>
               </TabsList>
 
-              <TabsContent value="properties" className="mt-6">
-                <Accordion type="multiple" defaultValue={["materials", "plystack", "configurations", "fea-export", "experimental-validation"]} className="space-y-4">
-                  <AccordionItem value="materials" className="border rounded-lg px-6">
+              <TabsContent value="properties" className="mt-6 w-full min-w-0">
+                <Accordion type="multiple" defaultValue={["materials", "plystack", "configurations", "fea-export", "experimental-validation"]} className="space-y-4 w-full">
+                  <AccordionItem value="materials" className="border rounded-lg px-3 sm:px-6 w-full">
                     <AccordionTrigger className="text-lg font-semibold hover:no-underline">
                       Material Selection
                     </AccordionTrigger>
