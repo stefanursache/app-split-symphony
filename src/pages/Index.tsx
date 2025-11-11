@@ -51,7 +51,8 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Button } from '@/components/ui/button';
-import { Moon, Sun } from 'lucide-react';
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { Moon, Sun, Menu } from 'lucide-react';
 import { GeometryConfig, DEFAULT_GEOMETRY } from '@/types/geometry';
 import logo from '@/assets/logo.png';
 
@@ -428,6 +429,8 @@ const Index = () => {
                 progressiveFailureAnalysis={progressiveFailureAnalysis}
                 interlaminarResults={interlaminarResults}
               />
+              
+              {/* Desktop Navigation */}
               {user ? (
                 <Button
                   onClick={async () => {
@@ -448,6 +451,7 @@ const Index = () => {
                   Sign In
                 </Button>
               )}
+              
               <Button
                 onClick={toggleTheme}
                 variant="outline"
@@ -460,6 +464,51 @@ const Index = () => {
                   <Moon className="h-4 w-4 md:h-5 md:w-5" />
                 )}
               </Button>
+
+              {/* Mobile Navigation */}
+              <Sheet>
+                <SheetTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="md:hidden flex-shrink-0 h-9 w-9"
+                  >
+                    <Menu className="h-5 w-5" />
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="right" className="w-[280px]">
+                  <div className="flex flex-col gap-4 mt-8">
+                    <div className="flex flex-col gap-3">
+                      {user ? (
+                        <>
+                          <div className="text-sm text-muted-foreground mb-2">
+                            Signed in as:<br />
+                            <span className="text-foreground font-medium">{user.email}</span>
+                          </div>
+                          <Button
+                            onClick={async () => {
+                              await supabase.auth.signOut();
+                              toast.success('Signed out successfully');
+                            }}
+                            variant="outline"
+                            className="w-full"
+                          >
+                            Sign Out
+                          </Button>
+                        </>
+                      ) : (
+                        <Button
+                          onClick={() => navigate('/auth')}
+                          variant="default"
+                          className="w-full"
+                        >
+                          Sign In
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                </SheetContent>
+              </Sheet>
             </div>
           </div>
         </div>
