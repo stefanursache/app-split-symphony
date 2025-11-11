@@ -679,13 +679,13 @@ const Index = () => {
                   </AccordionItem>
                 </Accordion>
                 <ABDMatrixDisplay matrix={abdMatrix} plies={state.plies} materials={materials} />
-                <EngineeringProperties properties={engineeringProps} />
-                <StressResults results={stressResults} />
                 <StressVisualization
                   plies={state.plies}
                   materials={materials}
                   stressResults={stressResults}
                 />
+                <EngineeringProperties properties={engineeringProps} />
+                <StressResults results={stressResults} />
               </TabsContent>
 
               <TabsContent value="failure" className="mt-6 space-y-6">
