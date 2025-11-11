@@ -456,12 +456,12 @@ const Index = () => {
                 onClick={toggleTheme}
                 variant="outline"
                 size="icon"
-                className="rounded-full flex-shrink-0 h-9 w-9 md:h-10 md:w-10"
+                className="rounded-full hidden md:flex flex-shrink-0 h-10 w-10"
               >
                 {theme === 'dark' ? (
-                  <Sun className="h-4 w-4 md:h-5 md:w-5" />
+                  <Sun className="h-5 w-5" />
                 ) : (
-                  <Moon className="h-4 w-4 md:h-5 md:w-5" />
+                  <Moon className="h-5 w-5" />
                 )}
               </Button>
 
@@ -505,6 +505,26 @@ const Index = () => {
                           Sign In
                         </Button>
                       )}
+                      
+                      <div className="border-t pt-3 mt-2">
+                        <Button
+                          onClick={toggleTheme}
+                          variant="outline"
+                          className="w-full justify-start gap-2"
+                        >
+                          {theme === 'dark' ? (
+                            <>
+                              <Sun className="h-4 w-4" />
+                              Light Mode
+                            </>
+                          ) : (
+                            <>
+                              <Moon className="h-4 w-4" />
+                              Dark Mode
+                            </>
+                          )}
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 </SheetContent>
