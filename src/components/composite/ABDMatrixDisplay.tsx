@@ -236,6 +236,75 @@ export function ABDMatrixDisplay({ matrix, plies, materials }: ABDMatrixDisplayP
           </CollapsibleContent>
         </Collapsible>
 
+        <Collapsible defaultOpen={false}>
+          <CollapsibleTrigger className="flex items-center justify-between w-full group">
+            <h4 className="text-base font-semibold text-foreground">Stress Distribution Through Thickness</h4>
+            <ChevronDown className="h-5 w-5 transition-transform group-data-[state=open]:rotate-180" />
+          </CollapsibleTrigger>
+          <CollapsibleContent>
+            <ScrollArea className="h-[600px] mt-4">
+              <div className="space-y-6 pr-4">
+                {steps.map((step, idx) => (
+                  <Card key={idx} className="p-6">
+                    <h3 className="text-xl font-bold mb-4 text-foreground">
+                      Ply {step.plyNumber}: {step.material} at {step.angle}°
+                    </h3>
+                    
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                        <div>
+                          <p className="text-muted-foreground">Thickness: <span className="text-foreground font-semibold">{step.thickness} mm</span></p>
+                          <p className="text-muted-foreground">Position: <span className="text-foreground font-semibold">z = {formatNumber3(step.zStart)} to {formatNumber3(step.zEnd)} mm</span></p>
+                        </div>
+                      </div>
+
+                      <Separator />
+
+                      <div>
+                        <h4 className="font-semibold mb-2 text-foreground">Step 1: Material Stiffness Matrix (Q)</h4>
+                        <p className="text-xs text-muted-foreground mb-3">
+                          The reduced stiffness matrix Q relates stresses to strains in the material coordinate system (1-2).
+                        </p>
+                        {renderMatrixWithBrackets(step.Q, 'Q (MPa)')}
+                      </div>
+
+                      <Separator />
+
+                      <div>
+                        <h4 className="font-semibold mb-2 text-foreground">Step 2: Transformed Stiffness Matrix (Q̄)</h4>
+                        <p className="text-xs text-muted-foreground mb-3">
+                          Transform Q to the global coordinate system (x-y) using the rotation angle θ = {step.angle}°.
+                        </p>
+                        {renderMatrixWithBrackets(step.Q_bar, 'Q̄ (MPa)')}
+                      </div>
+
+                      <Separator />
+
+                      <div>
+                        <h4 className="font-semibold mb-2 text-foreground">Step 3: Contribution to ABD Matrices</h4>
+                        <div className="space-y-3">
+                          <div>
+                            <p className="text-xs text-muted-foreground mb-2">A contribution: Aᵢⱼ = Q̄ᵢⱼ × t</p>
+                            {renderMatrixWithBrackets(step.A_contrib, 'ΔA (N/mm)')}
+                          </div>
+                          <div>
+                            <p className="text-xs text-muted-foreground mb-2">B contribution: Bᵢⱼ = ½ Q̄ᵢⱼ × (z₁² - z₀²)</p>
+                            {renderMatrixWithBrackets(step.B_contrib, 'ΔB (N)')}
+                          </div>
+                          <div>
+                            <p className="text-xs text-muted-foreground mb-2">D contribution: Dᵢⱼ = ⅓ Q̄ᵢⱼ × (z₁³ - z₀³)</p>
+                            {renderMatrixWithBrackets(step.D_contrib, 'ΔD (N·mm)')}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            </ScrollArea>
+          </CollapsibleContent>
+        </Collapsible>
+
       </div>
     </Card>
   );

@@ -18,7 +18,6 @@ import { CrossSectionVisualization } from '@/components/composite/CrossSectionVi
 import { ABDMatrixDisplay } from '@/components/composite/ABDMatrixDisplay';
 import { ConfigurationComparison } from '@/components/composite/ConfigurationComparison';
 import { SaveConfigurationDialog } from '@/components/composite/SaveConfigurationDialog';
-import { MathematicsExplanation } from '@/components/composite/MathematicsExplanation';
 import { FailureCriteriaSelector } from '@/components/composite/FailureCriteriaSelector';
 import { PlyFailureAnalysis } from '@/components/composite/PlyFailureAnalysis';
 import { SafetyMarginSummary } from '@/components/composite/SafetyMarginSummary';
@@ -687,7 +686,6 @@ const Index = () => {
                   materials={materials}
                   stressResults={stressResults}
                 />
-                <MathematicsExplanation plies={state.plies} materials={materials} />
               </TabsContent>
 
               <TabsContent value="failure" className="mt-6 space-y-6">
