@@ -238,32 +238,6 @@ export function ABDMatrixDisplay({ matrix, plies, materials }: ABDMatrixDisplayP
 
         <Collapsible defaultOpen={false}>
           <CollapsibleTrigger className="flex items-center justify-between w-full group">
-            <h4 className="text-base font-semibold text-foreground">Final ABD Matrix</h4>
-            <ChevronDown className="h-5 w-5 transition-transform group-data-[state=open]:rotate-180" />
-          </CollapsibleTrigger>
-          <CollapsibleContent>
-            <p className="text-sm text-muted-foreground mb-4 mt-4">
-              Sum of all ply contributions to obtain the complete laminate stiffness matrices.
-            </p>
-            <div className="space-y-4">
-              {renderMatrix('A - Extensional Stiffness', matrix.A, 'N/mm')}
-              {renderMatrix('B - Coupling Stiffness', matrix.B, 'N')}
-              {renderMatrix('D - Bending Stiffness', matrix.D, 'N·mm')}
-            </div>
-            
-            <div className="mt-6 p-4 bg-muted/30 rounded border border-border">
-              <h5 className="font-semibold mb-2 text-foreground">Interpretation</h5>
-              <ul className="text-xs text-muted-foreground space-y-2 list-disc list-inside">
-                <li><strong>A matrix:</strong> Controls in-plane response. Diagonal terms are extensional stiffnesses in x, y, and shear.</li>
-                <li><strong>B matrix:</strong> Represents bending-extension coupling. Zero for symmetric laminates.</li>
-                <li><strong>D matrix:</strong> Controls bending and twisting response. Analogous to moment of inertia.</li>
-              </ul>
-            </div>
-          </CollapsibleContent>
-        </Collapsible>
-
-        <Collapsible defaultOpen={false}>
-          <CollapsibleTrigger className="flex items-center justify-between w-full group">
             <h4 className="text-base font-semibold text-foreground">Stress Distribution Through Thickness</h4>
             <ChevronDown className="h-5 w-5 transition-transform group-data-[state=open]:rotate-180" />
           </CollapsibleTrigger>
