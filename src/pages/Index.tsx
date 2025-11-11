@@ -407,7 +407,7 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background overflow-x-hidden">
       <header className="border-b border-border bg-card sticky top-0 z-50">
         <div className="container mx-auto px-4 py-3 md:py-6">
           <div className="flex items-center justify-between gap-2">
@@ -514,8 +514,8 @@ const Index = () => {
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-8">
-        <div className="grid lg:grid-cols-3 gap-6">
+      <main className="container mx-auto px-2 sm:px-4 py-8 max-w-full overflow-x-hidden">
+        <div className="grid lg:grid-cols-3 gap-4 sm:gap-6">
           {/* Left Side - Cross Section View and Guide */}
           <div className="lg:col-span-1 space-y-6">
             <CrossSectionVisualization plies={state.plies} materials={materials} />
@@ -525,7 +525,7 @@ const Index = () => {
           {/* Right Side - Properties and Analysis */}
           <div className="lg:col-span-2 space-y-6">
             <Tabs value={state.activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="grid w-full grid-cols-4">
+              <TabsList className="grid w-full grid-cols-4 text-xs sm:text-sm">
                 <TabsTrigger value="properties">Properties</TabsTrigger>
                 <TabsTrigger value="stress">Stress</TabsTrigger>
                 <TabsTrigger value="failure">Failure</TabsTrigger>
