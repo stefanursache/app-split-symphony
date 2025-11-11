@@ -91,15 +91,15 @@ export function PlyStack({
         </Button>
       </div>
 
-      <div className="flex gap-2 mb-4">
+      <div className="flex flex-col sm:flex-row gap-2 mb-4">
         <Input
           type="number"
           value={angle}
           onChange={(e) => setAngle(Number(e.target.value))}
           placeholder="Angle (°)"
-          className="w-32"
+          className="w-full sm:w-32"
         />
-        <Button onClick={handleAddPly} className="gap-2 flex-1">
+        <Button onClick={handleAddPly} className="gap-2 w-full sm:flex-1">
           <Plus className="h-4 w-4" />
           Add Ply
         </Button>
@@ -120,23 +120,25 @@ export function PlyStack({
             return (
               <div
                 key={index}
-                className="flex items-center gap-3 p-3 rounded-lg border border-border bg-card hover:bg-accent/50 transition-colors"
+                className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3 p-3 rounded-lg border border-border bg-card hover:bg-accent/50 transition-colors"
               >
-                <div
-                  className="w-8 h-8 rounded border border-border flex-shrink-0"
-                  style={{ backgroundColor: material.color }}
-                />
-                <div className="flex-1 min-w-0">
-                  <div className="font-medium text-sm text-foreground">
-                    Ply {index + 1}
-                  </div>
-                  <div className="text-xs text-muted-foreground truncate">
-                    {material.name}
+                <div className="flex items-center gap-3 flex-1 min-w-0 w-full sm:w-auto">
+                  <div
+                    className="w-8 h-8 rounded border border-border flex-shrink-0"
+                    style={{ backgroundColor: material.color }}
+                  />
+                  <div className="flex-1 min-w-0">
+                    <div className="font-medium text-sm text-foreground">
+                      Ply {index + 1}
+                    </div>
+                    <div className="text-xs text-muted-foreground truncate">
+                      {material.name}
+                    </div>
                   </div>
                 </div>
                 
                 {isEditing ? (
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
                     <Input
                       type="number"
                       value={editAngle}
@@ -167,7 +169,7 @@ export function PlyStack({
                     </Button>
                   </div>
                 ) : (
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
                     <div className="font-mono text-sm text-foreground min-w-[60px] text-right">
                       {ply.angle}°
                     </div>

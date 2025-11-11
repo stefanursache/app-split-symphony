@@ -25,13 +25,13 @@ export function MaterialProperties({ material }: MaterialPropertiesProps) {
   ];
 
   return (
-    <Card className="p-6">
+    <Card className="p-4 sm:p-6">
       <h3 className="text-lg font-semibold mb-4 text-foreground">Material Properties</h3>
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
         {properties.map((prop, index) => (
           <div key={index} className="space-y-1">
-            <div className="text-sm text-muted-foreground">{prop.label}</div>
-            <div className="text-lg font-medium text-foreground">{prop.value}</div>
+            <div className="text-xs sm:text-sm text-muted-foreground">{prop.label}</div>
+            <div className="text-base sm:text-lg font-medium text-foreground break-words">{prop.value}</div>
           </div>
         ))}
       </div>
