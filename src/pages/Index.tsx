@@ -70,6 +70,7 @@ const Index = () => {
     setSelectedMaterial
   } = useAppState();
   const { configurations, loading: configsLoading, saveConfiguration, updateConfiguration, deleteConfiguration } = useConfigurations();
+  const [selectedComparisonConfigs, setSelectedComparisonConfigs] = useState<Configuration[]>([]);
   const {
     loadCases,
     activeLoadCaseId,
@@ -427,6 +428,7 @@ const Index = () => {
                 bucklingResult={bucklingResult}
                 progressiveFailureAnalysis={progressiveFailureAnalysis}
                 interlaminarResults={interlaminarResults}
+                comparisonConfigs={selectedComparisonConfigs}
               />
               
               {/* Desktop Navigation */}
@@ -729,6 +731,7 @@ const Index = () => {
                   onLoadConfig={handleLoadConfiguration}
                   onDeleteConfig={handleDeleteConfiguration}
                   isAuthenticated={!!user}
+                  onSelectionChange={setSelectedComparisonConfigs}
                 />
               </TabsContent>
 

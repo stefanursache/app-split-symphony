@@ -23,6 +23,18 @@ interface PDFReportExportProps {
   bucklingResult?: any;
   progressiveFailureAnalysis?: any;
   interlaminarResults?: any[];
+  comparisonConfigs?: Array<{
+    name: string;
+    plies: Array<{ material: string; angle: number }>;
+    total_thickness?: number;
+    total_weight?: number;
+    engineering_properties?: {
+      Ex: number;
+      Ey: number;
+      Gxy: number;
+      nuxy: number;
+    };
+  }>;
 }
 
 export function PDFReportExport({
@@ -37,7 +49,8 @@ export function PDFReportExport({
   thermalResults = [],
   bucklingResult = null,
   progressiveFailureAnalysis = null,
-  interlaminarResults = []
+  interlaminarResults = [],
+  comparisonConfigs = []
 }: PDFReportExportProps) {
   const [isGenerating, setIsGenerating] = useState(false);
 
@@ -832,6 +845,160 @@ export function PDFReportExport({
       methodText.forEach(text => {
         doc.text(text, margin + 5, yPos);
         yPos += 7;
+      });
+
+
+      // ============ CONFIGURATION COMPARISON (if provided) ============
+      if (comparisonConfigs && comparisonConfigs.length > 1) {
+        doc.addPage();
+        yPos = 20;
+        doc.setFontSize(16);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(41, 128, 185);
+        doc.text('Configuration Comparison Analysis', margin, yPos);
+        doc.setTextColor(0, 0, 0);
+        yPos += 12;
+
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'normal');
+        doc.text(`Comparing ${comparisonConfigs.length} laminate configurations`, margin, yPos);
+        yPos += 15;
+
+        // Comparison Table
+        const comparisonData: any[][] = [
+          ['Configuration', 'Plies', 'Thickness (mm)', 'Weight (g)', 'Ex (MPa)', 'Ey (MPa)', 'Gxy (MPa)', 'νxy']
+        ];
+
+        comparisonConfigs.forEach((config) => {
+          comparisonData.push([
+            config.name,
+            config.plies.length.toString(),
+            config.total_thickness?.toFixed(2) || 'N/A',
+            config.total_weight?.toFixed(2) || 'N/A',
+            config.engineering_properties?.Ex.toFixed(0) || 'N/A',
+            config.engineering_properties?.Ey.toFixed(0) || 'N/A',
+            config.engineering_properties?.Gxy.toFixed(0) || 'N/A',
+            config.engineering_properties?.nuxy.toFixed(3) || 'N/A'
+          ]);
+        });
+
+        autoTable(doc, {
+          startY: yPos,
+          head: [comparisonData[0]],
+          body: comparisonData.slice(1),
+          theme: 'striped',
+          headStyles: { fillColor: [41, 128, 185], fontSize: 8 },
+          styles: { fontSize: 7, halign: 'center' },
+          margin: { left: margin, right: margin }
+        });
+
+        yPos = (doc as any).lastAutoTable.finalY + 15;
+
+        // Key Differences Summary
+        checkNewPage(80);
+        doc.setFontSize(12);
+        doc.setFont('helvetica', 'bold');
+        doc.text('Key Differences Summary', margin, yPos);
+        yPos += 10;
+
+        const plyCountRange = {
+          min: Math.min(...comparisonConfigs.map(c => c.plies.length)),
+          max: Math.max(...comparisonConfigs.map(c => c.plies.length))
+        };
+
+        const thicknessRange = comparisonConfigs.every(c => c.total_thickness) ? {
+          min: Math.min(...comparisonConfigs.map(c => c.total_thickness!)),
+          max: Math.max(...comparisonConfigs.map(c => c.total_thickness!))
+        } : null;
+
+        const exRange = comparisonConfigs.every(c => c.engineering_properties) ? {
+          min: Math.min(...comparisonConfigs.map(c => c.engineering_properties!.Ex)),
+          max: Math.max(...comparisonConfigs.map(c => c.engineering_properties!.Ex))
+        } : null;
+
+        const differenceData = [
+          ['Property', 'Minimum', 'Maximum', 'Range'],
+          ['Ply Count', plyCountRange.min.toString(), plyCountRange.max.toString(), (plyCountRange.max - plyCountRange.min).toString()],
+        ];
+
+        if (thicknessRange) {
+          differenceData.push([
+            'Thickness (mm)',
+            thicknessRange.min.toFixed(2),
+            thicknessRange.max.toFixed(2),
+            (thicknessRange.max - thicknessRange.min).toFixed(2)
+          ]);
+        }
+
+        if (exRange) {
+          differenceData.push([
+            'Ex (MPa)',
+            exRange.min.toFixed(0),
+            exRange.max.toFixed(0),
+            (exRange.max - exRange.min).toFixed(0)
+          ]);
+        }
+
+        autoTable(doc, {
+          startY: yPos,
+          head: [differenceData[0]],
+          body: differenceData.slice(1),
+          theme: 'grid',
+          headStyles: { fillColor: [52, 152, 219], fontSize: 9 },
+          styles: { fontSize: 8 },
+          margin: { left: margin, right: margin }
+        });
+
+        yPos = (doc as any).lastAutoTable.finalY + 15;
+
+        // Stacking sequences comparison
+        checkNewPage(60);
+        doc.setFontSize(12);
+        doc.setFont('helvetica', 'bold');
+        doc.text('Stacking Sequences', margin, yPos);
+        yPos += 10;
+
+        comparisonConfigs.forEach((config, idx) => {
+          checkNewPage(15);
+          doc.setFontSize(10);
+          doc.setFont('helvetica', 'bold');
+          doc.text(`${config.name}:`, margin, yPos);
+          yPos += 6;
+          doc.setFont('helvetica', 'normal');
+          doc.setFontSize(9);
+          const stackingNotation = `[${config.plies.map(p => `${p.angle}°`).join('/')}]`;
+          doc.text(stackingNotation, margin + 5, yPos);
+          yPos += 10;
+        });
+      }
+
+      // ============ CONCLUSIONS & REFERENCES ============
+      yPos += 10;
+      checkNewPage(100);
+      doc.setFontSize(16);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(41, 128, 185);
+      doc.text('Conclusions & References', margin, yPos);
+      doc.setTextColor(0, 0, 0);
+      yPos += 12;
+
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'normal');
+      const conclusions = [
+        `This ${plies.length}-ply laminate analysis demonstrates comprehensive structural evaluation using Classical Lamination Theory.`,
+        `Key findings include equivalent moduli of Ex=${engineeringProps.Ex.toFixed(0)} MPa and Ey=${engineeringProps.Ey.toFixed(0)} MPa.`,
+        comparisonConfigs && comparisonConfigs.length > 1 
+          ? `Configuration comparison shows variations in structural properties across ${comparisonConfigs.length} designs.`
+          : '',
+        'All results should be validated against physical testing before critical applications.'
+      ].filter(Boolean);
+
+      conclusions.forEach(conclusion => {
+        if (conclusion) {
+          const splitText = doc.splitTextToSize(conclusion, contentWidth - 10);
+          doc.text(splitText, margin + 5, yPos);
+          yPos += 6 * splitText.length;
+        }
       });
 
       yPos += 10;
