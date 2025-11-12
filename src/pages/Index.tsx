@@ -544,10 +544,11 @@ const Index = () => {
           {/* Right Side - Properties and Analysis */}
           <div className="lg:col-span-2 space-y-6 w-full min-w-0">
             <Tabs value={state.activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="grid w-full grid-cols-4 text-xs sm:text-sm h-auto">
+              <TabsList className="grid w-full grid-cols-5 text-xs sm:text-sm h-auto">
                 <TabsTrigger value="properties" className="text-[10px] sm:text-sm px-1 sm:px-3">Properties</TabsTrigger>
                 <TabsTrigger value="stress" className="text-[10px] sm:text-sm px-1 sm:px-3">Stress</TabsTrigger>
                 <TabsTrigger value="failure" className="text-[10px] sm:text-sm px-1 sm:px-3">Failure</TabsTrigger>
+                <TabsTrigger value="compare" className="text-[10px] sm:text-sm px-1 sm:px-3">Compare</TabsTrigger>
                 <TabsTrigger value="education" className="text-[10px] sm:text-sm px-1 sm:px-3">Education</TabsTrigger>
               </TabsList>
 
@@ -717,6 +718,18 @@ const Index = () => {
                 {interlaminarResults.length > 0 && (
                   <InterlaminarStressResults results={interlaminarResults} />
                 )}
+              </TabsContent>
+
+              <TabsContent value="compare" className="mt-6">
+                <ConfigurationComparison
+                  configurations={configurations}
+                  loading={configsLoading}
+                  currentConfig={null}
+                  onAddCurrent={() => {}}
+                  onLoadConfig={handleLoadConfiguration}
+                  onDeleteConfig={handleDeleteConfiguration}
+                  isAuthenticated={!!user}
+                />
               </TabsContent>
 
               <TabsContent value="education" className="mt-6">

@@ -45,6 +45,16 @@ export function PDFReportExport({
     setIsGenerating(true);
     try {
       const doc = new jsPDF();
+      
+      // Set PDF metadata
+      doc.setProperties({
+        title: 'Composite Laminate Analysis Report',
+        subject: 'Structural Engineering Analysis',
+        author: 'Ursache Stefan',
+        keywords: 'composite, laminate, CLT, structural analysis',
+        creator: 'Composite Laminate Analysis Tool'
+      });
+      
       let yPos = 20;
       const pageWidth = doc.internal.pageSize.getWidth();
       const pageHeight = doc.internal.pageSize.getHeight();
