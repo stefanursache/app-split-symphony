@@ -1,13 +1,27 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
+import html2canvas from 'html2canvas';
+import { toast } from 'sonner';
+import { 
+  BarChart, Bar, RadarChart, Radar, PolarGrid, PolarAngleAxis, 
+  PolarRadiusAxis, XAxis, YAxis, CartesianGrid, Tooltip, 
+  Legend, ResponsiveContainer 
+} from 'recharts';
+import { 
+  Layers, Weight, Ruler, Plus, X, BarChart3, 
+  Activity, Download 
+} from 'lucide-react';
+
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Configuration } from '@/hooks/useConfigurations';
+import { 
+  Accordion, AccordionContent, AccordionItem, AccordionTrigger 
+} from '@/components/ui/accordion';
+
+import type { Configuration } from '@/hooks/useConfigurations';
 import { ConfigurationActions } from './ConfigurationActions';
-import { Layers, Weight, Ruler, Plus, X, BarChart3, Activity } from 'lucide-react';
-import { BarChart, Bar, RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
 interface ConfigurationComparisonProps {
   configurations: Configuration[];
@@ -31,10 +45,12 @@ export function ConfigurationComparison({
   onSelectionChange,
 }: ConfigurationComparisonProps) {
   const [selectedConfigs, setSelectedConfigs] = useState<Configuration[]>([]);
+  const barChartRef = useRef<HTMLDivElement>(null);
+  const radarChartRef = useRef<HTMLDivElement>(null);
 
   const addConfiguration = (config: Configuration) => {
     if (selectedConfigs.length >= 4) {
-      return; // Maximum 4 configurations for comparison
+      return;
     }
     if (!selectedConfigs.find(c => c.id === config.id)) {
       const newConfigs = [...selectedConfigs, config];
@@ -54,7 +70,6 @@ export function ConfigurationComparison({
     onSelectionChange?.([]);
   };
 
-  // Prepare data for charts
   const prepareBarChartData = () => {
     if (selectedConfigs.length === 0) return [];
     
@@ -73,11 +88,11 @@ export function ConfigurationComparison({
         } else if (metric === 'Gxy' && config.engineering_properties) {
           dataPoint[configName] = config.engineering_properties.Gxy;
         } else if (metric === 'Thickness' && config.total_thickness) {
-          dataPoint[configName] = config.total_thickness * 1000; // Scale for visibility
+          dataPoint[configName] = config.total_thickness * 1000;
         } else if (metric === 'Weight' && config.total_weight) {
           dataPoint[configName] = config.total_weight;
         } else if (metric === 'Plies') {
-          dataPoint[configName] = config.plies.length * 1000; // Scale for visibility
+          dataPoint[configName] = config.plies.length * 1000;
         }
       });
       
@@ -88,7 +103,6 @@ export function ConfigurationComparison({
   const prepareRadarChartData = () => {
     if (selectedConfigs.length === 0 || !selectedConfigs.every(c => c.engineering_properties)) return [];
     
-    // Normalize all values to 0-100 scale for radar chart
     const allEx = selectedConfigs.map(c => c.engineering_properties!.Ex);
     const allEy = selectedConfigs.map(c => c.engineering_properties!.Ey);
     const allGxy = selectedConfigs.map(c => c.engineering_properties!.Gxy);
@@ -101,7 +115,7 @@ export function ConfigurationComparison({
       return ((value - min) / (max - min)) * 100;
     };
     
-    return selectedConfigs.map((config, index) => ({
+    return selectedConfigs.map((config) => ({
       name: config.name.substring(0, 15) + (config.name.length > 15 ? '...' : ''),
       Ex: config.engineering_properties ? normalize(config.engineering_properties.Ex, Math.min(...allEx), Math.max(...allEx)) : 0,
       Ey: config.engineering_properties ? normalize(config.engineering_properties.Ey, Math.min(...allEy), Math.max(...allEy)) : 0,
@@ -114,9 +128,33 @@ export function ConfigurationComparison({
 
   const chartColors = ['hsl(var(--primary))', 'hsl(var(--chart-2))', 'hsl(var(--chart-3))', 'hsl(var(--chart-4))'];
 
+  const exportChartAsPNG = async (chartRef: React.RefObject<HTMLDivElement>, filename: string) => {
+    if (!chartRef.current) {
+      toast.error('Chart not found');
+      return;
+    }
+
+    try {
+      const canvas = await html2canvas(chartRef.current, {
+        backgroundColor: '#ffffff',
+        scale: 2,
+      });
+      
+      const url = canvas.toDataURL('image/png');
+      const link = document.createElement('a');
+      link.download = `${filename}_${new Date().getTime()}.png`;
+      link.href = url;
+      link.click();
+      
+      toast.success('Chart exported successfully');
+    } catch (error) {
+      console.error('Error exporting chart:', error);
+      toast.error('Failed to export chart');
+    }
+  };
+
   return (
     <div className="space-y-6">
-      {/* Comparison View */}
       {selectedConfigs.length > 0 && (
         <Card className="p-6 bg-gradient-to-br from-primary/5 to-accent/5 border-primary/20 animate-fade-in">
           <div className="flex items-center justify-between mb-6">
@@ -211,7 +249,6 @@ export function ConfigurationComparison({
                 </div>
               </div>
 
-              {/* Difference Highlights */}
               {selectedConfigs.length >= 2 && (
                 <div className="mt-6 p-4 bg-muted/50 rounded-lg">
                   <h4 className="font-semibold text-foreground mb-3">Key Differences</h4>
@@ -252,10 +289,20 @@ export function ConfigurationComparison({
             </TabsContent>
 
             <TabsContent value="bar" className="mt-0">
-              <Card className="p-6">
-                <div className="flex items-center gap-2 mb-4">
-                  <Activity className="h-5 w-5 text-primary" />
-                  <h4 className="font-semibold text-foreground">Engineering Properties Comparison</h4>
+              <Card className="p-6" ref={barChartRef}>
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-2">
+                    <Activity className="h-5 w-5 text-primary" />
+                    <h4 className="font-semibold text-foreground">Engineering Properties Comparison</h4>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => exportChartAsPNG(barChartRef, 'bar-chart-comparison')}
+                  >
+                    <Download className="h-4 w-4 mr-2" />
+                    Export PNG
+                  </Button>
                 </div>
                 <div className="h-[500px]">
                   <ResponsiveContainer width="100%" height="100%">
@@ -296,10 +343,20 @@ export function ConfigurationComparison({
             </TabsContent>
 
             <TabsContent value="radar" className="mt-0">
-              <Card className="p-6">
-                <div className="flex items-center gap-2 mb-4">
-                  <Activity className="h-5 w-5 text-primary" />
-                  <h4 className="font-semibold text-foreground">Performance Spider Chart (Normalized)</h4>
+              <Card className="p-6" ref={radarChartRef}>
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-2">
+                    <Activity className="h-5 w-5 text-primary" />
+                    <h4 className="font-semibold text-foreground">Performance Spider Chart (Normalized)</h4>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => exportChartAsPNG(radarChartRef, 'radar-chart-comparison')}
+                  >
+                    <Download className="h-4 w-4 mr-2" />
+                    Export PNG
+                  </Button>
                 </div>
                 <div className="h-[500px]">
                   <ResponsiveContainer width="100%" height="100%">
@@ -337,139 +394,160 @@ export function ConfigurationComparison({
         </Card>
       )}
 
-      <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold text-foreground">Saved Configurations</h3>
-        <Badge variant="outline">{configurations.length} saved</Badge>
-      </div>
-
-      {loading ? (
-        <div className="space-y-4">
-          {[1, 2, 3].map((i) => (
-            <Card key={i} className="p-6">
-              <Skeleton className="h-32 w-full" />
-            </Card>
-          ))}
-        </div>
-      ) : configurations.length === 0 ? (
-        <Card className="p-12">
-          <div className="text-center text-muted-foreground">
-            <p className="text-lg mb-2">No saved configurations yet</p>
-            {!isAuthenticated && (
-              <p className="text-sm mt-2 text-amber-600 dark:text-amber-500">Sign in to save configurations</p>
-            )}
-            <p className="text-sm">Create and save your first laminate configuration to compare designs</p>
-          </div>
-        </Card>
-      ) : (
-        <div className="grid gap-4">
-          {configurations.map((config) => (
-            <Card key={config.id} className="p-6">
-              <div className="space-y-4">
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <h4 className="font-semibold text-foreground text-lg mb-1">
-                      {config.name}
-                    </h4>
-                    {config.description && (
-                      <p className="text-sm text-muted-foreground mb-3">
-                        {config.description}
-                      </p>
-                    )}
-                    <div className="flex items-center gap-4 text-sm">
-                      <div className="flex items-center gap-1 text-muted-foreground">
-                        <Layers className="h-4 w-4" />
-                        <span>{config.plies.length} plies</span>
-                      </div>
-                      {config.total_thickness && (
-                        <div className="flex items-center gap-1 text-muted-foreground">
-                          <Ruler className="h-4 w-4" />
-                          <span>{config.total_thickness.toFixed(2)} mm</span>
-                        </div>
-                      )}
-                      {config.total_weight && (
-                        <div className="flex items-center gap-1 text-muted-foreground">
-                          <Weight className="h-4 w-4" />
-                          <span>{config.total_weight.toFixed(2)} g</span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="bg-muted/50 rounded-lg p-3">
-                  <p className="text-xs font-medium text-muted-foreground mb-2">Ply Stack:</p>
-                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
-                    {config.plies.map((ply, index) => (
-                      <div
-                        key={index}
-                        className="text-xs bg-background rounded px-2 py-1 border border-border"
-                      >
-                        <span className="font-mono text-muted-foreground">#{index + 1}:</span>{' '}
-                        <span className="text-foreground">{ply.material}</span>{' '}
-                        <span className="text-primary">@ {ply.angle}°</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {config.engineering_properties && (
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
-                    <div>
-                      <div className="text-muted-foreground text-xs">Ex</div>
-                      <div className="font-medium text-foreground">
-                        {config.engineering_properties.Ex.toFixed(0)} MPa
-                      </div>
-                    </div>
-                    <div>
-                      <div className="text-muted-foreground text-xs">Ey</div>
-                      <div className="font-medium text-foreground">
-                        {config.engineering_properties.Ey.toFixed(0)} MPa
-                      </div>
-                    </div>
-                    <div>
-                      <div className="text-muted-foreground text-xs">Gxy</div>
-                      <div className="font-medium text-foreground">
-                        {config.engineering_properties.Gxy.toFixed(0)} MPa
-                      </div>
-                    </div>
-                    <div>
-                      <div className="text-muted-foreground text-xs">νxy</div>
-                      <div className="font-medium text-foreground">
-                        {config.engineering_properties.nuxy.toFixed(3)}
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => addConfiguration(config)}
-                    disabled={selectedConfigs.some(c => c.id === config.id) || selectedConfigs.length >= 4}
-                  >
-                    <Plus className="h-4 w-4 mr-1" />
-                    {selectedConfigs.some(c => c.id === config.id) ? 'Added' : 'Compare'}
-                  </Button>
-                  
-                  <ConfigurationActions
-                    config={config}
-                    onLoad={onLoadConfig}
-                    onDelete={onDeleteConfig}
-                  />
-                </div>
-
-                <div className="text-xs text-muted-foreground pt-2 border-t border-border">
-                  Created: {new Date(config.created_at).toLocaleDateString()}
-                  {config.updated_at !== config.created_at && (
-                    <> • Updated: {new Date(config.updated_at).toLocaleDateString()}</>
-                  )}
-                </div>
+      <Card className="p-6">
+        <Accordion type="single" collapsible defaultValue="saved-configs">
+          <AccordionItem value="saved-configs" className="border-none">
+            <AccordionTrigger className="hover:no-underline">
+              <div className="flex items-center justify-between w-full pr-4">
+                <h3 className="text-lg font-semibold text-foreground">Saved Configurations</h3>
+                <Badge variant="outline">{configurations.length} saved</Badge>
               </div>
-            </Card>
-          ))}
-        </div>
-      )}
+            </AccordionTrigger>
+            <AccordionContent className="pt-4">
+              {loading ? (
+                <div className="space-y-4">
+                  {[1, 2, 3].map((i) => (
+                    <Card key={i} className="p-6">
+                      <Skeleton className="h-32 w-full" />
+                    </Card>
+                  ))}
+                </div>
+              ) : configurations.length === 0 ? (
+                <Card className="p-12">
+                  <div className="text-center text-muted-foreground">
+                    <p className="text-lg mb-2">No saved configurations yet</p>
+                    {!isAuthenticated && (
+                      <p className="text-sm mt-2 text-amber-600 dark:text-amber-500">Sign in to save configurations</p>
+                    )}
+                    <p className="text-sm">Create and save your first laminate configuration to compare designs</p>
+                  </div>
+                </Card>
+              ) : (
+                <div className="grid gap-4">
+                  {configurations.map((config) => (
+                    <Card key={config.id} className="p-6 hover-scale transition-all">
+                      <div className="space-y-4">
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <h4 className="font-semibold text-foreground text-lg mb-1">
+                              {config.name}
+                            </h4>
+                            {config.description && (
+                              <p className="text-sm text-muted-foreground mb-3">
+                                {config.description}
+                              </p>
+                            )}
+                            <div className="flex items-center gap-4 text-sm flex-wrap">
+                              <div className="flex items-center gap-1 text-muted-foreground">
+                                <Layers className="h-4 w-4" />
+                                <span>{config.plies.length} plies</span>
+                              </div>
+                              {config.total_thickness && (
+                                <div className="flex items-center gap-1 text-muted-foreground">
+                                  <Ruler className="h-4 w-4" />
+                                  <span>{config.total_thickness.toFixed(2)} mm</span>
+                                </div>
+                              )}
+                              {config.total_weight && (
+                                <div className="flex items-center gap-1 text-muted-foreground">
+                                  <Weight className="h-4 w-4" />
+                                  <span>{config.total_weight.toFixed(2)} g</span>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+
+                        <Accordion type="single" collapsible className="w-full">
+                          <AccordionItem value="details" className="border rounded-lg px-3">
+                            <AccordionTrigger className="text-sm hover:no-underline py-2">
+                              <span className="text-muted-foreground">View Details</span>
+                            </AccordionTrigger>
+                            <AccordionContent className="pb-3">
+                              <div className="space-y-3 pt-2">
+                                <div className="bg-muted/50 rounded-lg p-3">
+                                  <p className="text-xs font-medium text-muted-foreground mb-2">Ply Stack:</p>
+                                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
+                                    {config.plies.map((ply, index) => (
+                                      <div
+                                        key={index}
+                                        className="text-xs bg-background rounded px-2 py-1 border border-border"
+                                      >
+                                        <span className="font-mono text-muted-foreground">#{index + 1}:</span>{' '}
+                                        <span className="text-foreground">{ply.material}</span>{' '}
+                                        <span className="text-primary">@ {ply.angle}°</span>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+
+                                {config.engineering_properties && (
+                                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+                                    <div>
+                                      <div className="text-muted-foreground text-xs">Ex</div>
+                                      <div className="font-medium text-foreground">
+                                        {config.engineering_properties.Ex.toFixed(0)} MPa
+                                      </div>
+                                    </div>
+                                    <div>
+                                      <div className="text-muted-foreground text-xs">Ey</div>
+                                      <div className="font-medium text-foreground">
+                                        {config.engineering_properties.Ey.toFixed(0)} MPa
+                                      </div>
+                                    </div>
+                                    <div>
+                                      <div className="text-muted-foreground text-xs">Gxy</div>
+                                      <div className="font-medium text-foreground">
+                                        {config.engineering_properties.Gxy.toFixed(0)} MPa
+                                      </div>
+                                    </div>
+                                    <div>
+                                      <div className="text-muted-foreground text-xs">νxy</div>
+                                      <div className="font-medium text-foreground">
+                                        {config.engineering_properties.nuxy.toFixed(3)}
+                                      </div>
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            </AccordionContent>
+                          </AccordionItem>
+                        </Accordion>
+
+                        <div className="flex gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => addConfiguration(config)}
+                            disabled={selectedConfigs.some(c => c.id === config.id) || selectedConfigs.length >= 4}
+                            className="transition-all"
+                          >
+                            <Plus className="h-4 w-4 mr-1" />
+                            {selectedConfigs.some(c => c.id === config.id) ? 'Added' : 'Compare'}
+                          </Button>
+                          
+                          <ConfigurationActions
+                            config={config}
+                            onLoad={onLoadConfig}
+                            onDelete={onDeleteConfig}
+                          />
+                        </div>
+
+                        <div className="text-xs text-muted-foreground pt-2 border-t border-border">
+                          Created: {new Date(config.created_at).toLocaleDateString()}
+                          {config.updated_at !== config.created_at && (
+                            <> • Updated: {new Date(config.updated_at).toLocaleDateString()}</>
+                          )}
+                        </div>
+                      </div>
+                    </Card>
+                  ))}
+                </div>
+              )}
+            </AccordionContent>
+          </AccordionItem>
+        </Accordion>
+      </Card>
     </div>
   );
 }

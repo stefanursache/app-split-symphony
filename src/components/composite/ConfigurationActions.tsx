@@ -12,7 +12,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { Download, Trash2 } from 'lucide-react';
-import { Configuration } from '@/hooks/useConfigurations';
+import type { Configuration } from '@/hooks/useConfigurations';
 
 interface ConfigurationActionsProps {
   config: Configuration;

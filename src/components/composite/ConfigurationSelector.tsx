@@ -1,5 +1,5 @@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Configuration } from '@/hooks/useConfigurations';
+import type { Configuration } from '@/hooks/useConfigurations';
 import { Skeleton } from '@/components/ui/skeleton';
 
 interface ConfigurationSelectorProps {
