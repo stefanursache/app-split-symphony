@@ -8,7 +8,7 @@ import {
 } from 'recharts';
 import { 
   Layers, Weight, Ruler, Plus, X, BarChart3, 
-  Activity, Download 
+  Activity, Download, Trash2 
 } from 'lucide-react';
 
 import { Card } from '@/components/ui/card';
@@ -19,9 +19,21 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   Accordion, AccordionContent, AccordionItem, AccordionTrigger 
 } from '@/components/ui/accordion';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 import type { Configuration } from '@/hooks/useConfigurations';
-import { ConfigurationActions } from './ConfigurationActions';
+
+// Export type to avoid circular type checking issues
+export type { Configuration };
 
 interface ConfigurationComparisonProps {
   configurations: Configuration[];
@@ -45,6 +57,8 @@ export function ConfigurationComparison({
   onSelectionChange,
 }: ConfigurationComparisonProps) {
   const [selectedConfigs, setSelectedConfigs] = useState<Configuration[]>([]);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [configToDelete, setConfigToDelete] = useState<string | null>(null);
   const barChartRef = useRef<HTMLDivElement>(null);
   const radarChartRef = useRef<HTMLDivElement>(null);
 
@@ -520,17 +534,32 @@ export function ConfigurationComparison({
                             size="sm"
                             onClick={() => addConfiguration(config)}
                             disabled={selectedConfigs.some(c => c.id === config.id) || selectedConfigs.length >= 4}
-                            className="transition-all"
+                            className="transition-all flex-1"
                           >
                             <Plus className="h-4 w-4 mr-1" />
                             {selectedConfigs.some(c => c.id === config.id) ? 'Added' : 'Compare'}
                           </Button>
                           
-                          <ConfigurationActions
-                            config={config}
-                            onLoad={onLoadConfig}
-                            onDelete={onDeleteConfig}
-                          />
+                          <Button
+                            onClick={() => onLoadConfig(config)}
+                            variant="outline"
+                            size="sm"
+                            className="flex-1 text-xs sm:text-sm"
+                          >
+                            <Download className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                            Load
+                          </Button>
+                          <Button
+                            onClick={() => {
+                              setConfigToDelete(config.id);
+                              setDeleteDialogOpen(true);
+                            }}
+                            variant="outline"
+                            size="sm"
+                            className="text-destructive hover:text-destructive px-2 sm:px-4"
+                          >
+                            <Trash2 className="h-3 w-3 sm:h-4 sm:w-4" />
+                          </Button>
                         </div>
 
                         <div className="text-xs text-muted-foreground pt-2 border-t border-border">
@@ -548,6 +577,32 @@ export function ConfigurationComparison({
           </AccordionItem>
         </Accordion>
       </Card>
+
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Configuration</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this configuration? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (configToDelete) {
+                  onDeleteConfig(configToDelete);
+                  setConfigToDelete(null);
+                }
+                setDeleteDialogOpen(false);
+              }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
