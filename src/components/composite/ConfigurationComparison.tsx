@@ -32,9 +32,6 @@ import {
 
 import type { Configuration } from '@/hooks/useConfigurations';
 
-// Export type to avoid circular type checking issues
-export type { Configuration };
-
 interface ConfigurationComparisonProps {
   configurations: Configuration[];
   loading: boolean;
