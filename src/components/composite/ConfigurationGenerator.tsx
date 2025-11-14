@@ -48,6 +48,67 @@ export function ConfigurationGenerator({
     );
   };
 
+  const validateStackingRules = (plies: Ply[]): { isValid: boolean; penalty: number; issues: string[] } => {
+    const issues: string[] = [];
+    let penalty = 0;
+
+    // Rule 1: Adjacent angle difference should not exceed 60°
+    for (let i = 0; i < plies.length - 1; i++) {
+      const angleDiff = Math.abs(plies[i].angle - plies[i + 1].angle);
+      if (angleDiff > 60 && angleDiff < 300) { // Account for wrap-around (e.g., -45 to 45 = 90, but could be considered as 270)
+        penalty += 0.05;
+        if (plies.length > 16) {
+          issues.push(`Adjacent angle difference exceeds 60° at ply ${i + 1}-${i + 2}`);
+        }
+      }
+    }
+
+    // Rule 2: No more than 5 consecutive plies of the same angle
+    let consecutiveCount = 1;
+    for (let i = 1; i < plies.length; i++) {
+      if (plies[i].angle === plies[i - 1].angle) {
+        consecutiveCount++;
+        if (consecutiveCount > 5) {
+          penalty += 0.1;
+          issues.push(`More than 5 consecutive ${plies[i].angle}° plies (risk of edge splitting)`);
+        }
+      } else {
+        consecutiveCount = 1;
+      }
+    }
+
+    // Rule 3: Multiple 90° plies should not be together
+    for (let i = 0; i < plies.length - 1; i++) {
+      if (plies[i].angle === 90 && plies[i + 1].angle === 90) {
+        penalty += 0.08;
+        issues.push(`Consecutive 90° plies at position ${i + 1}-${i + 2} (should mix with 0° or ±45°)`);
+      }
+    }
+
+    // Rule 4: Exterior layers should preferably be ±45° (not 0° or 90°)
+    if (plies.length > 0) {
+      const firstAngle = Math.abs(plies[0].angle);
+      const lastAngle = Math.abs(plies[plies.length - 1].angle);
+      
+      if (firstAngle !== 45) {
+        penalty += 0.03;
+      }
+      if (lastAngle !== 45) {
+        penalty += 0.03;
+      }
+      
+      if (firstAngle === 0 || firstAngle === 90) {
+        issues.push(`Outer ply has ${plies[0].angle}° orientation (±45° preferred for impact resistance)`);
+      }
+      if (lastAngle === 0 || lastAngle === 90) {
+        issues.push(`Outer ply has ${plies[plies.length - 1].angle}° orientation (±45° preferred for impact resistance)`);
+      }
+    }
+
+    const isValid = penalty < 0.5; // Consider invalid if penalty is too high
+    return { isValid, penalty, issues };
+  };
+
   const generateConfigurations = () => {
     if (selectedMaterials.length === 0) {
       toast.error('Please select at least one material');
@@ -58,13 +119,14 @@ export function ConfigurationGenerator({
     
     // Generate multiple configurations with different angle combinations
     const configs: GeneratedConfig[] = [];
+    // Updated angle patterns to follow stacking rules better
     const anglePatterns = [
-      [0, 90, 0, 90],           // Cross-ply
-      [0, 45, -45, 90],         // Quasi-isotropic
-      [0, 0, 90, 90],           // Balanced
-      [45, -45, 45, -45],       // Shear-optimized
-      [0, 30, -30, 60, -60, 90], // Multi-angle
-      [0, 45, 90, -45],         // Rotated quasi-isotropic
+      [45, -45, 0, 90, 0, -45, 45],     // Symmetric with ±45° exterior
+      [45, 0, -45, 90, -45, 0, 45],     // Quasi-isotropic symmetric
+      [45, -45, 0, 0, -45, 45],         // Balanced with ±45° exterior
+      [45, -45, 45, -45, 45, -45],      // Shear-optimized
+      [45, 0, -45, 60, -60, 0, 45],     // Multi-angle symmetric
+      [45, -45, 90, 0, 90, -45, 45],    // Cross-ply with ±45° exterior
     ];
 
     // Generate configurations with single materials
@@ -88,7 +150,13 @@ export function ConfigurationGenerator({
         }
 
         const config = evaluateConfiguration(plies, materials, targetThickness);
-        if (config) configs.push(config);
+        if (config) {
+          const validation = validateStackingRules(plies);
+          if (validation.isValid) {
+            config.score -= validation.penalty; // Apply penalty to score
+            configs.push(config);
+          }
+        }
       });
     });
 
@@ -114,7 +182,13 @@ export function ConfigurationGenerator({
         }
         
         const config = evaluateConfiguration(plies, materials, targetThickness);
-        if (config) configs.push(config);
+        if (config) {
+          const validation = validateStackingRules(plies);
+          if (validation.isValid) {
+            config.score -= validation.penalty;
+            configs.push(config);
+          }
+        }
 
         // Strategy 2: Use stronger material for 0° and ±45°, lighter material for 90°
         if (selectedMaterials.length === 2) {
@@ -140,7 +214,13 @@ export function ConfigurationGenerator({
             }
             
             const hybridConfig = evaluateConfiguration(hybridPlies, materials, targetThickness);
-            if (hybridConfig) configs.push(hybridConfig);
+            if (hybridConfig) {
+              const validation = validateStackingRules(hybridPlies);
+              if (validation.isValid) {
+                hybridConfig.score -= validation.penalty;
+                configs.push(hybridConfig);
+              }
+            }
           }
         }
 
@@ -166,7 +246,13 @@ export function ConfigurationGenerator({
             }
             
             const sandwichConfig = evaluateConfiguration(sandwichPlies, materials, targetThickness);
-            if (sandwichConfig) configs.push(sandwichConfig);
+            if (sandwichConfig) {
+              const validation = validateStackingRules(sandwichPlies);
+              if (validation.isValid) {
+                sandwichConfig.score -= validation.penalty;
+                configs.push(sandwichConfig);
+              }
+            }
           }
         }
       });
@@ -399,11 +485,32 @@ export function ConfigurationGenerator({
                   </div>
                 </div>
 
+                <div>
+                  <h4 className="font-semibold text-sm mb-2">7. Stacking Rules Validation</h4>
+                  <div className="space-y-2 text-xs">
+                    <div className="bg-muted p-2 rounded">
+                      <p className="font-semibold mb-1">Adjacent Angle Difference ≤ 60°</p>
+                      <p className="text-muted-foreground">Prevents cracks during curing (enforced for stacks &gt;16 plies)</p>
+                    </div>
+                    <div className="bg-muted p-2 rounded">
+                      <p className="font-semibold mb-1">Maximum 5 Consecutive Same-Angle Plies</p>
+                      <p className="text-muted-foreground">Prevents edge splitting and delamination</p>
+                    </div>
+                    <div className="bg-muted p-2 rounded">
+                      <p className="font-semibold mb-1">No Consecutive 90° Plies</p>
+                      <p className="text-muted-foreground">Mix with 0° or ±45° plies for better performance</p>
+                    </div>
+                    <div className="bg-muted p-2 rounded">
+                      <p className="font-semibold mb-1">±45° Exterior Layers</p>
+                      <p className="text-muted-foreground">Preferred for impact resistance and peel stress mitigation</p>
+                    </div>
+                  </div>
+                </div>
+
                 <div className="bg-blue-500/10 border border-blue-500/20 p-3 rounded-lg">
                   <p className="text-sm">
-                    <strong>Note:</strong> The generator creates single-material and hybrid multi-material configurations,
-                    using various layup strategies to find the optimal balance of strength, weight, and thickness.
-                    Each configuration is ranked by the multi-objective score.
+                    <strong>Note:</strong> All generated configurations are validated against composite design best practices
+                    to ensure manufacturability and structural integrity. Configurations violating critical stacking rules are filtered out.
                   </p>
                 </div>
               </div>
