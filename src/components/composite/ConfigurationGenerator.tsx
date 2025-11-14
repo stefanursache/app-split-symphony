@@ -56,10 +56,8 @@ export function ConfigurationGenerator({
     for (let i = 0; i < plies.length - 1; i++) {
       const angleDiff = Math.abs(plies[i].angle - plies[i + 1].angle);
       if (angleDiff > 60 && angleDiff < 300) { // Account for wrap-around (e.g., -45 to 45 = 90, but could be considered as 270)
-        penalty += 0.05;
-        if (plies.length > 16) {
-          issues.push(`Adjacent angle difference exceeds 60° at ply ${i + 1}-${i + 2}`);
-        }
+        penalty += 0.15; // Increased penalty for angle violations
+        issues.push(`Adjacent angle difference exceeds 60° at ply ${i + 1}-${i + 2}`);
       }
     }
 
@@ -124,9 +122,9 @@ export function ConfigurationGenerator({
       [45, -45, 0, 90, 0, -45, 45],     // Symmetric with ±45° exterior
       [45, 0, -45, 90, -45, 0, 45],     // Quasi-isotropic symmetric
       [45, -45, 0, 0, -45, 45],         // Balanced with ±45° exterior
-      [45, -45, 45, -45, 45, -45],      // Shear-optimized
       [45, 0, -45, 60, -60, 0, 45],     // Multi-angle symmetric
       [45, -45, 90, 0, 90, -45, 45],    // Cross-ply with ±45° exterior
+      [45, 0, -45, 0, 45],              // Balanced angle-ply
     ];
 
     // Generate configurations with single materials
