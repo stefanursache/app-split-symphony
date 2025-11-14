@@ -67,6 +67,7 @@ export function ConfigurationGenerator({
       [0, 45, 90, -45],         // Rotated quasi-isotropic
     ];
 
+    // Generate configurations with single materials
     selectedMaterials.forEach(material => {
       const materialData = materials[material];
       if (!materialData) return;
@@ -86,46 +87,90 @@ export function ConfigurationGenerator({
           });
         }
 
-        // Calculate properties
-        const properties = calculateEngineeringProperties(plies, materials);
-        const totalWeight = plies.reduce((sum, ply) => {
-          const mat = materials[ply.material];
-          return sum + (mat ? mat.density * mat.thickness : 0);
-        }, 0);
-
-        // Calculate comprehensive metrics
-        const thicknessDiff = Math.abs(properties.thickness - targetThickness);
-        const thicknessPenalty = thicknessDiff / targetThickness; // Normalized thickness error
-        
-        // Strength-to-weight ratio (higher is better)
-        const strengthToWeightRatio = totalWeight > 0 ? properties.Ex / totalWeight : 0;
-        
-        // Stiffness metric (combination of Ex and Ey)
-        const stiffness = (properties.Ex + properties.Ey) / 2;
-        
-        // Multi-objective score:
-        // 1. Maximize strength-to-weight ratio (70% weight)
-        // 2. Minimize thickness deviation (20% weight)
-        // 3. Maximize absolute stiffness (10% weight)
-        const normalizedStrengthToWeight = strengthToWeightRatio / 10000; // Normalize to ~0-1 range
-        const normalizedStiffness = stiffness / 100000; // Normalize to ~0-1 range
-        
-        const score = (
-          (normalizedStrengthToWeight * 0.7) - 
-          (thicknessPenalty * 0.2) + 
-          (normalizedStiffness * 0.1)
-        );
-
-        configs.push({
-          plies,
-          thickness: properties.thickness,
-          weight: totalWeight,
-          score,
-          strengthToWeightRatio,
-          stiffness,
-        });
+        const config = evaluateConfiguration(plies, materials, targetThickness);
+        if (config) configs.push(config);
       });
     });
+
+    // Generate hybrid configurations with multiple materials
+    if (selectedMaterials.length > 1) {
+      anglePatterns.forEach(pattern => {
+        // Strategy 1: Alternate materials by ply
+        const avgThickness = selectedMaterials.reduce((sum, mat) => 
+          sum + (materials[mat]?.thickness || 0), 0) / selectedMaterials.length;
+        const patternThickness = pattern.length * avgThickness;
+        const repeats = Math.max(1, Math.round(targetThickness / patternThickness));
+        
+        const plies: Ply[] = [];
+        let materialIndex = 0;
+        for (let i = 0; i < repeats; i++) {
+          pattern.forEach(angle => {
+            plies.push({ 
+              material: selectedMaterials[materialIndex % selectedMaterials.length], 
+              angle 
+            });
+            materialIndex++;
+          });
+        }
+        
+        const config = evaluateConfiguration(plies, materials, targetThickness);
+        if (config) configs.push(config);
+
+        // Strategy 2: Use stronger material for 0° and ±45°, lighter material for 90°
+        if (selectedMaterials.length === 2) {
+          const mat1Data = materials[selectedMaterials[0]];
+          const mat2Data = materials[selectedMaterials[1]];
+          
+          if (mat1Data && mat2Data) {
+            // Identify which material is stronger
+            const strongerMat = mat1Data.E1 > mat2Data.E1 ? selectedMaterials[0] : selectedMaterials[1];
+            const lighterMat = mat1Data.density < mat2Data.density ? selectedMaterials[0] : selectedMaterials[1];
+            
+            const hybridPlies: Ply[] = [];
+            for (let i = 0; i < repeats; i++) {
+              pattern.forEach(angle => {
+                // Use stronger material for load-bearing angles (0°, ±45°)
+                // Use lighter material for transverse angles (90°, ±60°, ±30°)
+                const useStronger = Math.abs(angle) <= 45;
+                hybridPlies.push({ 
+                  material: useStronger ? strongerMat : lighterMat, 
+                  angle 
+                });
+              });
+            }
+            
+            const hybridConfig = evaluateConfiguration(hybridPlies, materials, targetThickness);
+            if (hybridConfig) configs.push(hybridConfig);
+          }
+        }
+
+        // Strategy 3: Sandwich construction (strong outer, light core for bending patterns)
+        if (selectedMaterials.length >= 2 && pattern.length >= 4) {
+          const mat1Data = materials[selectedMaterials[0]];
+          const mat2Data = materials[selectedMaterials[1]];
+          
+          if (mat1Data && mat2Data) {
+            const strongerMat = mat1Data.E1 > mat2Data.E1 ? selectedMaterials[0] : selectedMaterials[1];
+            const lighterMat = strongerMat === selectedMaterials[0] ? selectedMaterials[1] : selectedMaterials[0];
+            
+            const sandwichPlies: Ply[] = [];
+            for (let i = 0; i < repeats; i++) {
+              pattern.forEach((angle, idx) => {
+                // Use stronger material for outer plies, lighter for inner
+                const useOuter = idx < pattern.length / 3 || idx >= pattern.length * 2 / 3;
+                sandwichPlies.push({ 
+                  material: useOuter ? strongerMat : lighterMat, 
+                  angle 
+                });
+              });
+            }
+            
+            const sandwichConfig = evaluateConfiguration(sandwichPlies, materials, targetThickness);
+            if (sandwichConfig) configs.push(sandwichConfig);
+          }
+        }
+      });
+    }
 
     // Sort by score (best first)
     configs.sort((a, b) => b.score - a.score);
@@ -137,7 +182,62 @@ export function ConfigurationGenerator({
     toast.success(`Generated ${configs.slice(0, 6).length} optimized configurations`);
   };
 
+  const evaluateConfiguration = (
+    plies: Ply[], 
+    materials: Record<string, any>, 
+    targetThickness: number
+  ): GeneratedConfig | null => {
+    try {
+      // Calculate properties
+      const properties = calculateEngineeringProperties(plies, materials);
+      const totalWeight = plies.reduce((sum, ply) => {
+        const mat = materials[ply.material];
+        return sum + (mat ? mat.density * mat.thickness : 0);
+      }, 0);
+
+      // Calculate comprehensive metrics
+      const thicknessDiff = Math.abs(properties.thickness - targetThickness);
+      const thicknessPenalty = thicknessDiff / targetThickness; // Normalized thickness error
+      
+      // Strength-to-weight ratio (higher is better)
+      const strengthToWeightRatio = totalWeight > 0 ? properties.Ex / totalWeight : 0;
+      
+      // Stiffness metric (combination of Ex and Ey)
+      const stiffness = (properties.Ex + properties.Ey) / 2;
+      
+      // Multi-objective score:
+      // 1. Maximize strength-to-weight ratio (70% weight)
+      // 2. Minimize thickness deviation (20% weight)
+      // 3. Maximize absolute stiffness (10% weight)
+      const normalizedStrengthToWeight = strengthToWeightRatio / 10000; // Normalize to ~0-1 range
+      const normalizedStiffness = stiffness / 100000; // Normalize to ~0-1 range
+      
+      const score = (
+        (normalizedStrengthToWeight * 0.7) - 
+        (thicknessPenalty * 0.2) + 
+        (normalizedStiffness * 0.1)
+      );
+
+      return {
+        plies,
+        thickness: properties.thickness,
+        weight: totalWeight,
+        score,
+        strengthToWeightRatio,
+        stiffness,
+      };
+    } catch (error) {
+      console.error('Configuration evaluation error:', error);
+      return null;
+    }
+  };
+
   const getBestConfig = () => generatedConfigs[0];
+  
+  const getConfigMaterials = (config: GeneratedConfig): string[] => {
+    const uniqueMaterials = new Set(config.plies.map(ply => ply.material));
+    return Array.from(uniqueMaterials);
+  };
 
   return (
     <div className="space-y-6">
@@ -281,10 +381,29 @@ export function ConfigurationGenerator({
                   </div>
                 </div>
 
+                <div>
+                  <h4 className="font-semibold text-sm mb-2">6. Multi-Material Strategies</h4>
+                  <div className="space-y-2 text-xs">
+                    <div className="bg-muted p-2 rounded">
+                      <p className="font-semibold mb-1">Alternating Strategy</p>
+                      <p className="text-muted-foreground">Materials alternate by ply for balanced properties</p>
+                    </div>
+                    <div className="bg-muted p-2 rounded">
+                      <p className="font-semibold mb-1">Angle-Based Strategy</p>
+                      <p className="text-muted-foreground">Stronger materials at 0°/±45°, lighter materials at 90°</p>
+                    </div>
+                    <div className="bg-muted p-2 rounded">
+                      <p className="font-semibold mb-1">Sandwich Strategy</p>
+                      <p className="text-muted-foreground">Strong materials on outer surfaces, lightweight core for bending resistance</p>
+                    </div>
+                  </div>
+                </div>
+
                 <div className="bg-blue-500/10 border border-blue-500/20 p-3 rounded-lg">
                   <p className="text-sm">
-                    <strong>Note:</strong> The generator creates multiple variants of each pattern using your selected materials,
-                    repeating the pattern to approximate the target thickness, then ranks all configurations by the multi-objective score.
+                    <strong>Note:</strong> The generator creates single-material and hybrid multi-material configurations,
+                    using various layup strategies to find the optimal balance of strength, weight, and thickness.
+                    Each configuration is ranked by the multi-objective score.
                   </p>
                 </div>
               </div>
@@ -324,12 +443,26 @@ export function ConfigurationGenerator({
                 <span className="font-medium">{(getBestConfig().stiffness / 1000).toFixed(1)} GPa</span>
               </div>
 
-              <div className="pt-2 border-t border-border">
-                <div className="text-sm text-muted-foreground mb-2">Ply Stack:</div>
+              <div className="pt-2 border-t border-border space-y-2">
+                <div className="text-sm text-muted-foreground">Materials Used:</div>
+                <div className="flex flex-wrap gap-1">
+                  {getConfigMaterials(getBestConfig()).map((mat, idx) => (
+                    <Badge key={idx} variant="outline" className="text-xs">
+                      {mat}
+                    </Badge>
+                  ))}
+                </div>
+                
+                <div className="text-sm text-muted-foreground mt-3">Ply Stack:</div>
                 <div className="flex flex-wrap gap-1">
                   {getBestConfig().plies.map((ply, idx) => (
-                    <Badge key={idx} variant="secondary" className="text-xs">
-                      {ply.angle}°
+                    <Badge 
+                      key={idx} 
+                      variant="secondary" 
+                      className="text-xs"
+                      title={ply.material}
+                    >
+                      {ply.material.substring(0, 3)}:{ply.angle}°
                     </Badge>
                   ))}
                 </div>
@@ -352,8 +485,8 @@ export function ConfigurationGenerator({
           <h3 className="text-lg font-semibold mb-4">Alternative Configurations</h3>
           <div className="grid gap-3">
             {generatedConfigs.slice(1).map((config, idx) => (
-              <div key={idx} className="p-3 bg-muted/30 rounded-lg flex justify-between items-center">
-                <div className="space-y-1">
+              <div key={idx} className="p-3 bg-muted/30 rounded-lg flex justify-between items-center gap-3">
+                <div className="space-y-1 flex-1 min-w-0">
                   <div className="text-sm font-medium">Configuration {idx + 2}</div>
                   <div className="text-xs text-muted-foreground">
                     {config.thickness.toFixed(2)}mm · {config.weight.toFixed(2)}g · {config.plies.length} plies
@@ -361,9 +494,16 @@ export function ConfigurationGenerator({
                   <div className="text-xs text-muted-foreground">
                     STW: {config.strengthToWeightRatio.toFixed(1)} MPa/g
                   </div>
+                  <div className="flex flex-wrap gap-1 mt-1">
+                    {getConfigMaterials(config).map((mat, matIdx) => (
+                      <Badge key={matIdx} variant="outline" className="text-[10px] px-1 py-0">
+                        {mat}
+                      </Badge>
+                    ))}
+                  </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <Badge variant="outline" className="text-xs">
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  <Badge variant="outline" className="text-xs whitespace-nowrap">
                     Score: {config.score.toFixed(2)}
                   </Badge>
                   <Button
