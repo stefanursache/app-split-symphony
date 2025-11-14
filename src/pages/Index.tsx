@@ -34,6 +34,7 @@ import { InterlaminarStressResults } from '@/components/composite/InterlaminarSt
 import { HowToUseGuide } from '@/components/composite/HowToUseGuide';
 import { FEAExport } from '@/components/composite/FEAExport';
 import { ExperimentalValidation } from '@/components/composite/ExperimentalValidation';
+import { ConfigurationGenerator } from '@/components/composite/ConfigurationGenerator';
 import { calculateEngineeringProperties, calculateStressStrain } from '@/utils/calculations';
 import { calculateABDMatrix } from '@/utils/abdMatrix';
 import { calculateFailureAnalysis, calculateSafetySummary, FailureResult } from '@/utils/failureAnalysis';
@@ -546,10 +547,11 @@ const Index = () => {
           {/* Right Side - Properties and Analysis */}
           <div className="lg:col-span-2 space-y-6 w-full min-w-0">
             <Tabs value={state.activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="grid w-full grid-cols-5 text-xs sm:text-sm h-auto">
+              <TabsList className="grid w-full grid-cols-6 text-xs sm:text-sm h-auto">
                 <TabsTrigger value="properties" className="text-[10px] sm:text-sm px-1 sm:px-3">Properties</TabsTrigger>
                 <TabsTrigger value="stress" className="text-[10px] sm:text-sm px-1 sm:px-3">Stress</TabsTrigger>
                 <TabsTrigger value="failure" className="text-[10px] sm:text-sm px-1 sm:px-3">Failure</TabsTrigger>
+                <TabsTrigger value="generate" className="text-[10px] sm:text-sm px-1 sm:px-3">Generate</TabsTrigger>
                 <TabsTrigger value="compare" className="text-[10px] sm:text-sm px-1 sm:px-3">Compare</TabsTrigger>
                 <TabsTrigger value="education" className="text-[10px] sm:text-sm px-1 sm:px-3">Education</TabsTrigger>
               </TabsList>
@@ -720,6 +722,18 @@ const Index = () => {
                 {interlaminarResults.length > 0 && (
                   <InterlaminarStressResults results={interlaminarResults} />
                 )}
+              </TabsContent>
+
+              <TabsContent value="generate" className="mt-6">
+                <ConfigurationGenerator
+                  availableMaterials={Object.keys(materials)}
+                  materials={materials}
+                  onApplyConfiguration={(plies) => {
+                    clearPlies();
+                    plies.forEach(ply => addPly(ply.material, ply.angle));
+                    toast.success(`Applied configuration with ${plies.length} plies`);
+                  }}
+                />
               </TabsContent>
 
               <TabsContent value="compare" className="mt-6">
