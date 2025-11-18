@@ -48,6 +48,15 @@ export function ConfigurationGenerator({
     );
   };
 
+  // Ensure even number of plies
+  const ensureEvenPlies = (plies: Ply[]): Ply[] => {
+    if (plies.length % 2 === 0) {
+      return plies;
+    }
+    // Add one more ply with the same properties as the last ply to make it even
+    return [...plies, { ...plies[plies.length - 1] }];
+  };
+
   const validateStackingRules = (plies: Ply[]): { isValid: boolean; penalty: number; issues: string[] } => {
     const issues: string[] = [];
     let penalty = 0;
@@ -140,12 +149,15 @@ export function ConfigurationGenerator({
         const repeats = Math.max(1, Math.round(targetThickness / patternThickness));
         
         // Build the ply stack
-        const plies: Ply[] = [];
+        let plies: Ply[] = [];
         for (let i = 0; i < repeats; i++) {
           pattern.forEach(angle => {
             plies.push({ material, angle });
           });
         }
+        
+        // Ensure even number of plies
+        plies = ensureEvenPlies(plies);
 
         const config = evaluateConfiguration(plies, materials, targetThickness);
         if (config) {
@@ -167,7 +179,7 @@ export function ConfigurationGenerator({
         const patternThickness = pattern.length * avgThickness;
         const repeats = Math.max(1, Math.round(targetThickness / patternThickness));
         
-        const plies: Ply[] = [];
+        let plies: Ply[] = [];
         let materialIndex = 0;
         for (let i = 0; i < repeats; i++) {
           pattern.forEach(angle => {
@@ -178,6 +190,9 @@ export function ConfigurationGenerator({
             materialIndex++;
           });
         }
+        
+        // Ensure even number of plies
+        plies = ensureEvenPlies(plies);
         
         const config = evaluateConfiguration(plies, materials, targetThickness);
         if (config) {
@@ -198,7 +213,7 @@ export function ConfigurationGenerator({
             const strongerMat = mat1Data.E1 > mat2Data.E1 ? selectedMaterials[0] : selectedMaterials[1];
             const lighterMat = mat1Data.density < mat2Data.density ? selectedMaterials[0] : selectedMaterials[1];
             
-            const hybridPlies: Ply[] = [];
+            let hybridPlies: Ply[] = [];
             for (let i = 0; i < repeats; i++) {
               pattern.forEach(angle => {
                 // Use stronger material for load-bearing angles (0°, ±45°)
@@ -210,6 +225,9 @@ export function ConfigurationGenerator({
                 });
               });
             }
+            
+            // Ensure even number of plies
+            hybridPlies = ensureEvenPlies(hybridPlies);
             
             const hybridConfig = evaluateConfiguration(hybridPlies, materials, targetThickness);
             if (hybridConfig) {
@@ -231,7 +249,7 @@ export function ConfigurationGenerator({
             const strongerMat = mat1Data.E1 > mat2Data.E1 ? selectedMaterials[0] : selectedMaterials[1];
             const lighterMat = strongerMat === selectedMaterials[0] ? selectedMaterials[1] : selectedMaterials[0];
             
-            const sandwichPlies: Ply[] = [];
+            let sandwichPlies: Ply[] = [];
             for (let i = 0; i < repeats; i++) {
               pattern.forEach((angle, idx) => {
                 // Use stronger material for outer plies, lighter for inner
@@ -242,6 +260,9 @@ export function ConfigurationGenerator({
                 });
               });
             }
+            
+            // Ensure even number of plies
+            sandwichPlies = ensureEvenPlies(sandwichPlies);
             
             const sandwichConfig = evaluateConfiguration(sandwichPlies, materials, targetThickness);
             if (sandwichConfig) {
