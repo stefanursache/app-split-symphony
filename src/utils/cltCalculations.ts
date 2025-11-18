@@ -137,7 +137,7 @@ export function transformStrainsToMaterial(
 
   const epsilon_1 = epsilon_x * c2 + epsilon_y * s2 + gamma_xy * s * c;
   const epsilon_2 = epsilon_x * s2 + epsilon_y * c2 - gamma_xy * s * c;
-  const gamma_12 = -2 * (epsilon_x - epsilon_y) * s * c + gamma_xy * (c2 - s2);
+  const gamma_12 = 2 * (epsilon_x - epsilon_y) * s * c + gamma_xy * (c2 - s2);
 
   return { epsilon_1, epsilon_2, gamma_12 };
 }
