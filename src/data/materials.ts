@@ -4,19 +4,19 @@ export const DEFAULT_MATERIALS: Record<string, Material> = {
   'Fiberglass EC9-136': {
     name: 'Fiberglass EC9-136',
     type: 'Glass Fiber',
-    E1: 72000,
-    E2: 72000,
-    G12: 3000,
-    nu12: 0.22,
-    tensile_strength: 3450,
-    compressive_strength: 1450,
-    shear_strength: 45,
+    E1: 40000,
+    E2: 10000,
+    G12: 3800,
+    nu12: 0.30,
+    tensile_strength: 1000,
+    compressive_strength: 700,
+    shear_strength: 70,
     thermal_resistance: 260,
-    density: 1.9,
+    density: 2.0,
     thickness: 0.25,
     color: '#E8F4F8',
     alpha1: 7e-6,
-    alpha2: 7e-6
+    alpha2: 22e-6
   },
   'Carbon Fiber Twill': {
     name: 'Carbon Fiber Twill',
@@ -38,19 +38,19 @@ export const DEFAULT_MATERIALS: Record<string, Material> = {
   'Aramid Kevlar Twill': {
     name: 'Aramid Kevlar Twill',
     type: 'Aramid Fiber',
-    E1: 118000,
-    E2: 118000,
-    G12: 3000,
-    nu12: 0.34,
-    tensile_strength: 1970,
-    compressive_strength: 400,
-    shear_strength: 50,
+    E1: 73000,
+    E2: 5000,
+    G12: 2200,
+    nu12: 0.35,
+    tensile_strength: 1400,
+    compressive_strength: 300,
+    shear_strength: 40,
     thermal_resistance: 260,
-    density: 1.45,
+    density: 1.4,
     thickness: 0.20,
     color: '#FFE5B4',
-    alpha1: -2e-6,
-    alpha2: 60e-6
+    alpha1: -1e-6,
+    alpha2: 50e-6
   }
 };
 
