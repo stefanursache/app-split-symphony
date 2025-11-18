@@ -24,7 +24,7 @@ import { SafetyMarginSummary } from '@/components/composite/SafetyMarginSummary'
 import { EducationalContent } from '@/components/composite/EducationalContent';
 import { LoadCaseManager } from '@/components/composite/LoadCaseManager';
 import { StressVisualization } from '@/components/composite/StressVisualization';
-import { LaminateVisualization3D } from '@/components/composite/LaminateVisualization3D';
+
 import { PDFReportExport } from '@/components/composite/PDFReportExport';
 import { GeometrySelector } from '@/components/composite/GeometrySelector';
 import { AdvancedAnalysisOptions } from '@/components/composite/AdvancedAnalysisOptions';
@@ -686,11 +686,6 @@ const Index = () => {
                 </Accordion>
                 <ABDMatrixDisplay matrix={abdMatrix} plies={state.plies} materials={materials} />
                 <StressVisualization
-                  plies={state.plies}
-                  materials={materials}
-                  stressResults={stressResults}
-                />
-                <LaminateVisualization3D
                   plies={state.plies}
                   materials={materials}
                   stressResults={stressResults}
