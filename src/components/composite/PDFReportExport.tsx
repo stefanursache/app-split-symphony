@@ -35,6 +35,13 @@ interface PDFReportExportProps {
       nuxy: number;
     };
   }>;
+  geometryConfig?: {
+    type: 'plate' | 'tube';
+    innerDiameter?: number;
+  };
+  safetyFactor?: number | null;
+  failureCriterion?: 'max_stress' | 'tsai_wu' | 'tsai_hill';
+  deltaT?: number;
 }
 
 export function PDFReportExport({
@@ -50,7 +57,11 @@ export function PDFReportExport({
   bucklingResult = null,
   progressiveFailureAnalysis = null,
   interlaminarResults = [],
-  comparisonConfigs = []
+  comparisonConfigs = [],
+  geometryConfig,
+  safetyFactor = null,
+  failureCriterion = 'max_stress',
+  deltaT = 0
 }: PDFReportExportProps) {
   const [isGenerating, setIsGenerating] = useState(false);
 
@@ -128,8 +139,14 @@ export function PDFReportExport({
       yPos += 10;
       doc.text(`Total Thickness: ${engineeringProps.thickness.toFixed(3)} mm`, margin + 10, yPos);
       yPos += 10;
+      doc.text(`Total Weight: ${engineeringProps.weight.toFixed(3)} kg/m²`, margin + 10, yPos);
+      yPos += 10;
       doc.text(`Analysis Type: ${geometryType === 'tube' ? 'Cylindrical Shell Theory' : 'Classical Lamination Theory (CLT)'}`, margin + 10, yPos);
       yPos += 10;
+      if (geometryConfig && geometryConfig.type === 'tube' && geometryConfig.innerDiameter) {
+        doc.text(`Geometry: Tube with inner diameter ${geometryConfig.innerDiameter.toFixed(2)} mm`, margin + 10, yPos);
+        yPos += 10;
+      }
       if (loadCase) {
         doc.text(`Load Case: ${loadCase.name}`, margin + 10, yPos);
       }
@@ -164,11 +181,13 @@ export function PDFReportExport({
         '4. ABD Stiffness Matrices',
         '5. Engineering Properties',
         '6. Load Case Definition',
-        '7. Stress Analysis Results',
-        '8. Strain Analysis Results',
-        '9. Failure Analysis',
-        '10. Advanced Analyses',
-        '11. Safety Margins & Conclusions'
+        '7. Analysis Parameters',
+        '8. Stress Analysis Results',
+        '9. Strain Analysis Results',
+        '10. Failure Analysis',
+        '11. Advanced Analyses',
+        '12. Configuration Comparison',
+        '13. Safety Margins & Conclusions'
       ];
       tocItems.forEach(item => {
         doc.text(item, margin + 10, yPos);
@@ -189,8 +208,12 @@ export function PDFReportExport({
         ['Parameter', 'Value', 'Unit'],
         ['Number of Plies', plies.length.toString(), '-'],
         ['Total Thickness', engineeringProps.thickness.toFixed(3), 'mm'],
+        ['Total Weight', engineeringProps.weight.toFixed(3), 'kg/m²'],
         ['Stacking Sequence', plies.map(p => `${p.angle}°`).join('/'), '°'],
-        ['Analysis Method', 'Classical Lamination Theory', '-'],
+        ['Geometry Type', geometryConfig?.type === 'tube' ? 'Cylindrical Tube' : 'Flat Plate', '-'],
+        ...(geometryConfig?.type === 'tube' && geometryConfig.innerDiameter ? 
+          [['Inner Diameter', geometryConfig.innerDiameter.toFixed(2), 'mm']] : []),
+        ['Analysis Method', geometryType === 'tube' ? 'Cylindrical Shell Theory' : 'Classical Lamination Theory', '-'],
         ['Coordinate System', 'Global (x-y) and Material (1-2)', '-']
       ];
 
@@ -222,7 +245,7 @@ export function PDFReportExport({
         if (!mat) return;
 
         if (idx > 0) yPos += 10;
-        checkNewPage(60);
+        checkNewPage(70);
 
         doc.setFontSize(12);
         doc.setFont('helvetica', 'bold');
@@ -230,17 +253,20 @@ export function PDFReportExport({
         yPos += 8;
 
         const matData = [
-          ['Property', 'Value', 'Unit'],
-          ['Longitudinal Modulus (E₁)', mat.E1.toFixed(0), 'MPa'],
-          ['Transverse Modulus (E₂)', mat.E2.toFixed(0), 'MPa'],
-          ['Shear Modulus (G₁₂)', mat.G12.toFixed(0), 'MPa'],
-          ['Poisson Ratio (ν₁₂)', mat.nu12.toFixed(3), '-'],
-          ['Ply Thickness', mat.thickness.toFixed(3), 'mm'],
-          ['Density', mat.density.toFixed(2), 'g/cm³'],
-          ...(mat.tensile_strength ? [['Tensile Strength', mat.tensile_strength.toFixed(0), 'MPa']] : []),
-          ...(mat.compressive_strength ? [['Compressive Strength', mat.compressive_strength.toFixed(0), 'MPa']] : []),
-          ...(mat.shear_strength ? [['Shear Strength', mat.shear_strength.toFixed(0), 'MPa']] : []),
-          ['Thermal Resistance', mat.thermal_resistance.toFixed(0), '°C']
+          ['Property', 'Symbol', 'Value', 'Unit'],
+          ['Longitudinal Modulus', 'E₁', mat.E1.toFixed(0), 'MPa'],
+          ['Transverse Modulus', 'E₂', mat.E2.toFixed(0), 'MPa'],
+          ['Shear Modulus', 'G₁₂', mat.G12.toFixed(0), 'MPa'],
+          ['Major Poisson\'s Ratio', 'ν₁₂', mat.nu12.toFixed(3), '-'],
+          ['Ply Thickness', 't', mat.thickness.toFixed(3), 'mm'],
+          ['Density', 'ρ', mat.density.toFixed(3), 'g/cm³'],
+          ...(mat.tensile_strength ? [['Tensile Strength', 'X_t', mat.tensile_strength.toFixed(0), 'MPa']] : []),
+          ...(mat.compressive_strength ? [['Compressive Strength', 'X_c', mat.compressive_strength.toFixed(0), 'MPa']] : []),
+          ...(mat.shear_strength ? [['Shear Strength', 'S', mat.shear_strength.toFixed(0), 'MPa']] : []),
+          ...(mat.alpha1 ? [['Thermal Exp. Coeff. (Long.)', 'α₁', (mat.alpha1 * 1e6).toFixed(2), '×10⁻⁶/°C']] : []),
+          ...(mat.alpha2 ? [['Thermal Exp. Coeff. (Trans.)', 'α₂', (mat.alpha2 * 1e6).toFixed(2), '×10⁻⁶/°C']] : []),
+          ...(mat.thermal_resistance ? [['Thermal Resistance', 'T_max', mat.thermal_resistance.toFixed(0), '°C']] : []),
+          ...(mat.type ? [['Material Type', '-', mat.type, '-']] : [])
         ];
 
         autoTable(doc, {
@@ -471,14 +497,46 @@ export function PDFReportExport({
         yPos = (doc as any).lastAutoTable.finalY + 15;
       }
 
-      // ============ SECTION 7: STRESS RESULTS ============
+      // ============ FAILURE ANALYSIS PARAMETERS ============
+      checkNewPage(50);
+      doc.setFontSize(14);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Analysis Parameters', margin, yPos);
+      yPos += 10;
+
+      const failureCriterionName = {
+        'max_stress': 'Maximum Stress Criterion',
+        'tsai_wu': 'Tsai-Wu Criterion',
+        'tsai_hill': 'Tsai-Hill Criterion'
+      }[failureCriterion] || 'Maximum Stress Criterion';
+
+      const analysisParams = [
+        ['Parameter', 'Value'],
+        ['Failure Criterion', failureCriterionName],
+        ...(safetyFactor ? [['Safety Factor', safetyFactor.toFixed(2)]] : []),
+        ...(deltaT && deltaT !== 0 ? [['Temperature Change (ΔT)', `${deltaT.toFixed(1)} °C`]] : [])
+      ];
+
+      autoTable(doc, {
+        startY: yPos,
+        head: [analysisParams[0]],
+        body: analysisParams.slice(1),
+        theme: 'grid',
+        headStyles: { fillColor: [52, 152, 219], fontSize: 9 },
+        styles: { fontSize: 9 },
+        margin: { left: margin, right: margin }
+      });
+
+      yPos = (doc as any).lastAutoTable.finalY + 15;
+
+      // ============ SECTION 8: STRESS RESULTS ============
       if (stressResults && stressResults.length > 0) {
         doc.addPage();
         yPos = 20;
         doc.setFontSize(16);
         doc.setFont('helvetica', 'bold');
         doc.setTextColor(41, 128, 185);
-        doc.text('7. Stress Analysis Results', margin, yPos);
+        doc.text('8. Stress Analysis Results', margin, yPos);
         doc.setTextColor(0, 0, 0);
         yPos += 12;
 
@@ -551,12 +609,12 @@ export function PDFReportExport({
 
         yPos = (doc as any).lastAutoTable.finalY + 15;
 
-        // ============ SECTION 8: STRAIN RESULTS ============
+        // ============ SECTION 9: STRAIN RESULTS ============
         checkNewPage(60);
         doc.setFontSize(16);
         doc.setFont('helvetica', 'bold');
         doc.setTextColor(41, 128, 185);
-        doc.text('8. Strain Analysis Results', margin, yPos);
+        doc.text('9. Strain Analysis Results', margin, yPos);
         doc.setTextColor(0, 0, 0);
         yPos += 12;
 
@@ -587,14 +645,14 @@ export function PDFReportExport({
         yPos = (doc as any).lastAutoTable.finalY + 15;
       }
 
-      // ============ SECTION 9: FAILURE ANALYSIS ============
+      // ============ SECTION 10: FAILURE ANALYSIS ============
       if (failureResults && failureResults.length > 0) {
         doc.addPage();
         yPos = 20;
         doc.setFontSize(16);
         doc.setFont('helvetica', 'bold');
         doc.setTextColor(41, 128, 185);
-        doc.text('9. Failure Analysis', margin, yPos);
+        doc.text('10. Failure Analysis', margin, yPos);
         doc.setTextColor(0, 0, 0);
         yPos += 12;
 
@@ -660,7 +718,7 @@ export function PDFReportExport({
       if (thermalResults && thermalResults.length > 0) {
         doc.setFontSize(13);
         doc.setFont('helvetica', 'bold');
-        doc.text('10.1 Thermal Stress Analysis', margin, yPos);
+        doc.text('11.1 Thermal Stress Analysis', margin, yPos);
         yPos += 10;
 
         const thermalData = [
@@ -726,7 +784,7 @@ export function PDFReportExport({
         checkNewPage(60);
         doc.setFontSize(13);
         doc.setFont('helvetica', 'bold');
-        doc.text('10.3 Progressive Failure Analysis', margin, yPos);
+        doc.text('11.3 Progressive Failure Analysis', margin, yPos);
         yPos += 10;
 
         const progData = [
@@ -760,7 +818,7 @@ export function PDFReportExport({
         checkNewPage(60);
         doc.setFontSize(13);
         doc.setFont('helvetica', 'bold');
-        doc.text('10.4 Interlaminar Stress Analysis', margin, yPos);
+        doc.text('11.4 Interlaminar Stress Analysis', margin, yPos);
         yPos += 10;
 
         const interlamData = [
@@ -804,7 +862,46 @@ export function PDFReportExport({
         yPos = (doc as any).lastAutoTable.finalY + 15;
       }
 
-      // ============ SECTION 11: CONCLUSIONS ============
+      // ============ SECTION 11: CONFIGURATION COMPARISON ============
+      if (comparisonConfigs && comparisonConfigs.length > 0) {
+        doc.addPage();
+        yPos = 20;
+        doc.setFontSize(16);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(41, 128, 185);
+        doc.text('12. Configuration Comparison', margin, yPos);
+        doc.setTextColor(0, 0, 0);
+        yPos += 12;
+
+        const compData = [
+          ['Config Name', 'Plies', 'Thickness (mm)', 'Weight (kg/m²)', 'Ex (MPa)', 'Ey (MPa)']
+        ];
+
+        comparisonConfigs.forEach(config => {
+          compData.push([
+            config.name || 'N/A',
+            config.plies.length.toString(),
+            config.total_thickness?.toFixed(3) || 'N/A',
+            config.total_weight?.toFixed(3) || 'N/A',
+            config.engineering_properties?.Ex.toFixed(0) || 'N/A',
+            config.engineering_properties?.Ey.toFixed(0) || 'N/A'
+          ]);
+        });
+
+        autoTable(doc, {
+          startY: yPos,
+          head: [compData[0]],
+          body: compData.slice(1),
+          theme: 'grid',
+          headStyles: { fillColor: [41, 128, 185], fontSize: 9 },
+          styles: { fontSize: 8, halign: 'center' },
+          margin: { left: margin, right: margin }
+        });
+
+        yPos = (doc as any).lastAutoTable.finalY + 15;
+      }
+
+      // ============ SECTION 12: CONCLUSIONS ============
       doc.addPage();
       yPos = 20;
       doc.setFontSize(16);

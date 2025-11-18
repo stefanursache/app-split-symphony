@@ -431,6 +431,10 @@ const Index = () => {
                 progressiveFailureAnalysis={progressiveFailureAnalysis}
                 interlaminarResults={interlaminarResults}
                 comparisonConfigs={selectedComparisonConfigs}
+                geometryConfig={geometry}
+                safetyFactor={safetyFactor}
+                failureCriterion={failureCriterion}
+                deltaT={deltaT}
               />
               
               {/* Desktop Navigation */}
