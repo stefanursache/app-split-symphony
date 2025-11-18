@@ -665,22 +665,18 @@ const Index = () => {
                       >
                         Calculate Stress/Strain
                       </Button>
-                    </AccordionContent>
-                  </AccordionItem>
-
-                  <AccordionItem value="loadcases" className="border rounded-lg px-6">
-                    <AccordionTrigger className="text-lg font-semibold hover:no-underline">
-                      Load Cases
-                    </AccordionTrigger>
-                    <AccordionContent className="pt-4">
-                      <LoadCaseManager
-                        loadCases={loadCases}
-                        activeLoadCaseId={activeLoadCaseId}
-                        onSelectLoadCase={setActiveLoadCaseId}
-                        onAddLoadCase={addLoadCase}
-                        onDeleteLoadCase={deleteLoadCase}
-                        onRunAnalysis={handleRunLoadCase}
-                      />
+                      
+                      <div className="pt-6">
+                        <h3 className="text-lg font-semibold mb-4">Load Cases</h3>
+                        <LoadCaseManager
+                          loadCases={loadCases}
+                          activeLoadCaseId={activeLoadCaseId}
+                          onSelectLoadCase={setActiveLoadCaseId}
+                          onAddLoadCase={addLoadCase}
+                          onDeleteLoadCase={deleteLoadCase}
+                          onRunAnalysis={handleRunLoadCase}
+                        />
+                      </div>
                     </AccordionContent>
                   </AccordionItem>
                 </Accordion>
