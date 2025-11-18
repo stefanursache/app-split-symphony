@@ -68,6 +68,19 @@ export function PDFReportExport({
   const generatePDF = async () => {
     setIsGenerating(true);
     try {
+      // Validate required data
+      if (!plies || plies.length === 0) {
+        toast.error('No plies defined. Please add plies before generating PDF.');
+        setIsGenerating(false);
+        return;
+      }
+      
+      if (!materials || Object.keys(materials).length === 0) {
+        toast.error('No materials defined. Please ensure materials are loaded.');
+        setIsGenerating(false);
+        return;
+      }
+
       const doc = new jsPDF();
       
       // Set PDF metadata
@@ -137,13 +150,13 @@ export function PDFReportExport({
       yPos += 10;
       doc.text(`Configuration: ${plies.length} ply laminate`, margin + 10, yPos);
       yPos += 10;
-      doc.text(`Total Thickness: ${engineeringProps.thickness.toFixed(3)} mm`, margin + 10, yPos);
+      doc.text(`Total Thickness: ${(engineeringProps?.thickness || 0).toFixed(3)} mm`, margin + 10, yPos);
       yPos += 10;
-      doc.text(`Total Weight: ${engineeringProps.weight.toFixed(3)} kg/m²`, margin + 10, yPos);
+      doc.text(`Total Weight: ${(engineeringProps?.weight || 0).toFixed(3)} kg/m²`, margin + 10, yPos);
       yPos += 10;
       doc.text(`Analysis Type: ${geometryType === 'tube' ? 'Cylindrical Shell Theory' : 'Classical Lamination Theory (CLT)'}`, margin + 10, yPos);
       yPos += 10;
-      if (geometryConfig && geometryConfig.type === 'tube' && geometryConfig.innerDiameter) {
+      if (geometryConfig?.type === 'tube' && geometryConfig?.innerDiameter) {
         doc.text(`Geometry: Tube with inner diameter ${geometryConfig.innerDiameter.toFixed(2)} mm`, margin + 10, yPos);
         yPos += 10;
       }
@@ -207,11 +220,11 @@ export function PDFReportExport({
       const configData = [
         ['Parameter', 'Value', 'Unit'],
         ['Number of Plies', plies.length.toString(), '-'],
-        ['Total Thickness', engineeringProps.thickness.toFixed(3), 'mm'],
-        ['Total Weight', engineeringProps.weight.toFixed(3), 'kg/m²'],
+        ['Total Thickness', (engineeringProps?.thickness || 0).toFixed(3), 'mm'],
+        ['Total Weight', (engineeringProps?.weight || 0).toFixed(3), 'kg/m²'],
         ['Stacking Sequence', plies.map(p => `${p.angle}°`).join('/'), '°'],
         ['Geometry Type', geometryConfig?.type === 'tube' ? 'Cylindrical Tube' : 'Flat Plate', '-'],
-        ...(geometryConfig?.type === 'tube' && geometryConfig.innerDiameter ? 
+        ...(geometryConfig?.type === 'tube' && geometryConfig?.innerDiameter ? 
           [['Inner Diameter', geometryConfig.innerDiameter.toFixed(2), 'mm']] : []),
         ['Analysis Method', geometryType === 'tube' ? 'Cylindrical Shell Theory' : 'Classical Lamination Theory', '-'],
         ['Coordinate System', 'Global (x-y) and Material (1-2)', '-']
@@ -254,17 +267,17 @@ export function PDFReportExport({
 
         const matData = [
           ['Property', 'Symbol', 'Value', 'Unit'],
-          ['Longitudinal Modulus', 'E₁', mat.E1.toFixed(0), 'MPa'],
-          ['Transverse Modulus', 'E₂', mat.E2.toFixed(0), 'MPa'],
-          ['Shear Modulus', 'G₁₂', mat.G12.toFixed(0), 'MPa'],
-          ['Major Poisson\'s Ratio', 'ν₁₂', mat.nu12.toFixed(3), '-'],
-          ['Ply Thickness', 't', mat.thickness.toFixed(3), 'mm'],
-          ['Density', 'ρ', mat.density.toFixed(3), 'g/cm³'],
+          ['Longitudinal Modulus', 'E₁', (mat.E1 || 0).toFixed(0), 'MPa'],
+          ['Transverse Modulus', 'E₂', (mat.E2 || 0).toFixed(0), 'MPa'],
+          ['Shear Modulus', 'G₁₂', (mat.G12 || 0).toFixed(0), 'MPa'],
+          ['Major Poisson\'s Ratio', 'ν₁₂', (mat.nu12 || 0).toFixed(3), '-'],
+          ['Ply Thickness', 't', (mat.thickness || 0).toFixed(3), 'mm'],
+          ['Density', 'ρ', (mat.density || 0).toFixed(3), 'g/cm³'],
           ...(mat.tensile_strength ? [['Tensile Strength', 'X_t', mat.tensile_strength.toFixed(0), 'MPa']] : []),
           ...(mat.compressive_strength ? [['Compressive Strength', 'X_c', mat.compressive_strength.toFixed(0), 'MPa']] : []),
           ...(mat.shear_strength ? [['Shear Strength', 'S', mat.shear_strength.toFixed(0), 'MPa']] : []),
-          ...(mat.alpha1 ? [['Thermal Exp. Coeff. (Long.)', 'α₁', (mat.alpha1 * 1e6).toFixed(2), '×10⁻⁶/°C']] : []),
-          ...(mat.alpha2 ? [['Thermal Exp. Coeff. (Trans.)', 'α₂', (mat.alpha2 * 1e6).toFixed(2), '×10⁻⁶/°C']] : []),
+          ...(mat.alpha1 !== undefined && mat.alpha1 !== null ? [['Thermal Exp. Coeff. (Long.)', 'α₁', (mat.alpha1 * 1e6).toFixed(2), '×10⁻⁶/°C']] : []),
+          ...(mat.alpha2 !== undefined && mat.alpha2 !== null ? [['Thermal Exp. Coeff. (Trans.)', 'α₂', (mat.alpha2 * 1e6).toFixed(2), '×10⁻⁶/°C']] : []),
           ...(mat.thermal_resistance ? [['Thermal Resistance', 'T_max', mat.thermal_resistance.toFixed(0), '°C']] : []),
           ...(mat.type ? [['Material Type', '-', mat.type, '-']] : [])
         ];
@@ -440,11 +453,11 @@ export function PDFReportExport({
 
       const engPropData = [
         ['Property', 'Symbol', 'Value', 'Unit'],
-        ['Longitudinal Modulus', 'Eₓ', engineeringProps.Ex.toFixed(2), 'MPa'],
-        ['Transverse Modulus', 'Eᵧ', engineeringProps.Ey.toFixed(2), 'MPa'],
-        ['Shear Modulus', 'Gₓᵧ', engineeringProps.Gxy.toFixed(2), 'MPa'],
-        ['Major Poisson Ratio', 'νₓᵧ', engineeringProps.nuxy.toFixed(4), '-'],
-        ['Total Thickness', 'h', engineeringProps.thickness.toFixed(3), 'mm']
+        ['Longitudinal Modulus', 'Eₓ', (engineeringProps?.Ex || 0).toFixed(2), 'MPa'],
+        ['Transverse Modulus', 'Eᵧ', (engineeringProps?.Ey || 0).toFixed(2), 'MPa'],
+        ['Shear Modulus', 'Gₓᵧ', (engineeringProps?.Gxy || 0).toFixed(2), 'MPa'],
+        ['Major Poisson Ratio', 'νₓᵧ', (engineeringProps?.nuxy || 0).toFixed(4), '-'],
+        ['Total Thickness', 'h', (engineeringProps?.thickness || 0).toFixed(3), 'mm']
       ];
 
       autoTable(doc, {
@@ -1083,7 +1096,7 @@ export function PDFReportExport({
       doc.setFont('helvetica', 'normal');
       const conclusions = [
         `This ${plies.length}-ply laminate analysis demonstrates comprehensive structural evaluation using Classical Lamination Theory.`,
-        `Key findings include equivalent moduli of Ex=${engineeringProps.Ex.toFixed(0)} MPa and Ey=${engineeringProps.Ey.toFixed(0)} MPa.`,
+        `Key findings include equivalent moduli of Ex=${(engineeringProps?.Ex || 0).toFixed(0)} MPa and Ey=${(engineeringProps?.Ey || 0).toFixed(0)} MPa.`,
         comparisonConfigs && comparisonConfigs.length > 1 
           ? `Configuration comparison shows variations in structural properties across ${comparisonConfigs.length} designs.`
           : '',
@@ -1139,7 +1152,8 @@ export function PDFReportExport({
       toast.success('Comprehensive PDF report generated successfully');
     } catch (error) {
       console.error('Error generating PDF:', error);
-      toast.error('Failed to generate PDF report');
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      toast.error(`Failed to generate PDF report: ${errorMessage}`);
     } finally {
       setIsGenerating(false);
     }
