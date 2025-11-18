@@ -76,13 +76,10 @@ export function calculateCylindricalShellStresses(
     }
   }
 
-  // Apply curvature correction for cylindrical geometry
-  if (isThinWall) {
-    // For thin-wall cylinders, add curvature correction to hoop strain
-    // Donnell-Mushtari-Vlasov theory correction
-    const curvatureCorrection = 1 / R_mid;
-    curvatures[1] += curvatureCorrection * strains[1]; // Hoop direction correction
-  }
+  // Apply curvature correction for cylindrical geometry (Donnell-Mushtari theory)
+  // For thin-wall cylinders, the curvature term 1/R affects the constitutive relations
+  // This is already accounted for in the shell theory formulation, so no additional
+  // correction is needed here for standard stress calculations
 
   // Get ply positions through thickness
   const plyPositions = calculatePlyPositions(plies, materials);

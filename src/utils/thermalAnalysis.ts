@@ -96,7 +96,9 @@ export function calculateThermalStresses(
     const Q12 = nu12 * E2 / denom;
     const Q22 = E2 / denom;
     
-    // Thermal stresses (negative because thermal expansion is resisted)
+    // Thermal stresses in constrained laminate
+    // When ΔT > 0 and material wants to expand but is constrained by other plies,
+    // compressive stresses develop. When ΔT < 0, tensile stresses develop.
     const sigma_1_thermal = -(Q11 * epsilon_1_thermal + Q12 * epsilon_2_thermal);
     const sigma_2_thermal = -(Q12 * epsilon_1_thermal + Q22 * epsilon_2_thermal);
     
